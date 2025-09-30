@@ -21,8 +21,8 @@
     <!-- Visualization & Content Choices: 1. SPA Navigation: HTML list + JS view switching. 2. Charts: Line/Bar charts (Chart.js) in the Dashboard view. 3. Data Entry: Modals for Debt, Recurring, and One-Time transactions. 4. Calendar: HTML grid. All data persists via localStorage. NO SVG/Mermaid used. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
-        /* FIX: Increased padding-bottom to 80px for better clearance above the iOS Home Indicator */
-        body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; color: #343a40; padding-top: 16px; padding-bottom: 80px; }
+        /* FIX: Increased padding-bottom to 120px for maximum clearance above the iOS Home Indicator */
+        body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; color: #343a40; padding-top: 16px; padding-bottom: 120px; }
         .chart-container { position: relative; width: 100%; max-width: 900px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
         @media (min-width: 768px) { .chart-container { height: 400px; } }
         .modal { transition: opacity 0.25s ease; }
@@ -524,8 +524,11 @@ document.addEventListener('DOMContentLoaded', () => {
             changeView(e.currentTarget.dataset.view);
         }));
 
-        // NOTE: startingBalanceEl change triggers saveData() via updateDashboard
-        [startDateEl, projectionMonthsEl, startingBalanceEl, transactionFilterEl].forEach(el => el.addEventListener('change', updateDashboard));
+        // NOTE: All handlers call updateDashboard, which calls saveAndRender, which calls saveData.
+        [startDateEl, projectionMonthsEl, transactionFilterEl].forEach(el => el.addEventListener('change', updateDashboard));
+        
+        // FIX: Ensure startingBalance change is explicitly handled to save the value.
+        startingBalanceEl.addEventListener('change', updateDashboard);
         
         // Listeners for type toggles (One-Time)
         document.getElementById('onetime-type-toggle').addEventListener('click', (e) => {
