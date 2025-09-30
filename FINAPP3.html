@@ -194,7 +194,18 @@
                 <input type="hidden" id="schedule-id">
                 <div class="space-y-4">
                     <div><label for="name" class="block text-sm font-medium">Name</label><input type="text" id="name" required class="w-full p-2 border rounded-lg"></div>
-                    <div><label for="amount" class="block text-sm font-medium">Amount (use "-" for expenses)</label><input type="number" step="0.01" id="amount" required class="w-full p-2 border rounded-lg"></div>
+                    
+                    <!-- RECURRING SCHEDULE TYPE TOGGLE (NEW) -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium">Amount Type</label>
+                        <div class="flex rounded-lg border border-gray-300 overflow-hidden" id="schedule-type-toggle">
+                            <button type="button" data-type="expense" data-current="expense" class="flex-1 p-2 font-semibold text-center bg-red-100 text-red-700 transition">Expense</button>
+                            <button type="button" data-type="income" class="flex-1 p-2 font-semibold text-center text-gray-700 bg-white border-l transition">Income</button>
+                        </div>
+                        <div><label for="amount" class="block text-sm font-medium">Amount ($)</label><input type="number" step="0.01" min="0" id="amount" required class="w-full p-2 border rounded-lg"></div>
+                    </div>
+                    <!-- END RECURRING SCHEDULE TYPE TOGGLE -->
+                    
                     <div><label for="start_date" class="block text-sm font-medium">Start Date</label><input type="date" id="start_date" required class="w-full p-2 border rounded-lg"></div>
                     <div><label for="frequency" class="block text-sm font-medium">Frequency</label><select id="frequency" required class="w-full p-2 border rounded-lg"><option value="Monthly">Monthly</option><option value="Weekly">Weekly</option></select></div>
                     <div id="day-value-monthly"><label for="day_value_month" class="block text-sm font-medium">Day of Month (1-31)</label><input type="number" id="day_value_month" min="1" max="31" class="w-full p-2 border rounded-lg"></div>
@@ -213,7 +224,18 @@
                 <input type="hidden" id="onetime-id">
                 <div class="space-y-4">
                     <div><label for="onetime-name" class="block text-sm font-medium">Name</label><input type="text" id="onetime-name" required class="w-full p-2 border rounded-lg"></div>
-                    <div><label for="onetime-amount" class="block text-sm font-medium">Amount (use "-" for expense)</label><input type="number" step="0.01" id="onetime-amount" required class="w-full p-2 border rounded-lg"></div>
+                    
+                    <!-- ONE-TIME TRANSACTION TYPE TOGGLE (NEW) -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium">Amount Type</label>
+                        <div class="flex rounded-lg border border-gray-300 overflow-hidden" id="onetime-type-toggle">
+                            <button type="button" data-type="expense" data-current="expense" class="flex-1 p-2 font-semibold text-center bg-red-100 text-red-700 transition">Expense</button>
+                            <button type="button" data-type="income" class="flex-1 p-2 font-semibold text-center text-gray-700 bg-white border-l transition">Income</button>
+                        </div>
+                        <div><label for="onetime-amount" class="block text-sm font-medium">Amount ($)</label><input type="number" step="0.01" min="0" id="onetime-amount" required class="w-full p-2 border rounded-lg"></div>
+                    </div>
+                    <!-- END ONE-TIME TRANSACTION TYPE TOGGLE -->
+                    
                     <div><label for="onetime-date" class="block text-sm font-medium">Date of Transaction</label><input type="date" id="onetime-date" required class="w-full p-2 border rounded-lg"></div>
                 </div>
                 <div class="mt-8 flex justify-end space-x-4">
@@ -255,7 +277,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let debtPlans = []; 
     let currentCalendarDate = new Date();
     let activeView = 'calendar'; 
-    let dailyTransactionMap = {}; // NEW: Global map to store transactions by date for the details modal
+    let dailyTransactionMap = {}; // Global map to store transactions by date for the details modal
+    let dailyBalanceMap = {}; // NEW: Global map to store end-of-day balances
 
     const defaultSchedules = [
         { id: 'RENT-01', name: 'Monthly Rent Payment', amount: -1010.00, startDate: '2024-01-03', frequency: 'Monthly', dayValue: 3, enabled: true },
@@ -276,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scheduleModal = document.getElementById('schedule-modal');
     const oneTimeModal = document.getElementById('onetime-modal');
     const debtPlanModal = document.getElementById('debt-plan-modal'); 
-    const dayDetailsModal = document.getElementById('day-details-modal'); // NEW
+    const dayDetailsModal = document.getElementById('day-details-modal'); 
 
     // Forms
     const scheduleForm = document.getElementById('schedule-form');
@@ -314,6 +337,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusMessageEl.classList.remove('opacity-100');
                 statusMessageEl.classList.add('opacity-0');
             }, 5000);
+        }
+    }
+    
+    // NEW: Function to manage the visual state of the Income/Expense toggles
+    function setToggleVisuals(containerId, type) {
+        const toggleContainer = document.getElementById(containerId);
+        const expenseBtn = toggleContainer.querySelector('[data-type="expense"]');
+        const incomeBtn = toggleContainer.querySelector('[data-type="income"]');
+
+        if (type === 'income') {
+            incomeBtn.classList.remove('bg-white', 'text-gray-700', 'border-l');
+            incomeBtn.classList.add('bg-green-100', 'text-green-700', 'border-green-300');
+            expenseBtn.classList.remove('bg-red-100', 'text-red-700');
+            expenseBtn.classList.add('bg-white', 'text-gray-700');
+            incomeBtn.dataset.current = 'income';
+            expenseBtn.dataset.current = '';
+        } else { // default to expense
+            expenseBtn.classList.remove('bg-white', 'text-gray-700');
+            expenseBtn.classList.add('bg-red-100', 'text-red-700', 'border-red-300');
+            incomeBtn.classList.remove('bg-green-100', 'text-green-700', 'border-green-300');
+            incomeBtn.classList.add('bg-white', 'text-gray-700', 'border-l');
+            expenseBtn.dataset.current = 'expense';
+            incomeBtn.dataset.current = '';
         }
     }
 
@@ -462,6 +508,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         [startDateEl, projectionMonthsEl, startingBalanceEl, transactionFilterEl].forEach(el => el.addEventListener('change', updateDashboard));
         
+        // Listeners for type toggles (One-Time)
+        document.getElementById('onetime-type-toggle').addEventListener('click', (e) => {
+            if (e.target.dataset.type) {
+                setToggleVisuals('onetime-type-toggle', e.target.dataset.type);
+            }
+        });
+
+        // Listeners for type toggles (Recurring)
+        document.getElementById('schedule-type-toggle').addEventListener('click', (e) => {
+            if (e.target.dataset.type) {
+                setToggleVisuals('schedule-type-toggle', e.target.dataset.type);
+            }
+        });
+        
         // --- DEBT PLAN EVENT LISTENERS ---
         debtPlansListEl.addEventListener('click', (e) => {
             const editBtn = e.target.closest('.debt-edit-btn');
@@ -544,16 +604,20 @@ document.addEventListener('DOMContentLoaded', () => {
         scheduleModal.addEventListener('click', (e) => { if (e.target === scheduleModal) closeModal(scheduleModal); });
         oneTimeModal.addEventListener('click', (e) => { if (e.target === oneTimeModal) closeModal(oneTimeModal); });
         debtPlanModal.addEventListener('click', (e) => { if (e.target === debtPlanModal) closeModal(debtPlanModal); }); 
-        dayDetailsModal.addEventListener('click', (e) => { if (e.target === dayDetailsModal) closeModal(dayDetailsModal); }); // NEW
+        dayDetailsModal.addEventListener('click', (e) => { if (e.target === dayDetailsModal) closeModal(dayDetailsModal); }); 
 
         // Submit Recurring Schedule
         scheduleForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const id = scheduleIdInput.value;
+            const rawAmount = parseFloat(document.getElementById('amount').value);
+            const isIncome = document.querySelector('#schedule-type-toggle [data-current="income"]');
+            const finalAmount = isIncome ? rawAmount : -rawAmount; // Apply sign based on toggle
+
             const newSchedule = {
                 id: id || `SCH-${Date.now()}`,
                 name: document.getElementById('name').value,
-                amount: parseFloat(document.getElementById('amount').value),
+                amount: finalAmount, // Use signed amount
                 startDate: document.getElementById('start_date').value,
                 frequency: frequencySelect.value,
                 dayValue: frequencySelect.value === 'Monthly' ? parseInt(document.getElementById('day_value_month').value) : document.getElementById('day_value_week').value,
@@ -571,16 +635,32 @@ document.addEventListener('DOMContentLoaded', () => {
             saveAndRender();
         });
 
-        // Submit One-Time Transaction
+        // Submit One-Time Transaction (UPDATED TO HANDLE EDITING)
         oneTimeForm.addEventListener('submit', (e) => {
             e.preventDefault();
+            const id = document.getElementById('onetime-id').value; // Get ID for editing
+            const rawAmount = parseFloat(document.getElementById('onetime-amount').value);
+            const isIncome = document.querySelector('#onetime-type-toggle [data-current="income"]');
+            const finalAmount = isIncome ? rawAmount : -rawAmount; // Apply sign based on toggle
+            
             const newTransaction = {
-                id: `ONE-${Date.now()}`,
+                id: id || `ONE-${Date.now()}`,
                 name: document.getElementById('onetime-name').value,
-                amount: parseFloat(document.getElementById('onetime-amount').value),
+                amount: finalAmount, // Use signed amount
                 date: document.getElementById('onetime-date').value,
             };
-            oneTimeTransactions.push(newTransaction);
+
+            if (id) {
+                // Editing existing
+                const index = oneTimeTransactions.findIndex(t => t.id === id);
+                if (index !== -1) {
+                    oneTimeTransactions[index] = newTransaction;
+                }
+            } else {
+                // Adding new
+                oneTimeTransactions.push(newTransaction);
+            }
+            
             closeModal(oneTimeModal);
             saveAndRender();
         });
@@ -596,15 +676,104 @@ document.addEventListener('DOMContentLoaded', () => {
             updateDashboard(); 
         });
         
-        // NEW: Listener for clicking on calendar days
+        // Listener for clicking on calendar days
         document.getElementById('calendar-grid').addEventListener('click', (e) => {
             const dayEl = e.target.closest('.calendar-day');
             if (dayEl && dayEl.dataset.date) {
                 openDayDetailsModal(dayEl.dataset.date);
             }
         });
+        
+        // FIX: Listener for buttons within the Day Details Modal
+        document.getElementById('day-details-list').addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-onetime-btn');
+            const editBtn = e.target.closest('.edit-onetime-btn');
+            
+            if (deleteBtn) {
+                const id = deleteBtn.dataset.id;
+                const transactionToDelete = oneTimeTransactions.find(t => t.id === id);
+
+                if (transactionToDelete && confirm(`Are you sure you want to delete the one-time event: "${transactionToDelete.name}"?`)) {
+                    oneTimeTransactions = oneTimeTransactions.filter(t => t.id !== id);
+                    closeModal(dayDetailsModal); // Close the detail modal after action
+                    saveAndRender();
+                } else if (!transactionToDelete) {
+                     console.error(`Attempted to delete one-time transaction with ID ${id}, but it was not found.`);
+                }
+            } else if (editBtn) {
+                const id = editBtn.dataset.id;
+                // Find the transaction object using the ID
+                const transactionToEdit = oneTimeTransactions.find(t => t.id === id);
+                if (transactionToEdit) {
+                    closeModal(dayDetailsModal); // Close details modal
+                    openOneTimeModal(transactionToEdit); // Open edit modal
+                }
+            }
+        });
     }
     
+    // Updates the Recurring Schedule Modal (for editing)
+    function openRecurringModal(schedule = null) {
+        scheduleForm.reset();
+        let type = 'expense';
+        let amountValue = '';
+
+        if (schedule) {
+            document.getElementById('modal-title').textContent = 'Edit Recurring Schedule';
+            scheduleIdInput.value = schedule.id;
+            document.getElementById('name').value = schedule.name;
+            
+            amountValue = Math.abs(schedule.amount);
+            type = schedule.amount > 0 ? 'income' : 'expense';
+
+            document.getElementById('start_date').value = schedule.startDate;
+            frequencySelect.value = schedule.frequency;
+            if (schedule.frequency === 'Monthly') {
+                document.getElementById('day_value_month').value = schedule.dayValue;
+            } else {
+                document.getElementById('day_value_week').value = schedule.dayValue;
+            }
+        } else {
+            document.getElementById('modal-title').textContent = 'Add New Recurring Schedule';
+            scheduleIdInput.value = '';
+        }
+        
+        document.getElementById('amount').value = amountValue || '';
+        setToggleVisuals('schedule-type-toggle', type); // Set initial visual state
+        toggleDayValueInputs();
+        scheduleModal.classList.remove('modal-inactive');
+        scheduleModal.classList.add('modal-active');
+    }
+
+    // Updates the One-Time Transaction Modal (for adding/editing)
+    function openOneTimeModal(transaction = null) { // Added transaction parameter
+        oneTimeForm.reset();
+        document.getElementById('onetime-id').value = ''; // Clear ID default
+        let type = 'expense';
+        let amountValue = '';
+
+        if (transaction) {
+            // Editing existing transaction
+            document.getElementById('onetime-id').value = transaction.id;
+            document.getElementById('onetime-name').value = transaction.name;
+            
+            amountValue = Math.abs(transaction.amount);
+            type = transaction.amount > 0 ? 'income' : 'expense';
+            
+            // BUG FIX: Parse the date string from storage into a Date object before formatting
+            const dateStr = format(parseISO(transaction.date), 'yyyy-MM-dd'); 
+            document.getElementById('onetime-date').value = dateStr;
+        } else {
+            // Adding new transaction (default behavior)
+            document.getElementById('onetime-date').value = format(currentCalendarDate, 'yyyy-MM-dd');
+        }
+        
+        document.getElementById('onetime-amount').value = amountValue || '';
+        setToggleVisuals('onetime-type-toggle', type); // Default to expense
+        oneTimeModal.classList.remove('modal-inactive');
+        oneTimeModal.classList.add('modal-active');
+    }
+
     function openDebtPlanModal(plan = null) {
         debtPlanForm.reset();
         document.getElementById('debt-pay-day').value = 1; 
@@ -625,36 +794,6 @@ document.addEventListener('DOMContentLoaded', () => {
         debtPlanModal.classList.add('modal-active');
     }
     
-    function openRecurringModal(schedule = null) {
-        scheduleForm.reset();
-        if (schedule) {
-            document.getElementById('modal-title').textContent = 'Edit Recurring Schedule';
-            scheduleIdInput.value = schedule.id;
-            document.getElementById('name').value = schedule.name;
-            document.getElementById('amount').value = schedule.amount;
-            document.getElementById('start_date').value = schedule.startDate;
-            frequencySelect.value = schedule.frequency;
-            if (schedule.frequency === 'Monthly') {
-                document.getElementById('day_value_month').value = schedule.dayValue;
-            } else {
-                document.getElementById('day_value_week').value = schedule.dayValue;
-            }
-        } else {
-            document.getElementById('modal-title').textContent = 'Add New Recurring Schedule';
-            scheduleIdInput.value = '';
-        }
-        toggleDayValueInputs();
-        scheduleModal.classList.remove('modal-inactive');
-        scheduleModal.classList.add('modal-active');
-    }
-
-    function openOneTimeModal() {
-        oneTimeForm.reset();
-        document.getElementById('onetime-date').value = format(currentCalendarDate, 'yyyy-MM-dd');
-        oneTimeModal.classList.remove('modal-inactive');
-        oneTimeModal.classList.add('modal-active');
-    }
-
     function closeModal(el) {
         el.classList.add('modal-inactive');
         el.classList.remove('modal-active');
@@ -674,13 +813,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // NEW FUNCTION: Opens the modal showing transactions for the selected day
+    // FUNCTION: Opens the modal showing transactions for the selected day
     function openDayDetailsModal(dateKey) {
         const transactions = dailyTransactionMap[dateKey] || [];
+        
+        const rawFinalBalance = dailyBalanceMap[dateKey]; // Get the balance for this specific date key
+        const finalBalanceText = rawFinalBalance !== undefined 
+            ? `$${rawFinalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : '$0.00'; 
+            
         const titleEl = document.getElementById('day-details-title');
         const listEl = document.getElementById('day-details-list');
 
-        titleEl.textContent = `Transactions on ${format(parseISO(dateKey), 'EEEE, MMM do')}`;
+        // NEW: Include the End of Day Balance in the title
+        titleEl.innerHTML = `Transactions on ${format(parseISO(dateKey), 'EEEE, MMM do')}
+                             <span class="block text-base font-medium text-gray-600 mt-1">End of Day Balance: <span class="font-bold text-lg text-blue-600">${finalBalanceText}</span></span>`;
         listEl.innerHTML = '';
         
         if (transactions.length === 0) {
@@ -696,18 +843,53 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const item = document.createElement('div');
             item.className = `flex justify-between items-center p-3 rounded-lg border ${colorClass}`;
+            
+            // Only add controls for One-Time events
+            let controlsHTML = '';
+            if (t.type === 'One-Time') {
+                 controlsHTML = `
+                    <div class="flex space-x-2 items-center">
+                        <button type="button" class="edit-onetime-btn text-gray-500 hover:text-purple-600 p-1 rounded-full hover:bg-gray-100" data-id="${t.id}" title="Edit Transaction">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536l12.232-12.232z"></path></svg>
+                        </button>
+                        <button type="button" class="delete-onetime-btn text-gray-500 hover:text-red-600 p-1 rounded-full hover:bg-gray-100" data-id="${t.id}" title="Delete Transaction">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                `;
+            }
+
             item.innerHTML = `
-                <div class="flex flex-col">
+                <div class="flex flex-col flex-grow">
                     <span class="font-medium text-gray-800">${t.name}</span>
                     <span class="text-xs text-gray-500">${typeLabel}</span>
                 </div>
-                <span class="font-bold text-lg ${amountClass}">${icon} $${Math.abs(t.amount).toFixed(2)}</span>
+                <div class="flex items-center space-x-3">
+                    <span class="font-bold text-lg ${amountClass}">${icon} $${Math.abs(t.amount).toFixed(2)}</span>
+                    ${controlsHTML}
+                </div>
             `;
             listEl.appendChild(item);
         });
 
         dayDetailsModal.classList.remove('modal-inactive');
         dayDetailsModal.classList.add('modal-active');
+    }
+
+    // NEW FUNCTION: Calculates the running balance for every projected transaction date
+    function calculateDailyBalances(projections) {
+        let runningBalance = parseFloat(startingBalanceEl.value);
+        dailyBalanceMap = {}; // Reset map
+
+        // Note: The projections array is already sorted by date.
+
+        projections.forEach(t => {
+            runningBalance += t.amount;
+            const dateKey = format(t.date, 'yyyy-MM-dd');
+            
+            // Always record the balance after the transaction
+            dailyBalanceMap[dateKey] = runningBalance;
+        });
     }
 
 
@@ -757,7 +939,7 @@ document.addEventListener('DOMContentLoaded', () => {
         oneTimeTransactions.forEach(t => {
             const tDate = new Date(t.date + 'T00:00:00');
             if (tDate >= startDate && tDate <= endDate) {
-                projections.push({ date: tDate, name: t.name, amount: t.amount, type: 'One-Time' });
+                projections.push({ date: tDate, name: t.name, amount: t.amount, type: 'One-Time', id: t.id }); // Ensure ID is passed
             }
         });
 
@@ -766,6 +948,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function updateDashboard() {
         const projections = generateProjections();
+        calculateDailyBalances(projections); // NEW CALL
         updateKeyMetrics(projections);
         // Only call chart updates if the dashboard view is active or immediately after controls change
         if (activeView === 'dashboard') {
@@ -786,7 +969,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const endDate = endOfWeek(monthEnd);
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         
-        dailyTransactionMap = {}; // NEW: Clear map for the new month
+        dailyTransactionMap = {}; // Clear map for the new month
         
         // Render Day Headers
         days.forEach(day => {
@@ -811,7 +994,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dayEl.appendChild(dayNumber);
 
             if (dailyTransactions.length > 0) {
-                // NEW: Store transactions and make the day clickable
+                // Store transactions and make the day clickable
                 dailyTransactionMap[dateKey] = dailyTransactions;
                 dayEl.classList.add('cursor-pointer', 'hover:shadow-lg', 'bg-blue-50'); 
                 dayEl.dataset.date = dateKey; 
