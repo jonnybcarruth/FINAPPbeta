@@ -41,14 +41,19 @@
     
     <!-- NAVIGATION BAR -->
     <nav class="fixed top-0 left-0 right-0 bg-white shadow-md z-40">
-        <div class="container mx-auto px-4 sm:px-6 md:px-8 flex justify-between items-center h-16">
-            <h1 class="text-xl font-bold text-gray-800">FinPlan</h1>
-            <div class="flex space-x-4">
-                <button data-view="calendar" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition">Calendar</button>
-                <button data-view="dashboard" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition">Dashboard</button>
-                <button data-view="debt" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition">Debt Plans</button>
-                <button data-view="schedules" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition">Recurring</button>
-                <button data-view="log" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition">Log</button>
+        <div class="container mx-auto px-4 sm:px-6 md:px-8 h-16">
+            <div class="flex items-center h-full">
+                <!-- App Title, fixed position -->
+                <h1 class="text-xl font-bold text-gray-800 flex-shrink-0 mr-4">FinPlan</h1>
+                
+                <!-- Scrollable Button Container (FIXED: Added overflow-x-auto and flex-nowrap) -->
+                <div class="flex overflow-x-auto flex-nowrap space-x-4 h-full items-center">
+                    <button data-view="calendar" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Calendar</button>
+                    <button data-view="dashboard" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Dashboard</button>
+                    <button data-view="debt" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Debt Plans</button>
+                    <button data-view="schedules" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Recurring</button>
+                    <button data-view="log" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Log</button>
+                </div>
             </div>
         </div>
     </nav>
@@ -94,7 +99,11 @@
                         <h3 id="calendar-month-year" class="text-xl font-semibold"></h3>
                         <button id="next-month" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Next &rarr;</button>
                     </div>
-                    <div id="calendar-grid" class="grid grid-cols-7 gap-1 calendar-grid"></div>
+                    <!-- Calendar Grid Wrapper (FIXED: Added overflow-x-auto for mobile scrolling) -->
+                    <div class="overflow-x-auto">
+                        <!-- Added min-w-[700px] to ensure readable cell size on mobile -->
+                        <div id="calendar-grid" class="grid grid-cols-7 gap-1 calendar-grid min-w-[700px]"></div>
+                    </div>
                 </section>
             </div>
             
