@@ -171,6 +171,20 @@
     </div>
 
     <!-- Modals (Global, accessible from all views) -->
+    
+    <!-- Modal for Daily Transaction Details (NEW) -->
+    <div id="day-details-modal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-2xl bg-white">
+            <h3 id="day-details-title" class="text-2xl font-bold mb-6">Transactions on [Date]</h3>
+            <div id="day-details-list" class="space-y-3 max-h-96 overflow-y-auto">
+                <!-- Transaction items go here -->
+            </div>
+            <div class="mt-8 flex justify-end">
+                <button type="button" id="close-day-details-btn" class="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Close</button>
+            </div>
+        </div>
+    </div>
+    <!-- End Modal for Daily Transaction Details -->
 
     <!-- Modal for Recurring Schedules (Complex) -->
     <div id="schedule-modal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
@@ -241,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let debtPlans = []; 
     let currentCalendarDate = new Date();
     let activeView = 'calendar'; 
+    let dailyTransactionMap = {}; // NEW: Global map to store transactions by date for the details modal
 
     const defaultSchedules = [
         { id: 'RENT-01', name: 'Monthly Rent Payment', amount: -1010.00, startDate: '2024-01-03', frequency: 'Monthly', dayValue: 3, enabled: true },
@@ -261,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scheduleModal = document.getElementById('schedule-modal');
     const oneTimeModal = document.getElementById('onetime-modal');
     const debtPlanModal = document.getElementById('debt-plan-modal'); 
+    const dayDetailsModal = document.getElementById('day-details-modal'); // NEW
 
     // Forms
     const scheduleForm = document.getElementById('schedule-form');
@@ -522,11 +538,13 @@ document.addEventListener('DOMContentLoaded', () => {
             closeModal(scheduleModal);
             closeModal(oneTimeModal);
         }));
+        document.getElementById('close-day-details-btn').addEventListener('click', () => closeModal(dayDetailsModal)); // NEW close button listener
 
         // Modal close on backdrop click
         scheduleModal.addEventListener('click', (e) => { if (e.target === scheduleModal) closeModal(scheduleModal); });
         oneTimeModal.addEventListener('click', (e) => { if (e.target === oneTimeModal) closeModal(oneTimeModal); });
         debtPlanModal.addEventListener('click', (e) => { if (e.target === debtPlanModal) closeModal(debtPlanModal); }); 
+        dayDetailsModal.addEventListener('click', (e) => { if (e.target === dayDetailsModal) closeModal(dayDetailsModal); }); // NEW
 
         // Submit Recurring Schedule
         scheduleForm.addEventListener('submit', (e) => {
@@ -571,11 +589,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('prev-month').addEventListener('click', () => {
             currentCalendarDate = subMonths(currentCalendarDate, 1);
-            updateDashboard(); // FIXED: Calls updateDashboard to regenerate projections and redraw the calendar safely.
+            updateDashboard(); 
         });
         document.getElementById('next-month').addEventListener('click', () => {
             currentCalendarDate = addMonths(currentCalendarDate, 1);
-            updateDashboard(); // FIXED: Calls updateDashboard to regenerate projections and redraw the calendar safely.
+            updateDashboard(); 
+        });
+        
+        // NEW: Listener for clicking on calendar days
+        document.getElementById('calendar-grid').addEventListener('click', (e) => {
+            const dayEl = e.target.closest('.calendar-day');
+            if (dayEl && dayEl.dataset.date) {
+                openDayDetailsModal(dayEl.dataset.date);
+            }
         });
     }
     
@@ -647,6 +673,43 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('day_value_week').required = true;
         }
     }
+    
+    // NEW FUNCTION: Opens the modal showing transactions for the selected day
+    function openDayDetailsModal(dateKey) {
+        const transactions = dailyTransactionMap[dateKey] || [];
+        const titleEl = document.getElementById('day-details-title');
+        const listEl = document.getElementById('day-details-list');
+
+        titleEl.textContent = `Transactions on ${format(parseISO(dateKey), 'EEEE, MMM do')}`;
+        listEl.innerHTML = '';
+        
+        if (transactions.length === 0) {
+             listEl.innerHTML = `<p class="text-center text-gray-500 italic">No scheduled transactions for this day.</p>`;
+        }
+        
+        transactions.forEach(t => {
+            const isExpense = t.amount < 0;
+            let colorClass = isExpense ? 'bg-red-50 text-red-800' : 'bg-green-50 text-green-800';
+            let amountClass = isExpense ? 'text-red-600' : 'text-green-600';
+            let icon = isExpense ? '↓' : '↑';
+            let typeLabel = t.type === 'Debt Payment' ? 'Debt' : t.type === 'One-Time' ? 'One-Time' : 'Recurring';
+            
+            const item = document.createElement('div');
+            item.className = `flex justify-between items-center p-3 rounded-lg border ${colorClass}`;
+            item.innerHTML = `
+                <div class="flex flex-col">
+                    <span class="font-medium text-gray-800">${t.name}</span>
+                    <span class="text-xs text-gray-500">${typeLabel}</span>
+                </div>
+                <span class="font-bold text-lg ${amountClass}">${icon} $${Math.abs(t.amount).toFixed(2)}</span>
+            `;
+            listEl.appendChild(item);
+        });
+
+        dayDetailsModal.classList.remove('modal-inactive');
+        dayDetailsModal.classList.add('modal-active');
+    }
+
 
     function generateProjections() {
         const startDate = new Date(startDateEl.value + 'T00:00:00');
@@ -723,6 +786,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const endDate = endOfWeek(monthEnd);
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         
+        dailyTransactionMap = {}; // NEW: Clear map for the new month
+        
         // Render Day Headers
         days.forEach(day => {
             const dayEl = document.createElement('div');
@@ -733,6 +798,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let day = startDate;
         while(day <= endDate) {
+            const dateKey = format(day, 'yyyy-MM-dd');
+            const dailyTransactions = projections.filter(p => format(p.date, 'yyyy-MM-dd') === dateKey);
+
             const dayEl = document.createElement('div');
             dayEl.className = `calendar-day p-2 border border-gray-200 rounded-md ${!isSameMonth(day, monthStart) ? 'bg-gray-50 text-gray-400' : 'bg-white'}`;
             if (isToday(day)) { dayEl.classList.add('border-blue-500', 'border-2'); }
@@ -742,7 +810,13 @@ document.addEventListener('DOMContentLoaded', () => {
             dayNumber.textContent = format(day, 'd');
             dayEl.appendChild(dayNumber);
 
-            const dailyTransactions = projections.filter(p => format(p.date, 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd'));
+            if (dailyTransactions.length > 0) {
+                // NEW: Store transactions and make the day clickable
+                dailyTransactionMap[dateKey] = dailyTransactions;
+                dayEl.classList.add('cursor-pointer', 'hover:shadow-lg', 'bg-blue-50'); 
+                dayEl.dataset.date = dateKey; 
+            }
+            
             const transactionList = document.createElement('ul');
             transactionList.className = 'mt-1 space-y-1 text-xs overflow-y-auto'
             dailyTransactions.forEach(t => {
