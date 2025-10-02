@@ -17,7 +17,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* FIX: Adjusted padding-top back to normal and set padding-bottom to 150px for max bottom clearance */
+        /* FIX: Adjusted padding-top to normal and set padding-bottom to 150px for max bottom clearance */
         body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; color: #343a40; padding-top: 16px; padding-bottom: 150px; }
         .chart-container { position: relative; width: 100%; max-width: 900px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
         @media (min-width: 768px) { .chart-container { height: 400px; } }
@@ -55,12 +55,12 @@
 
         <main class="space-y-8 md:space-y-12">
             
-            <!-- Dynamic Header (MOVED FROM FIXED NAV) -->
+            <!-- Dynamic Header -->
             <header class="text-center mb-4 md:mb-6">
                 <h1 class="3xl md:text-4xl font-bold text-gray-800">FinPlan</h1>
                 <h2 id="page-title" class="text-xl font-semibold text-gray-700 mt-2">Calendar</h2>
                 <div id="user-status" class="text-xs text-gray-500 mt-2 p-2 bg-gray-100 rounded-lg">
-                    Status: Connecting to Cloud...
+                    Status: Local Mode (Data saved to this device only)
                 </div>
             </header>
 
@@ -95,7 +95,7 @@
                     </div>
                 </section>
 
-                <!-- Projection Settings REMAINED in this view (Home/Calendar) -->
+                <!-- Projection Settings (MAIN CONTROL INPUTS) -->
                 <section id="projection-controls" class="bg-white p-6 rounded-2xl shadow-sm">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-bold text-gray-800">Settings</h2>
@@ -122,73 +122,128 @@
                         </div>
                     </div>
                     </section>
-                </div>
+            </div>
+            
+            <!-- 2. DASHBOARD VIEW (CHARTS & METRICS - MOVED PROJECTION SETTINGS HERE) -->
+            <div id="view-dashboard" class="view-container hidden space-y-8">
                 
-                <!-- 2. DASHBOARD VIEW (CHARTS & METRICS - MOVED PROJECTION SETTINGS HERE) -->
-                <div id="view-dashboard" class="view-container hidden space-y-8">
-                    
-                    <section id="key-metrics" class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                        <div class="bg-white p-6 rounded-2xl shadow-sm"><h3 class="text-md font-semibold text-gray-500">Projected End Balance</h3><p id="endBalance" class="text-3xl font-bold text-gray-800 mt-2">$0.00</p></div>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm"><h3 class="text-md font-semibold text-gray-500">Total Income</h3><p id="totalIncome" class="3xl font-bold text-green-600 mt-2">$0.00</p></div>
-                        <div class="bg-white p-6 rounded-2xl shadow-sm"><h3 class="text-md font-semibold text-gray-500">Total Expenses</h3><p id="totalExpenses" class="3xl font-bold text-red-600 mt-2">$0.00</p></div>
-                    </section>
-                    
-                    <section id="visualizations" class="bg-white p-6 rounded-2xl shadow-sm space-y-12">
-                        <div>
-                            <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Cash Flow Projection</h2>
-                            <p class="text-center text-gray-500 mb-4 max-w-2xl mx-auto">This chart shows the projected running balance over time, helping you anticipate future highs and lows.</p>
-                            <div class="chart-container"><canvas id="cashFlowChart"></canvas></div>
-                        </div>
-                        <div>
-                             <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Net Monthly Flow</h2>
-                            <p class="text-center text-gray-500 mb-4 max-w-2xl mx-auto">This bar chart illustrates the net financial result for each month—the difference between total income and total expenses.</p>
-                            <div class="chart-container"><canvas id="monthlyNetChart"></canvas></div>
-                        </div>
-                    </section>
-                    
-                </div>
-
-                <!-- 3. DEBT MANAGEMENT VIEW -->
-                <div id="view-debt" class="view-container hidden space-y-8">
-                    <section id="debt-plan-management" class="bg-white p-6 rounded-2xl shadow-sm">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-bold text-gray-800">Debt Plan Management</h2>
-                            <button id="add-debt-plan-btn" class="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 font-semibold">Add New Debt Plan</button>
-                        </div>
-                        <p class="text-gray-500 mb-6">Define structured debt repayments here. Payments are calculated based on the payoff period and automatically removed from the forecast once completed.</p>
-                        <div id="debtPlansList" class="space-y-4"></div>
-                    </section>
-                </div>
-
-                <!-- 4. RECURRING SCHEDULES VIEW -->
-                <div id="view-schedules" class="view-container hidden space-y-8">
-                    <section id="schedules-management" class="bg-white p-6 rounded-2xl shadow-sm">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-bold text-gray-800">Recurring Schedules Management</h2>
-                            <button id="add-schedule-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">Add New Recurring Schedule</button>
-                        </div>
-                        <p class="text-gray-500 mb-6">Manage all your **long-term, repeating** financial events here. Toggle items to run "what-if" scenarios.</p>
-                        <div id="schedulesList" class="space-y-4"></div>
-                    </section>
-                </div>
-
-                <!-- 5. TRANSACTION LOG VIEW -->
-                <div id="view-log" class="view-container hidden space-y-8">
-                     <section id="transaction-log" class="bg-white p-6 rounded-2xl shadow-sm">
-                        <h2 class="text-xl font-bold text-gray-800 mb-4">Projected Transaction Log</h2>
-                        <p class="text-gray-500 mb-6">A detailed, day-by-day list of all projected transactions (recurring, one-time, and debt payments). Filter by type for a granular analysis.</p>
-                        <div class="mb-4">
-                             <select id="transactionFilter" class="p-2 border border-gray-300 rounded-lg">
-                                 <option value="all">All Transactions</option><option value="income">Income Only</option><option value="expense">Expenses Only</option>
-                             </select>
-                        </div>
-                        <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th><th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th></tr></thead><tbody id="transactionTableBody" class="bg-white divide-y divide-gray-200"></tbody></table></div>
-                    </section>
-                </div>
+                <section id="key-metrics" class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm"><h3 class="text-md font-semibold text-gray-500">Projected End Balance</h3><p id="endBalance" class="text-3xl font-bold text-gray-800 mt-2">$0.00</p></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm"><h3 class="text-md font-semibold text-gray-500">Total Income</h3><p id="totalIncome" class="3xl font-bold text-green-600 mt-2">$0.00</p></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm"><h3 class="text-md font-semibold text-gray-500">Total Expenses</h3><p id="totalExpenses" class="3xl font-bold text-red-600 mt-2">$0.00</p></div>
+                </section>
                 
-            </main>
-        </div>
-        <!-- END MAIN DASHBOARD CONTENT -->
+                <section id="visualizations" class="bg-white p-6 rounded-2xl shadow-sm space-y-12">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Cash Flow Projection</h2>
+                        <p class="text-center text-gray-500 mb-4 max-w-2xl mx-auto">This chart shows the projected running balance over time, helping you anticipate future highs and lows.</p>
+                        <div class="chart-container"><canvas id="cashFlowChart"></canvas></div>
+                    </div>
+                    <div>
+                         <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Net Monthly Flow</h2>
+                        <p class="text-center text-gray-500 mb-4 max-w-2xl mx-auto">This bar chart illustrates the net financial result for each month—the difference between total income and total expenses.</p>
+                        <div class="chart-container"><canvas id="monthlyNetChart"></canvas></div>
+                    </div>
+                </section>
+
+                <!-- PROJECTION CONTROLS MOVED TO DASHBOARD BOTTOM -->
+                <section id="projection-controls-dashboard" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">Projection Settings</h2>
+                        <!-- MANUAL SAVE BUTTON ADDED -->
+                        <button id="manual-save-btn-dashboard" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">Save Settings</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        <div>
+                            <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Projection Start Date</label>
+                            <input type="date" id="startDate_dashboard" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="projectionMonths" class="block text-sm font-medium text-gray-700 mb-1">Projection Length (Months)</label>
+                            <select id="projectionMonths_dashboard" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="3">3 Months</option>
+                                <option value="6">6 Months</option>
+                                <option value="12" selected>12 Months</option>
+                                <option value="24">24 Months</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="startingBalance" class="block text-sm font-medium text-gray-700 mb-1">Starting Balance ($)</label>
+                            <input type="number" id="startingBalance_dashboard" value="5000" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </section>
+                
+            </div>
+            <!-- END DASHBOARD VIEW -->
+
+            <!-- 3. DEBT MANAGEMENT VIEW -->
+            <div id="view-debt" class="view-container hidden space-y-8">
+                <section id="debt-plan-management" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">Debt Plan Management</h2>
+                        <button id="add-debt-plan-btn" class="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 font-semibold">Add New Debt Plan</button>
+                    </div>
+                    <p class="text-gray-500 mb-6">Define structured debt repayments here. Payments are calculated based on the payoff period and automatically removed from the forecast once completed.</p>
+                    <div id="debtPlansList" class="space-y-4"></div>
+                </section>
+                
+            </div>
+            
+            <!-- 4. RECURRING SCHEDULES VIEW -->
+            <div id="view-schedules" class="view-container hidden space-y-8">
+                <section id="schedules-management" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">Recurring Schedules Management</h2>
+                        <button id="add-schedule-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">Add New Recurring Schedule</button>
+                    </div>
+                    <p class="text-gray-500 mb-6">Manage all your **long-term, repeating** financial events here. Toggle items to run "what-if" scenarios.</p>
+                    <div id="schedulesList" class="space-y-4"></div>
+                </section>
+            </div>
+
+            <!-- 5. SPENDING PLAN VIEW (NEW) -->
+            <div id="view-plan" class="view-container hidden space-y-8">
+                <section id="plan-intro" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Weekly Spending Plan Creator</h2>
+                    <p class="text-gray-600 mb-4">This tool analyzes your projected net savings and allocates that money into weekly budgets for discretionary spending (Groceries, Gas, Misc.). Select a plan below to generate planned expenses in your calendar.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <h3 class="text-md font-semibold text-gray-500">Projected Savings Over Period</h3>
+                            <p id="savings-projection" class="text-2xl font-bold text-green-700 mt-1">$0.00</p>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <h3 class="text-md font-semibold text-gray-500">Available Weekly Spending</h3>
+                            <p id="weekly-spending-base" class="text-2xl font-bold text-blue-700 mt-1">$0.00</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="plan-creator" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Plan Options</h2>
+                    <div id="plan-buttons" class="space-y-4">
+                        <!-- Plans will be generated here -->
+                    </div>
+                </section>
+            </div>
+            <!-- END SPENDING PLAN VIEW -->
+
+            <!-- 6. TRANSACTION LOG VIEW -->
+            <div id="view-log" class="view-container hidden space-y-8">
+                 <section id="transaction-log" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Projected Transaction Log</h2>
+                    <p class="text-gray-500 mb-6">A detailed, day-by-day list of all projected transactions (recurring, one-time, and debt payments). Filter by type for a granular analysis.</p>
+                    <div class="mb-4">
+                         <select id="transactionFilter" class="p-2 border border-gray-300 rounded-lg">
+                             <option value="all">All Transactions</option><option value="income">Income Only</option><option value="expense">Expenses Only</option>
+                         </select>
+                    </div>
+                    <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th><th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th></tr></thead><tbody id="transactionTableBody" class="bg-white divide-y divide-gray-200"></tbody></table></div>
+                </section>
+            </div>
+            
+        </main>
     </div>
 
     <!-- NAVIGATION BAR (Fixed at Bottom) -->
@@ -200,6 +255,7 @@
                 <button data-view="dashboard" data-name="Dashboard" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Dashboard</button>
                 <button data-view="debt" data-name="Debt Plans" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Debt Plans</button>
                 <button data-view="schedules" data-name="Recurring Schedules" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Recurring</button>
+                <button data-view="plan" data-name="Spending Plan" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Plan</button>
                 <button data-view="log" data-name="Transaction Log" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Log</button>
             </div>
         </div>
@@ -306,7 +362,7 @@
     </div>
 
 <script type="module">
-import { addMonths, eachDayOfInterval, format, getDay, getDate, endOfMonth, startOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, subMonths, parseISO, subDays } from 'https://cdn.jsdelivr.net/npm/date-fns@2.29.3/esm/index.js';
+import { addMonths, eachDayOfInterval, format, getDay, getDate, endOfMonth, startOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, subMonths, parseISO, subDays, getISOWeek, startOfWeek as startOfISOWeek, endOfWeek as endOfISOWeek, isBefore, isSameDay } from 'https://cdn.jsdelivr.net/npm/date-fns@2.29.3/esm/index.js';
 
 // =========================================================================
 // DOM ACCESS HELPERS (For safe access during async startup)
@@ -314,10 +370,58 @@ import { addMonths, eachDayOfInterval, format, getDay, getDate, endOfMonth, star
 function getUserStatusEl() { return document.getElementById('user-status'); }
 function getPageTitleEl() { return document.getElementById('page-title'); }
 
+// Function to synchronously initialize all DOM elements (moved out of listener for scope fix)
+let startDateEl, projectionMonthsEl, startingBalanceEl, startDateDashboardEl, projectionMonthsDashboardEl, startingBalanceDashboardEl;
+let schedulesListEl, debtPlansListEl, transactionFilterEl, statusMessageEl, manualSaveBtn, manualSaveBtnDashboard, planButtonsEl;
+let scheduleModal, oneTimeModal, debtPlanModal, dayDetailsModal;
+let scheduleForm, oneTimeForm, debtPlanForm;
+let scheduleIdInput, frequencySelect, debtIdInput;
+let navButtons, viewContainers, calendarGridEl, calendarSizeButtons;
+
+function initDomElements() {
+    startDateEl = document.getElementById('startDate');
+    projectionMonthsEl = document.getElementById('projectionMonths');
+    startingBalanceEl = document.getElementById('startingBalance');
+    // Dashboard elements
+    startDateDashboardEl = document.getElementById('startDate_dashboard');
+    projectionMonthsDashboardEl = document.getElementById('projectionMonths_dashboard');
+    startingBalanceDashboardEl = document.getElementById('startingBalance_dashboard');
+    schedulesListEl = document.getElementById('schedulesList');
+    debtPlansListEl = document.getElementById('debtPlansList');
+    transactionFilterEl = document.getElementById('transactionFilter');
+    statusMessageEl = document.getElementById('status-message'); 
+    manualSaveBtn = document.getElementById('manual-save-btn'); 
+    manualSaveBtnDashboard = document.getElementById('manual-save-btn-dashboard');
+    planButtonsEl = document.getElementById('plan-buttons'); 
+
+    scheduleModal = document.getElementById('schedule-modal');
+    oneTimeModal = document.getElementById('onetime-modal');
+    debtPlanModal = document.getElementById('debt-plan-modal'); 
+    dayDetailsModal = document.getElementById('day-details-modal'); 
+
+    scheduleForm = document.getElementById('schedule-form');
+    oneTimeForm = document.getElementById('onetime-form');
+    debtPlanForm = document.getElementById('debt-plan-form'); 
+
+    scheduleIdInput = document.getElementById('schedule-id');
+    frequencySelect = document.getElementById('frequency');
+    debtIdInput = document.getElementById('debt-id'); 
+    
+    navButtons = document.querySelectorAll('.nav-btn');
+    viewContainers = document.querySelectorAll('.view-container');
+    calendarGridEl = document.getElementById('calendar-grid');
+    calendarSizeButtons = document.querySelectorAll('.calendar-size-btn');
+}
+// =========================================================================
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     
+    // FIX: Call synchronous initialization function immediately upon DOMContentLoaded
+    initDomElements();
+
     // =========================================================================
-    // 1. VARIABLE DECLARATION AND INITIALIZATION
+    // 1. CORE APPLICATION VARIABLES
     // =========================================================================
     let recurringSchedules = [];
     let oneTimeTransactions = [];
@@ -333,45 +437,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     ];
     
     const weeklyDayMap = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
-
-    // DOM Elements
-    const startDateEl = document.getElementById('startDate');
-    const projectionMonthsEl = document.getElementById('projectionMonths');
-    const startingBalanceEl = document.getElementById('startingBalance');
-    const schedulesListEl = document.getElementById('schedulesList');
-    const debtPlansListEl = document.getElementById('debtPlansList');
-    const transactionFilterEl = document.getElementById('transactionFilter');
-    const statusMessageEl = document.getElementById('status-message'); 
-    const manualSaveBtn = document.getElementById('manual-save-btn'); 
-
-    // Modals
-    const scheduleModal = document.getElementById('schedule-modal');
-    const oneTimeModal = document.getElementById('onetime-modal');
-    const debtPlanModal = document.getElementById('debt-plan-modal'); 
-    const dayDetailsModal = document.getElementById('day-details-modal'); 
-
-    // Forms
-    const scheduleForm = document.getElementById('schedule-form');
-    const oneTimeForm = document.getElementById('onetime-form');
-    const debtPlanForm = document.getElementById('debt-plan-form'); 
-
-    // Form Inputs
-    const scheduleIdInput = document.getElementById('schedule-id');
-    const frequencySelect = document.getElementById('frequency');
-    const debtIdInput = document.getElementById('debt-id'); 
-    
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const viewContainers = document.querySelectorAll('.view-container');
-    const calendarGridEl = document.getElementById('calendar-grid');
-    const calendarSizeButtons = document.querySelectorAll('.calendar-size-btn');
     
     let cashFlowChart, monthlyNetChart;
     
-    // FIX: Adjusted sizes for better mobile fit.
+    // Calendar Size Definitions
     const calendarSizes = {
         'small': '320px', // Adjusted to fit most vertical screens
         'medium': '450px', 
-        'large': '600px'  // Adjusted down from 700px
+        'large': '600px'  
     };
     let currentCalendarSize = localStorage.getItem('calendarSize') || 'large'; 
     // =========================================================================
@@ -387,7 +460,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function showDashboard() {
         // Initial setup calls
+        // Ensure initial values are set BEFORE loadData reads them
         startDateEl.value = format(new Date(), 'yyyy-MM-dd');
+        startingBalanceEl.value = localStorage.getItem('startingBalance') || '5000'; 
+        
         loadData();
         renderSchedules();
         renderDebtPlans(); 
@@ -473,13 +549,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
         
-        // Ensure charts are redrawn if switching to dashboard
+        // Ensure charts are redrawn if switching to dashboard or plans are generated
         if (viewId === 'dashboard') {
-             // Delay to ensure the container is fully visible before Chart.js renders
             setTimeout(() => {
                 updateCashFlowChart(generateProjections());
                 updateMonthlyNetChart(generateProjections());
             }, 10); 
+        } else if (viewId === 'plan') {
+            // Recalculate spending plans when entering the view
+            const projections = generateProjections();
+            const metrics = updateKeyMetrics(projections);
+            generateSpendingPlans(metrics);
         }
     }
     // --- END VIEW MANAGEMENT LOGIC ---
@@ -502,10 +582,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             oneTimeTransactions = savedOneTime ? JSON.parse(savedOneTime) : []; 
             debtPlans = savedDebtPlans ? JSON.parse(savedDebtPlans) : [];       
             
-            // Load settings
-            if (savedBalance) startingBalanceEl.value = savedBalance;
-            if (savedProjectionMonths) projectionMonthsEl.value = savedProjectionMonths;
-            if (savedStartDate) startDateEl.value = savedStartDate;
+            // Load settings - Map dashboard controls to main element IDs
+            if (savedBalance) {
+                startingBalanceEl.value = savedBalance;
+                startingBalanceDashboardEl.value = savedBalance;
+            } else {
+                 // Use HTML default if nothing saved
+                startingBalanceDashboardEl.value = startingBalanceEl.value; 
+            }
+            if (savedProjectionMonths) {
+                projectionMonthsEl.value = savedProjectionMonths;
+                projectionMonthsDashboardEl.value = savedProjectionMonths;
+            }
+            if (savedStartDate) {
+                 startDateEl.value = savedStartDate;
+                 startDateDashboardEl.value = savedStartDate;
+            }
             if (savedSize) setCalendarSize(savedSize);
 
             showStatus('Data loaded from device memory.', 'bg-green-100 text-green-700');
@@ -525,15 +617,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     // =========================================================================
     function saveData() {
         try {
+            // Sync settings between calendar and dashboard input fields before saving
+            const balance = startingBalanceEl.value || startingBalanceDashboardEl.value;
+            const months = projectionMonthsEl.value || projectionMonthsDashboardEl.value;
+            const date = startDateEl.value || startDateDashboardEl.value;
+
             // Save all data arrays
             localStorage.setItem('recurringSchedules', JSON.stringify(recurringSchedules));
             localStorage.setItem('oneTimeTransactions', JSON.stringify(oneTimeTransactions));
             localStorage.setItem('debtPlans', JSON.stringify(debtPlans)); 
             
             // Save all settings
-            localStorage.setItem('startingBalance', startingBalanceEl.value); 
-            localStorage.setItem('projectionMonths', projectionMonthsEl.value); 
-            localStorage.setItem('startDate', startDateEl.value); 
+            localStorage.setItem('startingBalance', balance); 
+            localStorage.setItem('projectionMonths', months); 
+            localStorage.setItem('startDate', date); 
             localStorage.setItem('calendarSize', currentCalendarSize); 
             
             showStatus('Settings and Data saved successfully to device memory!', 'bg-blue-100 text-blue-700');
@@ -628,16 +725,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         calendarSizeButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 setCalendarSize(e.target.dataset.size);
-                // Call update dashboard to ensure calendar redraws instantly
                 updateDashboard();
             });
         });
 
         // NOTE: All handlers call updateDashboard, which calls saveAndRender, which calls saveData.
-        [startDateEl, projectionMonthsEl, startingBalanceEl, transactionFilterEl].forEach(el => el.addEventListener('change', updateDashboard));
+        // Sync inputs and trigger dashboard update/save
+        [startDateEl, projectionMonthsEl, startingBalanceEl].forEach(el => el.addEventListener('change', (e) => {
+            // Sync calendar inputs to dashboard controls
+            startDateDashboardEl.value = startDateEl.value;
+            projectionMonthsDashboardEl.value = projectionMonthsEl.value;
+            startingBalanceDashboardEl.value = startingBalanceEl.value;
+            updateDashboard();
+        }));
         
-        // NEW FIX: Manual Save Button Listener
+        // Sync inputs from dashboard controls to calendar fields
+        [startDateDashboardEl, projectionMonthsDashboardEl, startingBalanceDashboardEl].forEach(el => el.addEventListener('change', (e) => {
+            startDateEl.value = startDateDashboardEl.value;
+            projectionMonthsEl.value = projectionMonthsDashboardEl.value;
+            startingBalanceEl.value = startingBalanceDashboardEl.value;
+            updateDashboard();
+        }));
+        
+        // Manual Save Button Listener (Calendar & Dashboard versions)
         manualSaveBtn.addEventListener('click', () => {
+            updateDashboard(); // Triggers full recalculate and saveData()
+        });
+        manualSaveBtnDashboard.addEventListener('click', () => {
             updateDashboard(); // Triggers full recalculate and saveData()
         });
         
@@ -747,6 +861,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         oneTimeModal.addEventListener('click', (e) => { if (e.target === oneTimeModal) closeModal(oneTimeModal); });
         debtPlanModal.addEventListener('click', (e) => { if (e.target === debtPlanModal) closeModal(debtPlanModal); }); 
         dayDetailsModal.addEventListener('click', (e) => { if (e.target === dayDetailsModal) closeModal(dayDetailsModal); }); 
+        
+        // Spending Plan: Apply Plan
+        document.getElementById('plan-buttons').addEventListener('click', (e) => {
+            const button = e.target.closest('.apply-plan-btn');
+            if (button) {
+                const planData = JSON.parse(button.dataset.plan);
+                applySpendingPlan(planData);
+            }
+        });
 
         // Submit Recurring Schedule
         scheduleForm.addEventListener('submit', (e) => {
@@ -870,11 +993,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             document.getElementById('start_date').value = schedule.startDate;
             frequencySelect.value = schedule.frequency;
-            if (schedule.frequency === 'Monthly') {
-                document.getElementById('day_value_month').value = schedule.dayValue;
-            } else {
-                document.getElementById('day_value_week').value = schedule.dayValue;
-            }
+            if (document.getElementById('day_value_month')) document.getElementById('day_value_month').value = schedule.dayValue;
+            if (document.getElementById('day_value_week')) document.getElementById('day_value_week').value = schedule.dayValue;
         } else {
             document.getElementById('modal-title').textContent = 'Add New Recurring Schedule';
             scheduleIdInput.value = '';
@@ -1066,6 +1186,136 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // =========================================================================
+    // SPENDING PLAN LOGIC (NEW)
+    // =========================================================================
+    const SPENDING_CATEGORIES = [
+        { name: 'Groceries', percentage: 40 },
+        { name: 'Gas/Fuel', percentage: 30 },
+        { name: 'Misc. Spending', percentage: 30 },
+    ];
+    
+    // Helper: Calculate total weeks in the projection period
+    function calculateTotalWeeks(startDate, projectionMonths) {
+        const start = parseISO(startDate);
+        const end = addMonths(start, projectionMonths);
+        let weeks = 0;
+        let currentWeekStart = startOfISOWeek(start);
+
+        while (isBefore(currentWeekStart, end)) {
+            weeks++;
+            currentWeekStart = addDays(currentWeekStart, 7);
+        }
+        return weeks;
+    }
+    
+    function generateSpendingPlans(metrics) {
+        const totalSavings = metrics.endBalance - metrics.startingBalance;
+        // Use synchronized dashboard values for plan calculation
+        const projectionMonths = parseInt(projectionMonthsEl.value);
+        const startDate = startDateEl.value;
+        
+        const totalWeeks = calculateTotalWeeks(startDate, projectionMonths);
+
+        document.getElementById('savings-projection').textContent = `$${totalSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        
+        if (totalSavings <= 0) {
+            document.getElementById('weekly-spending-base').textContent = '$0.00';
+            planButtonsEl.innerHTML = `<p class="text-red-500 font-semibold p-4 bg-red-100 rounded-lg">Warning: Your projected savings are zero or negative. Spending plans cannot be created safely.</p>`;
+            return;
+        }
+
+        const baseWeeklyBudget = totalSavings / totalWeeks;
+        document.getElementById('weekly-spending-base').textContent = `$${baseWeeklyBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        const planDefinitions = [
+            { name: 'Conservative Plan (70%)', margin: 0.70, buttonClass: 'bg-green-600 hover:bg-green-700' }, 
+            { name: 'Balanced Plan (85%)', margin: 0.85, buttonClass: 'bg-blue-600 hover:bg-blue-700' },    
+            { name: 'Aggressive Plan (100%)', margin: 1.00, buttonClass: 'bg-red-600 hover:bg-red-700' }     
+        ];
+
+        planButtonsEl.innerHTML = '';
+
+        planDefinitions.forEach(plan => {
+            const weeklyBudget = baseWeeklyBudget * plan.margin;
+            
+            const categoryBreakdown = SPENDING_CATEGORIES.map(cat => {
+                const amount = (weeklyBudget * (cat.percentage / 100));
+                return `<li class="flex justify-between text-sm text-gray-700">
+                            <span>${cat.name}:</span>
+                            <span class="font-medium text-red-600">$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </li>`;
+            }).join('');
+
+            const card = document.createElement('div');
+            card.className = 'bg-gray-50 p-4 rounded-xl border border-gray-200';
+            card.innerHTML = `
+                <h3 class="text-lg font-bold mb-3">${plan.name}</h3>
+                <p class="text-lg font-semibold text-gray-900 mb-2">Weekly Total Expense: $${weeklyBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <ul class="list-disc list-inside space-y-1 ml-4 mb-4">
+                    ${categoryBreakdown}
+                </ul>
+                <button data-plan='${JSON.stringify({ budget: weeklyBudget, name: plan.name })}' 
+                        class="apply-plan-btn w-full py-2 text-white font-semibold rounded-lg ${plan.buttonClass}">
+                    Select Plan & Generate Expenses
+                </button>
+            `;
+            planButtonsEl.appendChild(card);
+        });
+
+        document.querySelectorAll('.apply-plan-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const planData = JSON.parse(e.currentTarget.dataset.plan);
+                applySpendingPlan(planData);
+            });
+        });
+    }
+
+    function applySpendingPlan(planData) {
+        if (!confirm(`Are you sure you want to apply the ${planData.name} and clear any existing planned weekly budgets?`)) {
+            return;
+        }
+
+        // 1. Clear any existing planned entries (filters out one-time transactions containing '(Planned)')
+        oneTimeTransactions = oneTimeTransactions.filter(t => !t.name.includes('(Planned)'));
+        
+        const totalBudget = planData.budget;
+        const startDate = startDateEl.value;
+        const projectionMonths = parseInt(projectionMonthsEl.value);
+        
+        // Calculate weeks to project
+        const totalWeeks = calculateTotalWeeks(startDate, projectionMonths);
+        
+        let currentWeekStart = startOfISOWeek(parseISO(startDate));
+        const limitDate = addMonths(parseISO(startDate), projectionMonths);
+
+        // 2. Generate new planned one-time expenses for each week
+        for (let i = 0; i < totalWeeks; i++) {
+            const weekDate = addDays(currentWeekStart, 4); // Use Thursday as default date for weekly plans
+            
+            if (isBefore(weekDate, limitDate) || isSameDay(weekDate, limitDate)) {
+
+                SPENDING_CATEGORIES.forEach(cat => {
+                    const amount = -(totalBudget * (cat.percentage / 100)); // Expenses are negative
+                    
+                    oneTimeTransactions.push({
+                        id: `PLAN-${Date.now()}-${i}-${cat.name}`,
+                        name: `${cat.name} (Planned)`,
+                        amount: amount,
+                        date: format(weekDate, 'yyyy-MM-dd'),
+                        type: 'One-Time'
+                    });
+                });
+            }
+            currentWeekStart = addDays(currentWeekStart, 7);
+        }
+
+        showStatus(`Generated ${totalWeeks * SPENDING_CATEGORIES.length} planned weekly expenses for the forecast!`, 'bg-blue-100 text-blue-700');
+        
+        // 3. Save and redraw everything
+        saveAndRender();
+    }
+
 
     function generateProjections() {
         const startDate = new Date(startDateEl.value + 'T00:00:00');
@@ -1123,7 +1373,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateDashboard() {
         const projections = generateProjections();
         calculateDailyBalances(projections); // NEW CALL
-        updateKeyMetrics(projections);
+        const metrics = updateKeyMetrics(projections); // Store metrics for plan view
+        
+        // Sync the dashboard settings fields with the main calendar settings fields
+        if (startDateDashboardEl) startDateDashboardEl.value = startDateEl.value;
+        if (projectionMonthsDashboardEl) projectionMonthsDashboardEl.value = projectionMonthsEl.value;
+        if (startingBalanceDashboardEl) startingBalanceDashboardEl.value = startingBalanceEl.value;
+        
+        // Update plan view data
+        if (activeView === 'plan') {
+             generateSpendingPlans(metrics);
+        }
+
         // Only call chart updates if the dashboard view is active or immediately after controls change
         if (activeView === 'dashboard') {
             updateCashFlowChart(generateProjections());
@@ -1190,7 +1451,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     colorClass = 'bg-pink-100 text-pink-800';
                     borderClass = 'border-l-2 border-pink-500';
                 } else if (t.type === 'One-Time') {
-                    colorClass = (t.amount > 0 ? 'bg-purple-100 text-purple-800' : 'bg-red-100 text-red-800');
+                    // Check if it's a planned expense (purple)
+                    colorClass = t.name.includes('(Planned)') ? 'bg-purple-50 text-purple-800' : (t.amount > 0 ? 'bg-purple-100 text-purple-800' : 'bg-red-100 text-red-800');
                     borderClass = 'border-l-2 border-purple-500';
                 } else if (t.amount > 0) {
                     colorClass = 'bg-green-100 text-green-800';
@@ -1210,7 +1472,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function updateKeyMetrics(projections) {
-        const startingBalance = parseFloat(startingBalanceEl.value);
+        const startingBalance = parseFloat(startingBalanceEl.value || startingBalanceDashboardEl.value);
         let totalIncome = 0;
         let totalExpenses = 0;
         projections.forEach(p => {
@@ -1223,7 +1485,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('totalIncome').textContent = `$${totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         document.getElementById('totalExpenses').textContent = `$${Math.abs(totalExpenses).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         
-        return { totalIncome, totalExpenses, endBalance };
+        return { totalIncome, totalExpenses, endBalance, startingBalance };
     }
 
     function renderTransactionTable(projections) {
@@ -1251,7 +1513,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 typeLabel = 'Debt';
                 amountClass = 'text-pink-600';
             } else if (p.type === 'One-Time') {
-                typeLabel = 'One-Time';
+                typeLabel = p.name.includes('(Planned)') ? 'PLAN' : 'One-Time';
                 amountClass = p.amount > 0 ? 'text-green-600' : 'text-red-600';
             } else {
                 typeLabel = 'Recurring';
