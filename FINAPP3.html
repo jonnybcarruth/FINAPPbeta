@@ -44,6 +44,33 @@
             padding-top: 10px;
             padding-bottom: 30px; /* Lift buttons higher */
         }
+        /* Custom styling for the slider track */
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 8px;
+            background: linear-gradient(to right, #4ade80 0%, #4ade80 var(--slider-progress, 0%), #d1d5db var(--slider-progress, 0%), #d1d5db 100%);
+            border-radius: 4px;
+        }
+        input[type=range]::-moz-range-track {
+            height: 8px;
+            background: linear-gradient(to right, #4ade80 0%, #4ade80 var(--slider-progress, 0%), #d1d5db var(--slider-progress, 0%), #d1d5db 100%);
+            border-radius: 4px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #10b981; /* Green color for thumb */
+            margin-top: -6px; /* Center thumb vertically */
+            box-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -86,12 +113,19 @@
                     
                     <!-- NEW: Calendar Size Controls -->
                     <div class="flex flex-col items-center mt-6 pt-4 border-t border-gray-200">
-                        <p class="text-sm font-semibold text-gray-700 mb-2">Calendar Size:</p>
-                        <div class="flex justify-center space-x-3">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Calendar Controls:</p>
+                        <div class="flex justify-center space-x-3 mb-4">
                             <button data-size="small" class="calendar-size-btn px-4 py-1 text-sm rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300">Small</button>
                             <button data-size="medium" class="calendar-size-btn px-4 py-1 text-sm rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300">Medium</button>
                             <button data-size="large" class="calendar-size-btn px-4 py-1 text-sm rounded-full bg-blue-600 text-white hover:bg-blue-700">Large</button>
                         </div>
+                        
+                        <!-- NEW: EOD Balance Toggle -->
+                        <div class="flex items-center space-x-2 p-2 bg-gray-100 rounded-lg">
+                            <input type="checkbox" id="toggleEODBalance" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
+                            <label for="toggleEODBalance" class="text-sm font-medium text-gray-700">Show End of Day Balance</label>
+                        </div>
+                        
                     </div>
                 </section>
 
@@ -205,8 +239,8 @@
             <!-- 5. SPENDING PLAN VIEW (NEW) -->
             <div id="view-plan" class="view-container hidden space-y-8">
                 <section id="plan-intro" class="bg-white p-6 rounded-2xl shadow-sm">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Weekly Spending Plan Creator</h2>
-                    <p class="text-gray-600 mb-4">This tool analyzes your projected net savings and allocates that money into weekly budgets for discretionary spending (Groceries, Gas, Misc.). Select a plan below to generate planned expenses in your calendar.</p>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Projected Surplus Analysis</h2>
+                    <p class="text-gray-600 mb-4">Analyze your projected cash surplus over the selected period. Use the controls below to set your savings target and customize the weekly budget categories.</p>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
                         <div class="p-4 bg-gray-50 rounded-lg">
@@ -219,15 +253,58 @@
                         </div>
                     </div>
                 </section>
+                
+                <!-- Savings Target & Category Controls (NEW) -->
+                <section id="plan-controls" class="bg-white p-6 rounded-2xl shadow-sm space-y-6">
+                    <h2 class="text-xl font-bold text-gray-800">Savings Target & Customization</h2>
 
+                    <!-- Savings Slider -->
+                    <div class="pt-2">
+                        <label for="savings-slider" class="block text-sm font-medium text-gray-700 mb-2">
+                            Amount to Commit to Savings: <span id="saved-amount-display" class="font-bold text-xl text-green-700">$0</span>
+                        </label>
+                        <!-- Custom CSS handles the dynamic progress bar -->
+                        <input type="range" id="savings-slider" min="0" max="0" value="0" step="10" 
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg"
+                               style="--slider-progress: 0%;">
+                        <p class="text-xs text-gray-500 mt-1">Slide to set your desired savings amount from your projected surplus.</p>
+                    </div>
+
+                    <!-- Remaining Budget Display -->
+                    <div class="p-4 bg-blue-100 rounded-xl text-center border border-blue-200">
+                        <h3 class="text-md font-semibold text-blue-800">Remaining Budget for Weekly Spending:</h3>
+                        <p id="remaining-budget-base" class="text-3xl font-bold text-blue-700 mt-1">$0.00</p>
+                    </div>
+
+                    <!-- Category Toggles -->
+                    <div class="pt-4 border-t border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-700 mb-3">Included Spending Categories:</h3>
+                        <div id="category-toggles" class="grid grid-cols-2 gap-4">
+                            <!-- Toggles generated by JS -->
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Plan Options -->
                 <section id="plan-creator" class="bg-white p-6 rounded-2xl shadow-sm">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Plan Options</h2>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Weekly Budget Allocation Plans</h2>
+                    <p class="text-gray-500 mb-6">Select a plan to spend a percentage of your **Remaining Budget** on the selected categories, and generate the weekly transactions.</p>
                     <div id="plan-buttons" class="space-y-4">
                         <!-- Plans will be generated here -->
                     </div>
                 </section>
+                
+                <!-- Delete Plan Section (NEW) -->
+                <section class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h2 class="text-xl font-bold text-red-700 mb-4">Manage Current Plan</h2>
+                    <p class="text-sm text-gray-600 mb-4">Use this button to quickly remove all existing planned expenses (transactions tagged "(Planned)") from your forecast.</p>
+                    <button id="delete-plan-btn" class="w-full py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700">
+                        Delete Current Spending Plan & Transactions
+                    </button>
+                </section>
             </div>
             <!-- END SPENDING PLAN VIEW -->
+
 
             <!-- 6. TRANSACTION LOG VIEW -->
             <div id="view-log" class="view-container hidden space-y-8">
@@ -378,6 +455,10 @@ let scheduleForm, oneTimeForm, debtPlanForm;
 let scheduleIdInput, frequencySelect, debtIdInput;
 let navButtons, viewContainers, calendarGridEl, calendarSizeButtons;
 
+// NEW ELEMENTS FOR PLAN VIEW
+let savingsSliderEl, savedAmountDisplayEl, remainingBudgetBaseEl, categoryTogglesEl, deletePlanBtnEl;
+let toggleEODBalanceEl; // NEW ELEMENT
+
 function initDomElements() {
     startDateEl = document.getElementById('startDate');
     projectionMonthsEl = document.getElementById('projectionMonths');
@@ -411,6 +492,15 @@ function initDomElements() {
     viewContainers = document.querySelectorAll('.view-container');
     calendarGridEl = document.getElementById('calendar-grid');
     calendarSizeButtons = document.querySelectorAll('.calendar-size-btn');
+    
+    // NEW ELEMENTS FOR PLAN VIEW
+    savingsSliderEl = document.getElementById('savings-slider');
+    savedAmountDisplayEl = document.getElementById('saved-amount-display');
+    remainingBudgetBaseEl = document.getElementById('remaining-budget-base');
+    categoryTogglesEl = document.getElementById('category-toggles');
+    deletePlanBtnEl = document.getElementById('delete-plan-btn'); 
+    
+    toggleEODBalanceEl = document.getElementById('toggleEODBalance');
 }
 // =========================================================================
 
@@ -430,6 +520,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     let activeView = 'calendar'; 
     let dailyTransactionMap = {}; 
     let dailyBalanceMap = {}; 
+    
+    // Global variable for the selected savings amount (synced from local storage)
+    let savedAmount = 0; 
+    let showEODBalance = localStorage.getItem('showEODBalance') === 'true'; // NEW: EOD Balance toggle state
 
     const defaultSchedules = [
         { id: 'RENT-01', name: 'Monthly Rent Payment', amount: -1010.00, startDate: '2024-01-03', frequency: 'Monthly', dayValue: 3, enabled: true },
@@ -440,17 +534,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     let cashFlowChart, monthlyNetChart;
     
-    // Calendar Size Definitions
+    // Calendar Size Definitions (MOVED TO GLOBAL SCOPE FOR CLEANUP)
     const calendarSizes = {
         'small': '320px', // Adjusted to fit most vertical screens
         'medium': '450px', 
         'large': '600px'  
     };
     let currentCalendarSize = localStorage.getItem('calendarSize') || 'large'; 
+    
+    // NEW: Updated SPENDING_CATEGORIES structure
+    const SPENDING_CATEGORIES = [
+        { name: 'Groceries', percentage: 40, fixedWeeklyAmount: 0, defaultEnabled: true },
+        { name: 'Gas/Fuel', percentage: 30, fixedWeeklyAmount: 0, defaultEnabled: true },
+        { name: 'Misc. Spending', percentage: 30, fixedWeeklyAmount: 0, defaultEnabled: true },
+        // Transportation category added as requested
+        { name: 'Transportation', percentage: 0, fixedWeeklyAmount: 50.00, defaultEnabled: false } 
+    ];
+    // This array holds the runtime status (enabled/disabled) of the categories
+    let activeSpendingCategories = []; 
+    
     // =========================================================================
-    
-    
-    // --- APP STARTUP ---
+    // 2. APP STARTUP
+    // =========================================================================
     if (getUserStatusEl()) {
         getUserStatusEl().textContent = `Status: Local Mode (Data saved to this device only)`;
     }
@@ -559,7 +664,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Recalculate spending plans when entering the view
             const projections = generateProjections();
             const metrics = updateKeyMetrics(projections);
-            generateSpendingPlans(metrics);
+            generateSpendingPlans(metrics); // This is the main plan calculation function
         }
     }
     // --- END VIEW MANAGEMENT LOGIC ---
@@ -577,7 +682,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             const savedProjectionMonths = localStorage.getItem('projectionMonths');
             const savedStartDate = localStorage.getItem('startDate');
             const savedSize = localStorage.getItem('calendarSize');
-
+            
+            // NEW: Load EOD Balance preference
+            const savedEOD = localStorage.getItem('showEODBalance');
+            showEODBalance = savedEOD ? savedEOD === 'true' : false; // Default to false
+            if (toggleEODBalanceEl) toggleEODBalanceEl.checked = showEODBalance;
+            
+            // NEW: Load saved amount and categories
+            const savedAmountLS = localStorage.getItem('savedAmount');
+            if (savedAmountLS) { savedAmount = parseFloat(savedAmountLS); }
+            
+            const savedCategories = localStorage.getItem('activeSpendingCategories');
+            if (savedCategories) { 
+                activeSpendingCategories = JSON.parse(savedCategories); 
+            } else {
+                 // Initialize categories with defaults if nothing saved
+                activeSpendingCategories = SPENDING_CATEGORIES.map(c => ({...c, enabled: c.defaultEnabled}));
+            }
+            
             recurringSchedules = savedSchedules ? JSON.parse(savedSchedules) : defaultSchedules;
             oneTimeTransactions = savedOneTime ? JSON.parse(savedOneTime) : []; 
             debtPlans = savedDebtPlans ? JSON.parse(savedDebtPlans) : [];       
@@ -585,18 +707,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Load settings - Map dashboard controls to main element IDs
             if (savedBalance) {
                 startingBalanceEl.value = savedBalance;
-                startingBalanceDashboardEl.value = savedBalance;
+                if (startingBalanceDashboardEl) startingBalanceDashboardEl.value = savedBalance;
             } else {
                  // Use HTML default if nothing saved
-                startingBalanceDashboardEl.value = startingBalanceEl.value; 
+                if (startingBalanceDashboardEl) startingBalanceDashboardEl.value = startingBalanceEl.value; 
             }
             if (savedProjectionMonths) {
                 projectionMonthsEl.value = savedProjectionMonths;
-                projectionMonthsDashboardEl.value = savedProjectionMonths;
+                if (projectionMonthsDashboardEl) projectionMonthsDashboardEl.value = savedProjectionMonths;
             }
             if (savedStartDate) {
                  startDateEl.value = savedStartDate;
-                 startDateDashboardEl.value = savedStartDate;
+                 if (startDateDashboardEl) startDateDashboardEl.value = savedStartDate;
             }
             if (savedSize) setCalendarSize(savedSize);
 
@@ -608,6 +730,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             recurringSchedules = defaultSchedules;
             oneTimeTransactions = [];
             debtPlans = [];
+            activeSpendingCategories = SPENDING_CATEGORIES.map(c => ({...c, enabled: c.defaultEnabled}));
             showStatus('ERROR: Failed to load data from device. Using defaults.', 'bg-red-100 text-red-700');
         }
     }
@@ -618,9 +741,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     function saveData() {
         try {
             // Sync settings between calendar and dashboard input fields before saving
-            const balance = startingBalanceEl.value || startingBalanceDashboardEl.value;
-            const months = projectionMonthsEl.value || projectionMonthsDashboardEl.value;
-            const date = startDateEl.value || startDateDashboardEl.value;
+            const balance = startingBalanceEl.value;
+            const months = projectionMonthsEl.value;
+            const date = startDateEl.value;
 
             // Save all data arrays
             localStorage.setItem('recurringSchedules', JSON.stringify(recurringSchedules));
@@ -632,6 +755,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.setItem('projectionMonths', months); 
             localStorage.setItem('startDate', date); 
             localStorage.setItem('calendarSize', currentCalendarSize); 
+            // NEW: Save EOD Balance preference
+            localStorage.setItem('showEODBalance', showEODBalance);
+            // NEW: Save saved amount and categories status
+            localStorage.setItem('savedAmount', savedAmount.toFixed(2));
+            localStorage.setItem('activeSpendingCategories', JSON.stringify(activeSpendingCategories));
             
             showStatus('Settings and Data saved successfully to device memory!', 'bg-blue-100 text-blue-700');
         } catch (e) {
@@ -733,17 +861,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Sync inputs and trigger dashboard update/save
         [startDateEl, projectionMonthsEl, startingBalanceEl].forEach(el => el.addEventListener('change', (e) => {
             // Sync calendar inputs to dashboard controls
-            startDateDashboardEl.value = startDateEl.value;
-            projectionMonthsDashboardEl.value = projectionMonthsEl.value;
-            startingBalanceDashboardEl.value = startingBalanceEl.value;
+            if (startDateDashboardEl) startDateDashboardEl.value = startDateEl.value;
+            if (projectionMonthsDashboardEl) projectionMonthsDashboardEl.value = projectionMonthsEl.value;
+            if (startingBalanceDashboardEl) startingBalanceDashboardEl.value = startingBalanceEl.value;
             updateDashboard();
         }));
         
         // Sync inputs from dashboard controls to calendar fields
         [startDateDashboardEl, projectionMonthsDashboardEl, startingBalanceDashboardEl].forEach(el => el.addEventListener('change', (e) => {
-            startDateEl.value = startDateDashboardEl.value;
-            projectionMonthsEl.value = projectionMonthsDashboardEl.value;
-            startingBalanceEl.value = startingBalanceDashboardEl.value;
+            if (startDateEl) startDateEl.value = startDateDashboardEl.value;
+            if (projectionMonthsEl) projectionMonthsEl.value = projectionMonthsDashboardEl.value;
+            if (startingBalanceEl) startingBalanceEl.value = startingBalanceDashboardEl.value;
             updateDashboard();
         }));
         
@@ -751,7 +879,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         manualSaveBtn.addEventListener('click', () => {
             updateDashboard(); // Triggers full recalculate and saveData()
         });
-        manualSaveBtnDashboard.addEventListener('click', () => {
+        document.getElementById('manual-save-btn-dashboard').addEventListener('click', () => {
             updateDashboard(); // Triggers full recalculate and saveData()
         });
         
@@ -863,7 +991,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         dayDetailsModal.addEventListener('click', (e) => { if (e.target === dayDetailsModal) closeModal(dayDetailsModal); }); 
         
         // Spending Plan: Apply Plan
-        document.getElementById('plan-buttons').addEventListener('click', (e) => {
+        planButtonsEl.addEventListener('click', (e) => {
             const button = e.target.closest('.apply-plan-btn');
             if (button) {
                 const planData = JSON.parse(button.dataset.plan);
@@ -916,7 +1044,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
 
             if (id) {
-                // Editing existing
+                // Editing existing transaction
                 const index = oneTimeTransactions.findIndex(t => t.id === id);
                 if (index !== -1) {
                     oneTimeTransactions[index] = newTransaction;
@@ -975,6 +1103,54 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         });
+        
+        // --- NEW PLAN LISTENERS ---
+        
+        // Savings Slider Listener
+        savingsSliderEl.addEventListener('input', (e) => {
+            savedAmount = parseFloat(e.target.value);
+            // Update the slider track progress for visual feedback
+            const max = parseFloat(savingsSliderEl.max);
+            const percentage = (savedAmount / max) * 100;
+            savingsSliderEl.style.setProperty('--slider-progress', `${percentage}%`);
+            savedAmountDisplayEl.textContent = `$${savedAmount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            updateDashboard(); // Recalculate everything based on new saved amount
+        });
+        
+        // Delete Plan Listener
+        deletePlanBtnEl.addEventListener('click', () => {
+            if (confirm('Are you sure you want to DELETE the current spending plan (all transactions tagged "(Planned)")?')) {
+                // Filter out all one-time transactions that were generated by the plan
+                oneTimeTransactions = oneTimeTransactions.filter(t => !t.name.includes('(Planned)'));
+                showStatus('All planned spending transactions deleted.', 'bg-red-100 text-red-700');
+                saveAndRender();
+            }
+        });
+        
+        // Category Toggle Listener
+        categoryTogglesEl.addEventListener('click', (e) => {
+            const toggle = e.target.closest('input[type="checkbox"]');
+            if (toggle) {
+                const categoryName = toggle.dataset.category;
+                const isChecked = toggle.checked;
+
+                const categoryIndex = activeSpendingCategories.findIndex(c => c.name === categoryName);
+                if (categoryIndex !== -1) {
+                    activeSpendingCategories[categoryIndex].enabled = isChecked;
+                    updateDashboard(); // Recalculate plan and metrics
+                }
+            }
+        });
+        
+        // EOD Balance Toggle Listener (NEW)
+        if (toggleEODBalanceEl) {
+            toggleEODBalanceEl.addEventListener('change', (e) => {
+                showEODBalance = e.target.checked;
+                updateDashboard(); // Redraw calendar
+            });
+        }
+        
+        // --- END NEW PLAN LISTENERS ---
     }
     
     // Updates the Recurring Schedule Modal (for editing)
@@ -1137,7 +1313,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Only add controls for One-Time events
             let controlsHTML = '';
-            if (t.type === 'One-Time') {
+            // Only show controls for true One-Time events, not the auto-generated planned ones
+            if (t.type === 'One-Time' && !t.name.includes('(Planned)')) { 
                  controlsHTML = `
                     <div class="flex space-x-2 items-center">
                         <button type="button" class="edit-onetime-btn text-gray-500 hover:text-purple-600 p-1 rounded-full hover:bg-gray-100" data-id="${t.id}" title="Edit Transaction">
@@ -1184,136 +1361,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Always record the balance after the transaction
             dailyBalanceMap[dateKey] = runningBalance;
         });
-    }
-
-    // =========================================================================
-    // SPENDING PLAN LOGIC (NEW)
-    // =========================================================================
-    const SPENDING_CATEGORIES = [
-        { name: 'Groceries', percentage: 40 },
-        { name: 'Gas/Fuel', percentage: 30 },
-        { name: 'Misc. Spending', percentage: 30 },
-    ];
-    
-    // Helper: Calculate total weeks in the projection period
-    function calculateTotalWeeks(startDate, projectionMonths) {
-        const start = parseISO(startDate);
-        const end = addMonths(start, projectionMonths);
-        let weeks = 0;
-        let currentWeekStart = startOfISOWeek(start);
-
-        while (isBefore(currentWeekStart, end)) {
-            weeks++;
-            currentWeekStart = addDays(currentWeekStart, 7);
-        }
-        return weeks;
-    }
-    
-    function generateSpendingPlans(metrics) {
-        const totalSavings = metrics.endBalance - metrics.startingBalance;
-        // Use synchronized dashboard values for plan calculation
-        const projectionMonths = parseInt(projectionMonthsEl.value);
-        const startDate = startDateEl.value;
-        
-        const totalWeeks = calculateTotalWeeks(startDate, projectionMonths);
-
-        document.getElementById('savings-projection').textContent = `$${totalSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        
-        if (totalSavings <= 0) {
-            document.getElementById('weekly-spending-base').textContent = '$0.00';
-            planButtonsEl.innerHTML = `<p class="text-red-500 font-semibold p-4 bg-red-100 rounded-lg">Warning: Your projected savings are zero or negative. Spending plans cannot be created safely.</p>`;
-            return;
-        }
-
-        const baseWeeklyBudget = totalSavings / totalWeeks;
-        document.getElementById('weekly-spending-base').textContent = `$${baseWeeklyBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-        const planDefinitions = [
-            { name: 'Conservative Plan (70%)', margin: 0.70, buttonClass: 'bg-green-600 hover:bg-green-700' }, 
-            { name: 'Balanced Plan (85%)', margin: 0.85, buttonClass: 'bg-blue-600 hover:bg-blue-700' },    
-            { name: 'Aggressive Plan (100%)', margin: 1.00, buttonClass: 'bg-red-600 hover:bg-red-700' }     
-        ];
-
-        planButtonsEl.innerHTML = '';
-
-        planDefinitions.forEach(plan => {
-            const weeklyBudget = baseWeeklyBudget * plan.margin;
-            
-            const categoryBreakdown = SPENDING_CATEGORIES.map(cat => {
-                const amount = (weeklyBudget * (cat.percentage / 100));
-                return `<li class="flex justify-between text-sm text-gray-700">
-                            <span>${cat.name}:</span>
-                            <span class="font-medium text-red-600">$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </li>`;
-            }).join('');
-
-            const card = document.createElement('div');
-            card.className = 'bg-gray-50 p-4 rounded-xl border border-gray-200';
-            card.innerHTML = `
-                <h3 class="text-lg font-bold mb-3">${plan.name}</h3>
-                <p class="text-lg font-semibold text-gray-900 mb-2">Weekly Total Expense: $${weeklyBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                <ul class="list-disc list-inside space-y-1 ml-4 mb-4">
-                    ${categoryBreakdown}
-                </ul>
-                <button data-plan='${JSON.stringify({ budget: weeklyBudget, name: plan.name })}' 
-                        class="apply-plan-btn w-full py-2 text-white font-semibold rounded-lg ${plan.buttonClass}">
-                    Select Plan & Generate Expenses
-                </button>
-            `;
-            planButtonsEl.appendChild(card);
-        });
-
-        document.querySelectorAll('.apply-plan-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const planData = JSON.parse(e.currentTarget.dataset.plan);
-                applySpendingPlan(planData);
-            });
-        });
-    }
-
-    function applySpendingPlan(planData) {
-        if (!confirm(`Are you sure you want to apply the ${planData.name} and clear any existing planned weekly budgets?`)) {
-            return;
-        }
-
-        // 1. Clear any existing planned entries (filters out one-time transactions containing '(Planned)')
-        oneTimeTransactions = oneTimeTransactions.filter(t => !t.name.includes('(Planned)'));
-        
-        const totalBudget = planData.budget;
-        const startDate = startDateEl.value;
-        const projectionMonths = parseInt(projectionMonthsEl.value);
-        
-        // Calculate weeks to project
-        const totalWeeks = calculateTotalWeeks(startDate, projectionMonths);
-        
-        let currentWeekStart = startOfISOWeek(parseISO(startDate));
-        const limitDate = addMonths(parseISO(startDate), projectionMonths);
-
-        // 2. Generate new planned one-time expenses for each week
-        for (let i = 0; i < totalWeeks; i++) {
-            const weekDate = addDays(currentWeekStart, 4); // Use Thursday as default date for weekly plans
-            
-            if (isBefore(weekDate, limitDate) || isSameDay(weekDate, limitDate)) {
-
-                SPENDING_CATEGORIES.forEach(cat => {
-                    const amount = -(totalBudget * (cat.percentage / 100)); // Expenses are negative
-                    
-                    oneTimeTransactions.push({
-                        id: `PLAN-${Date.now()}-${i}-${cat.name}`,
-                        name: `${cat.name} (Planned)`,
-                        amount: amount,
-                        date: format(weekDate, 'yyyy-MM-dd'),
-                        type: 'One-Time'
-                    });
-                });
-            }
-            currentWeekStart = addDays(currentWeekStart, 7);
-        }
-
-        showStatus(`Generated ${totalWeeks * SPENDING_CATEGORIES.length} planned weekly expenses for the forecast!`, 'bg-blue-100 text-blue-700');
-        
-        // 3. Save and redraw everything
-        saveAndRender();
     }
 
 
@@ -1381,7 +1428,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (startingBalanceDashboardEl) startingBalanceDashboardEl.value = startingBalanceEl.value;
         
         // Update plan view data
-        if (activeView === 'plan') {
+        if (activeView === 'plan' || document.getElementById('view-plan').classList.contains('hidden') === false) {
              generateSpendingPlans(metrics);
         }
 
@@ -1426,9 +1473,34 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (isToday(day)) { dayEl.classList.add('border-blue-500', 'border-2'); }
             
             const dayNumber = document.createElement('div');
-            dayNumber.className = "text-sm font-semibold";
+            // Modified class to allow for internal flex justification for date + balance
+            dayNumber.className = "text-sm font-semibold flex justify-between items-center"; 
+            
+            // Set initial text to day number
             dayNumber.textContent = format(day, 'd');
-            dayEl.appendChild(dayNumber);
+            
+            // --- NEW: Add EOD Balance Display ---
+            if (showEODBalance && inCurrentMonth) {
+                const eodBalance = getEndOfDayBalance(dateKey);
+                const balanceDisplay = document.createElement('span');
+                
+                // Determine color for the balance based on overall EOD value
+                let balanceColor = 'text-gray-500';
+                if (eodBalance >= 1000) balanceColor = 'text-green-600';
+                else if (eodBalance < 0) balanceColor = 'text-red-600';
+
+                // Display the End of Day balance concisely (rounded to the nearest k)
+                const roundedEOD = Math.round(eodBalance / 100) / 10; // Round to 0.1k
+                
+                balanceDisplay.className = `text-xs font-bold ${balanceColor} ml-1 truncate`;
+                balanceDisplay.textContent = `$${roundedEOD.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}k`; 
+                balanceDisplay.title = `End of Day: $${eodBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                
+                dayNumber.appendChild(balanceDisplay);
+            }
+            // --- END NEW EOD Balance Display ---
+            
+            dayEl.appendChild(dayNumber); // Append the date container
 
             if (inCurrentMonth) {
                 // FIX: Make ALL days in the current month interactive
@@ -1601,7 +1673,222 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+    
+    // =========================================================================
+    // SPENDING PLAN LOGIC 
+    // =========================================================================
+    
+    // Helper: Calculate total weeks in the projection period
+    function calculateTotalWeeks(startDate, projectionMonths) {
+        const start = parseISO(startDate);
+        const end = addMonths(start, projectionMonths);
+        let weeks = 0;
+        let currentWeekStart = startOfISOWeek(start);
 
+        while (isBefore(currentWeekStart, end)) {
+            weeks++;
+            currentWeekStart = addDays(currentWeekStart, 7);
+        }
+        return weeks;
+    }
+    
+    function renderCategoryToggles(categories) {
+        categoryTogglesEl.innerHTML = '';
+        categories.forEach(cat => {
+            const info = cat.fixedWeeklyAmount > 0 
+                ? `($${cat.fixedWeeklyAmount.toFixed(2)} Fixed/Week)` 
+                : `(${cat.percentage}% Allocation)`;
+
+            const item = document.createElement('div');
+            item.className = 'flex items-center space-x-3 p-3 bg-gray-100 rounded-lg';
+            item.innerHTML = `
+                <input type="checkbox" id="toggle-${cat.name.replace(/\s/g, '-')}" data-category="${cat.name}" ${cat.enabled ? 'checked' : ''} class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
+                <label for="toggle-${cat.name.replace(/\s/g, '-')}" class="text-sm font-medium text-gray-900 cursor-pointer flex-grow">
+                    ${cat.name} <span class="text-xs text-gray-500">${info}</span>
+                </label>
+            `;
+            categoryTogglesEl.appendChild(item);
+        });
+    }
+    
+    function generateSpendingPlans(metrics) {
+        const totalSavings = metrics.endBalance - metrics.startingBalance;
+        const projectionMonths = parseInt(projectionMonthsEl.value);
+        const startDate = startDateEl.value;
+        const totalWeeks = calculateTotalWeeks(startDate, projectionMonths);
+
+        document.getElementById('savings-projection').textContent = `$${totalSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        
+        // 1. Set Slider Max
+        const sliderMax = Math.max(0, Math.floor(totalSavings / 100) * 100); // Round down to nearest 100
+        savingsSliderEl.max = sliderMax.toFixed(0); 
+        savingsSliderEl.value = Math.min(savedAmount, sliderMax).toFixed(0); // Ensure current value doesn't exceed new max
+        savedAmount = parseFloat(savingsSliderEl.value); // Re-sync savedAmount
+        
+        // Update slider progress visual
+        const percentage = (sliderMax > 0) ? (savedAmount / sliderMax) * 100 : 0;
+        savingsSliderEl.style.setProperty('--slider-progress', `${percentage}%`);
+        savedAmountDisplayEl.textContent = `$${savedAmount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+
+        // 2. Calculate Remaining Budget
+        const remainingBudget = totalSavings - savedAmount;
+        
+        if (remainingBudget <= 0) {
+            remainingBudgetBaseEl.textContent = '$0.00';
+            planButtonsEl.innerHTML = `<p class="text-red-500 font-semibold p-4 bg-red-100 rounded-lg">Warning: Your selected savings goal ($${savedAmount.toLocaleString()}) exceeds or equals the projected surplus. No budget available for spending plans.</p>`;
+            renderCategoryToggles(activeSpendingCategories); // Render toggles even if no budget
+            return;
+        }
+
+        const baseWeeklyBudget = remainingBudget / totalWeeks;
+        remainingBudgetBaseEl.textContent = `$${remainingBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        // NEW LOGIC: Plan margins based on the *remaining* budget
+        const planDefinitions = [
+            // Plan 1: Spends 100% of the remaining budget (0% savings of remainder)
+            { name: 'Aggressive Spending (100% Budget)', margin: 1.00, buttonClass: 'bg-red-600 hover:bg-red-700' }, 
+            // Plan 2: Spends 75% of the remaining budget (25% savings of remainder)
+            { name: 'Balanced Spending (75% Budget)', margin: 0.75, buttonClass: 'bg-blue-600 hover:bg-blue-700' },    
+            // Plan 3: Spends 50% of the remaining budget (50% savings of remainder)
+            { name: 'Conservative Spending (50% Budget)', margin: 0.50, buttonClass: 'bg-green-600 hover:bg-green-700' } 
+        ];
+
+        planButtonsEl.innerHTML = '';
+        
+        const enabledCategories = activeSpendingCategories.filter(c => c.enabled);
+        
+        // Calculate total weekly fixed costs (e.g., Transportation)
+        const totalFixedWeeklyCost = enabledCategories.filter(c => c.fixedWeeklyAmount > 0)
+                                                     .reduce((sum, cat) => sum + cat.fixedWeeklyAmount, 0);
+
+        // Calculate total percentage only for the *variable* categories (Groceries, Gas, Misc)
+        const variableCategories = enabledCategories.filter(c => c.fixedWeeklyAmount === 0);
+        // Ensure total is 100, assuming default percentages hold
+        const totalVariablePercentage = variableCategories.reduce((sum, cat) => sum + cat.percentage, 0); 
+        
+        renderCategoryToggles(activeSpendingCategories); // Render toggles here
+
+        planDefinitions.forEach(plan => {
+            // Apply the plan margin to the base weekly budget, then subtract fixed costs
+            const weeklyBudgetForVariable = (baseWeeklyBudget * plan.margin) - totalFixedWeeklyCost;
+            
+            // This is the total weekly amount this plan allocates (fixed + variable)
+            const totalWeeklyAllocation = totalFixedWeeklyCost + (weeklyBudgetForVariable > 0 ? weeklyBudgetForVariable : 0);
+            
+            // Calculate breakdown for display and data
+            const categoryBreakdown = enabledCategories.map(cat => {
+                let amount;
+                let isFixed = cat.fixedWeeklyAmount > 0;
+                
+                if (isFixed) {
+                    amount = cat.fixedWeeklyAmount;
+                } else {
+                    // Only allocate from the variable budget if the variable budget is positive
+                    if (weeklyBudgetForVariable > 0 && totalVariablePercentage > 0) {
+                        // Allocate based on the category's relative percentage share of the total variable percentage
+                        amount = (weeklyBudgetForVariable * (cat.percentage / totalVariablePercentage));
+                    } else {
+                        amount = 0;
+                    }
+                }
+                
+                // Enforce Gas maximum/minimum (only applies to variable allocation)
+                if (cat.name === 'Gas/Fuel' && !isFixed) {
+                    if (amount > 100) amount = 100;
+                    if (amount < 30) amount = 30;
+                }
+                
+                // Ensure no negative allocation
+                amount = Math.max(0, amount); 
+                
+                return {
+                    name: cat.name,
+                    amount: amount
+                };
+            });
+            
+            const breakdownHtml = categoryBreakdown.filter(i => i.amount > 0.01).map(item => `
+                <li class="flex justify-between text-sm text-gray-700">
+                    <span>${item.name}:</span>
+                    <span class="font-medium text-red-600">$${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </li>
+            `).join('');
+
+            const card = document.createElement('div');
+            card.className = 'bg-gray-50 p-4 rounded-xl border border-gray-200';
+            card.innerHTML = `
+                <h3 class="text-lg font-bold mb-3">${plan.name}</h3>
+                <p class="text-sm text-gray-500">
+                    Saves ${((1 - plan.margin) * 100).toFixed(0)}% of the **Remaining Budget** (after fixed savings goal).
+                </p>
+                <p class="text-lg font-semibold text-gray-900 mb-2 mt-2">
+                    Total Weekly Plan: $${totalWeeklyAllocation.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+                <ul class="list-disc list-inside space-y-1 ml-4 mb-4">
+                    ${breakdownHtml || '<li class="text-gray-500 italic">No budget allocated to selected categories.</li>'}
+                </ul>
+                <button data-plan='${JSON.stringify({ breakdown: categoryBreakdown, name: plan.name })}' 
+                        class="apply-plan-btn w-full py-2 text-white font-semibold rounded-lg ${plan.buttonClass}">
+                    Select Plan & Generate Expenses
+                </button>
+            `;
+            planButtonsEl.appendChild(card);
+        });
+    }
+
+    function applySpendingPlan(planData) {
+        if (!confirm(`Are you sure you want to apply the ${planData.name} and clear any existing planned weekly budgets?`)) {
+            return;
+        }
+
+        // 1. Clear any existing planned entries
+        oneTimeTransactions = oneTimeTransactions.filter(t => !t.name.includes('(Planned)'));
+        
+        const breakdown = planData.breakdown;
+        const startDate = startDateEl.value;
+        const projectionMonths = parseInt(projectionMonthsEl.value);
+        
+        const totalWeeks = calculateTotalWeeks(startDate, projectionMonths);
+        let currentWeekStart = startOfISOWeek(parseISO(startDate));
+        const limitDate = addMonths(parseISO(startDate), projectionMonths);
+        let transactionCount = 0;
+
+        // 2. Generate new planned one-time expenses for each week
+        for (let i = 0; i < totalWeeks; i++) {
+            const weekDate = addDays(currentWeekStart, 4); // Use Thursday as default date for weekly plans
+            
+            if (isBefore(weekDate, limitDate) || isSameDay(weekDate, limitDate)) {
+
+                breakdown.forEach(cat => {
+                    const amount = cat.amount;
+                    
+                    if (amount > 0.01) { // Only generate a transaction if the amount is significant
+                        const finalAmount = -amount; // Expenses are negative
+                        
+                        oneTimeTransactions.push({
+                            id: `PLAN-${Date.now()}-${i}-${cat.name}`,
+                            name: `${cat.name} (Planned)`,
+                            amount: finalAmount,
+                            date: format(weekDate, 'yyyy-MM-dd'),
+                            type: 'One-Time'
+                        });
+                        transactionCount++;
+                    }
+                });
+            }
+            currentWeekStart = addDays(currentWeekStart, 7);
+        }
+
+        showStatus(`Generated ${transactionCount} planned weekly expenses for the forecast!`, 'bg-blue-100 text-blue-700');
+        
+        // 3. Save and redraw everything
+        saveAndRender();
+    }
+
+
+    // The main entry point is already called near the start of the DOMContentLoaded block:
+    // showDashboard();
+    
 });
 </script>
 </body>
