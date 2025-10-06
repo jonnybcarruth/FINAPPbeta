@@ -71,6 +71,23 @@
             background: #10b981;
             box-shadow: 0 0 2px rgba(0,0,0,0.5);
         }
+        
+        /* NEW: Responsive Font Sizing for Calendar Days */
+        /* Small Size Styles - TIGHTER CONSTRAINTS */
+        /* Targets date number, EOD balance amount, and transaction amounts */
+        .calendar-day-text-sm .text-sm { font-size: 0.65rem; /* ~10.4px */ }
+        /* Targets EOD Balance label and transaction descriptions (originally text-xs) */
+        .calendar-day-text-sm .text-xs { font-size: 0.55rem; /* ~8.8px */ }
+        /* Targets transaction text and amount (font-bold is only used in EOD span for color) */
+        .calendar-day-text-sm .font-bold { font-size: 0.65rem; } 
+        /* Targets the date/EOD container element for overall height control */
+        .calendar-day-text-sm .text-sm.font-semibold { font-size: 0.65rem; }
+        .calendar-day-text-sm .truncate { max-width: 60%; } /* Prevent overflow on transaction names */
+
+        /* Medium Size Styles (Slightly reduced) */
+        .calendar-day-text-medium .text-sm { font-size: 0.875rem; /* text-sm */ }
+        .calendar-day-text-medium .text-xs { font-size: 0.75rem; /* text-xs */ }
+        .calendar-day-text-medium .font-bold { font-size: 0.875rem; }
     </style>
 </head>
 <body class="antialiased">
@@ -599,6 +616,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.setItem('calendarSize', size);
             calendarGridEl.style.minWidth = calendarSizes[size];
             
+            // NEW: Add responsive text class based on size
+            calendarGridEl.classList.remove('calendar-day-text-sm', 'calendar-day-text-medium');
+            if (size === 'small') {
+                calendarGridEl.classList.add('calendar-day-text-sm');
+            } else if (size === 'medium') {
+                calendarGridEl.classList.add('calendar-day-text-medium');
+            }
+
             // Update button visuals
             calendarSizeButtons.forEach(btn => {
                 const isSelected = btn.dataset.size === size;
@@ -1111,7 +1136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             savedAmount = parseFloat(e.target.value);
             // Update the slider track progress for visual feedback
             const max = parseFloat(savingsSliderEl.max);
-            const percentage = (savedAmount / max) * 100;
+            const percentage = (max > 0) ? (savedAmount / max) * 100 : 0;
             savingsSliderEl.style.setProperty('--slider-progress', `${percentage}%`);
             savedAmountDisplayEl.textContent = `$${savedAmount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
             updateDashboard(); // Recalculate everything based on new saved amount
@@ -1311,10 +1336,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const item = document.createElement('div');
             item.className = `flex justify-between items-center p-3 rounded-lg border ${colorClass}`;
             
-            // Only add controls for One-Time events
+            // --- FIX: Allow editing/deleting of all One-Time events (including Planned) ---
             let controlsHTML = '';
-            // Only show controls for true One-Time events, not the auto-generated planned ones
-            if (t.type === 'One-Time' && !t.name.includes('(Planned)')) { 
+            if (t.type === 'One-Time') { 
                  controlsHTML = `
                     <div class="flex space-x-2 items-center">
                         <button type="button" class="edit-onetime-btn text-gray-500 hover:text-purple-600 p-1 rounded-full hover:bg-gray-100" data-id="${t.id}" title="Edit Transaction">
@@ -1326,6 +1350,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 `;
             }
+            // --- END FIX ---
 
             item.innerHTML = `
                 <div class="flex flex-col flex-grow">
@@ -1474,6 +1499,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const dayNumber = document.createElement('div');
             // Modified class to allow for internal flex justification for date + balance
+            // Ensure the base date number remains visible (text-sm)
             dayNumber.className = "text-sm font-semibold flex justify-between items-center"; 
             
             // Set initial text to day number
@@ -1745,11 +1771,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // NEW LOGIC: Plan margins based on the *remaining* budget
         const planDefinitions = [
-            // Plan 1: Spends 100% of the remaining budget (0% savings of remainder)
+            // Plan 1: Spends 100% of the remaining budget (0% savings of remainder) -> Aggressive Spending
             { name: 'Aggressive Spending (100% Budget)', margin: 1.00, buttonClass: 'bg-red-600 hover:bg-red-700' }, 
-            // Plan 2: Spends 75% of the remaining budget (25% savings of remainder)
+            // Plan 2: Spends 75% of the remaining budget (25% savings of remainder) -> Balanced Spending
             { name: 'Balanced Spending (75% Budget)', margin: 0.75, buttonClass: 'bg-blue-600 hover:bg-blue-700' },    
-            // Plan 3: Spends 50% of the remaining budget (50% savings of remainder)
+            // Plan 3: Spends 50% of the remaining budget (50% savings of remainder) -> Conservative Spending
             { name: 'Conservative Spending (50% Budget)', margin: 0.50, buttonClass: 'bg-green-600 hover:bg-green-700' } 
         ];
 
