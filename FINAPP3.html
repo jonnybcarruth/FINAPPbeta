@@ -395,7 +395,14 @@
                     <!-- END RECURRING SCHEDULE TYPE TOGGLE -->
                     
                     <div><label for="start_date" class="block text-sm font-medium">Start Date</label><input type="date" id="start_date" required class="w-full p-2 border rounded-lg"></div>
-                    <div><label for="frequency" class="block text-sm font-medium">Frequency</label><select id="frequency" required class="w-full p-2 border rounded-lg"><option value="Monthly">Monthly</option><option value="Weekly">Weekly</option></select></div>
+                    <div>
+                        <label for="frequency" class="block text-sm font-medium">Frequency</label>
+                        <select id="frequency" required class="w-full p-2 border rounded-lg">
+                            <option value="Monthly">Monthly</option>
+                            <option value="Weekly">Weekly</option>
+                            <option value="BiWeekly">Bi-Weekly</option> <!-- ADDED BI-WEEKLY OPTION -->
+                        </select>
+                    </div>
                     <div id="day-value-monthly"><label for="day_value_month" class="block text-sm font-medium">Day of Month (1-31)</label><input type="number" id="day_value_month" min="1" max="31" class="w-full p-2 border rounded-lg"></div>
                     <div id="day-value-weekly" class="hidden"><label for="day_value_week" class="block text-sm font-medium">Day of Week</label><select id="day_value_week" class="w-full p-2 border rounded-lg"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
                 </div>
@@ -1268,11 +1275,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('day-value-weekly').classList.add('hidden');
             document.getElementById('day_value_month').required = true;
             document.getElementById('day_value_week').required = false;
-        } else {
+        } else if (frequencySelect.value === 'Weekly' || frequencySelect.value === 'BiWeekly') { // UPDATED FOR BI-WEEKLY
             document.getElementById('day-value-monthly').classList.add('hidden');
             document.getElementById('day-value-weekly').classList.remove('hidden');
             document.getElementById('day_value_month').required = false;
             document.getElementById('day_value_week').required = true;
+        } else {
+             document.getElementById('day-value-monthly').classList.add('hidden');
+             document.getElementById('day-value-weekly').classList.add('hidden');
+             document.getElementById('day_value_month').required = false;
+             document.getElementById('day_value_week').required = false;
         }
     }
     
@@ -1401,9 +1413,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         intervalDays.forEach(day => {
             activeSchedules.forEach(schedule => {
                 if (day < new Date(schedule.startDate + 'T00:00:00')) return;
+
+                let shouldPay = false;
+                const scheduleStart = parseISO(schedule.startDate);
+
                 if (schedule.frequency === 'Monthly' && getDate(day) === schedule.dayValue) {
-                    projections.push({ date: day, name: schedule.name, amount: schedule.amount, type: 'Recurring' });
+                    shouldPay = true;
                 } else if (schedule.frequency === 'Weekly' && getDay(day) === weeklyDayMap[schedule.dayValue]) {
+                    shouldPay = true;
+                } else if (schedule.frequency === 'BiWeekly' && getDay(day) === weeklyDayMap[schedule.dayValue]) {
+                    // Check if the number of days elapsed since the start date is a multiple of 14
+                    const daysSinceStart = (day.getTime() - scheduleStart.getTime()) / (1000 * 60 * 60 * 24);
+                    // Use a small margin (e.g., 0.5 day) for float point safety near 0
+                    if (daysSinceStart >= -0.5 && Math.abs(daysSinceStart % 14) < 0.5) { 
+                        shouldPay = true;
+                    }
+                }
+
+                if (shouldPay) {
                     projections.push({ date: day, name: schedule.name, amount: schedule.amount, type: 'Recurring' });
                 }
             });
@@ -1497,18 +1524,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             dayEl.className = `calendar-day p-2 border border-gray-200 rounded-md ${!inCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'}`;
             if (isToday(day)) { dayEl.classList.add('border-blue-500', 'border-2'); }
             
-            const dayNumber = document.createElement('div');
-            // Modified class to allow for internal flex justification for date + balance
-            // Ensure the base date number remains visible (text-sm)
-            dayNumber.className = "text-sm font-semibold flex justify-between items-center"; 
+            // 1. Element for the Day Number (Date)
+            const dateNumberEl = document.createElement('div');
+            // Using flex-col here to handle stacking for smaller sizes
+            dateNumberEl.className = "text-sm font-semibold text-right flex flex-col items-end"; 
             
-            // Set initial text to day number
-            dayNumber.textContent = format(day, 'd');
+            // Append the date number
+            const dateSpan = document.createElement('span');
+            dateSpan.textContent = format(day, 'd');
+            dateNumberEl.appendChild(dateSpan);
             
-            // --- NEW: Add EOD Balance Display ---
+            // 2. --- NEW: Add EOD Balance Display (Stacked Below Date) ---
             if (showEODBalance && inCurrentMonth) {
                 const eodBalance = getEndOfDayBalance(dateKey);
-                const balanceDisplay = document.createElement('span');
+                const balanceDisplay = document.createElement('div'); // Changed to div for block-level stacking
                 
                 // Determine color for the balance based on overall EOD value
                 let balanceColor = 'text-gray-500';
@@ -1518,15 +1547,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Display the End of Day balance concisely (rounded to the nearest k)
                 const roundedEOD = Math.round(eodBalance / 100) / 10; // Round to 0.1k
                 
-                balanceDisplay.className = `text-xs font-bold ${balanceColor} ml-1 truncate`;
-                balanceDisplay.textContent = `$${roundedEOD.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}k`; 
+                // FIX: Removed ml-1 and $ sign
+                balanceDisplay.className = `text-xs font-bold ${balanceColor} text-right leading-none truncate`;
+                balanceDisplay.textContent = `${roundedEOD.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}k`; 
+                
                 balanceDisplay.title = `End of Day: $${eodBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                 
-                dayNumber.appendChild(balanceDisplay);
+                dateNumberEl.appendChild(balanceDisplay); // Append balance as child of dateNumberEl
             }
             // --- END NEW EOD Balance Display ---
             
-            dayEl.appendChild(dayNumber); // Append the date container
+            dayEl.appendChild(dateNumberEl); // Append the date container
 
             if (inCurrentMonth) {
                 // FIX: Make ALL days in the current month interactive
