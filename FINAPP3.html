@@ -1,69 +1,449 @@
-Since the integration of the backend server (`Server.py`) is the critical step to enable login and cross-platform data saving, I'll provide you with the **full updated JavaScript section** of your `FINAPP3.html` file.
-
-This update replaces all instances of `localStorage` with **API calls** to your deployed Render server and adds the necessary **Login/Account view** functionality.
-
-**Note:** You must replace the placeholder `YOUR_RENDER_URL` with the actual public URL provided by Render (e.g., `https://finplan-app-xyz.onrender.com`).
-
------
-
-## 1\. HTML View Update (For `FINAPP3.html` Body)
-
-First, add this new `view-account` container to your HTML, before the Transaction Log view.
-
-```html
-<div id="view-account" class="view-container hidden space-y-8">
-    <section id="login-form-card" class="bg-white p-6 rounded-2xl shadow-sm max-w-md mx-auto">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center" id="account-header">Account Login</h2>
-        <p class="text-sm text-gray-500 mb-6 text-center">Login to sync your data across all devices, or register a new account.</p>
-
-        <form id="login-form" class="space-y-4">
-            <div>
-                <label for="auth-username" class="block text-sm font-medium text-gray-700">Username</label>
-                <input type="text" id="auth-username" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div>
-                <label for="auth-password" class="block text-sm font-medium text-gray-700">Password</label>
-                <input type="password" id="auth-password" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="flex justify-between space-x-2 pt-4">
-                <button type="submit" data-action="login" class="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">Login</button>
-                <button type="button" id="register-btn" class="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">Register</button>
-            </div>
-        </form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive FinPlan Dashboard</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="FinPlan">
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/047857/ffffff?text=%24%E2%9C%93">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* FIX: Adjusted padding-top to normal and set padding-bottom to 150px for max bottom clearance */
+        body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; color: #343a40; padding-top: 16px; padding-bottom: 150px; }
+        .chart-container { position: relative; width: 100%; max-width: 900px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 400px; } }
+        .modal { transition: opacity 0.25s ease; }
+        .modal-active { opacity: 1; pointer-events: auto; }
+        .modal-inactive { opacity: 0; pointer-events: none; }
+        .calendar-grid { grid-template-rows: auto repeat(6, minmax(0, 1fr)); }
+        .calendar-day { min-height: 100px; }
+        .toggle-checkbox:checked { right: 0; border-color: #48BB78; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #48BB78; }
+        .active-nav { border-b-2 border-blue-600 text-blue-600 font-semibold; }
         
-        <div id="logout-container" class="mt-8 text-center hidden">
-             <p id="logged-in-message" class="text-lg font-semibold text-gray-700 mb-4">Logged in as: User</p>
-             <button type="button" id="logout-btn" class="w-full py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold">Logout</button>
+        /* NEW FIXED BOTTOM NAV STYLING */
+        #bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            border-top: 1px solid #E5E7EB;
+            z-index: 40;
+            height: 90px;
+            padding-top: 10px;
+            padding-bottom: 30px; /* Lift buttons higher */
+        }
+        /* Custom styling for the slider track */
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 8px;
+            background: linear-gradient(to right, #4ade80 0%, #4ade80 var(--slider-progress, 0%), #d1d5db var(--slider-progress, 0%), #d1d5db 100%);
+            border-radius: 4px;
+        }
+        input[type=range]::-moz-range-track {
+            height: 8px;
+            background: linear-gradient(to right, #4ade80 0%, #4ade80 var(--slider-progress, 0%), #d1d5db var(--slider-progress, 0%), #d1d5db 100%);
+            border-radius: 4px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #10b981; /* Green color for thumb */
+            margin-top: -6px; /* Center thumb vertically */
+            box-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+        
+        /* NEW: Responsive Font Sizing for Calendar Days */
+        /* Small Size Styles - TIGHTER CONSTRAINTS */
+        /* Targets date number, EOD balance amount, and transaction amounts */
+        .calendar-day-text-sm .text-sm { font-size: 0.65rem; /* ~10.4px */ }
+        /* Targets EOD Balance label and transaction descriptions (originally text-xs) */
+        .calendar-day-text-sm .text-xs { font-size: 0.55rem; /* ~8.8px */ }
+        /* Targets transaction text and amount (font-bold is only used in EOD span for color) */
+        .calendar-day-text-sm .font-bold { font-size: 0.65rem; } 
+        /* Targets the date/EOD container element for overall height control */
+        .calendar-day-text-sm .text-sm.font-semibold { font-size: 0.65rem; }
+        .calendar-day-text-sm .truncate { max-width: 60%; } /* Prevent overflow on transaction names */
+
+        /* Medium Size Styles (Slightly reduced) */
+        .calendar-day-text-medium .text-sm { font-size: 0.875rem; /* text-sm */ }
+        .calendar-day-text-medium .text-xs { font-size: 0.75rem; /* text-xs */ }
+        .calendar-day-text-medium .font-bold { font-size: 0.875rem; }
+    </style>
+</head>
+<body class="antialiased">
+    
+    <div id="status-message" class="fixed top-0 left-0 right-0 p-3 text-center text-sm font-medium transition duration-300 opacity-0 z-50"></div>
+    
+    <div class="container mx-auto p-4 sm:p-6 md:p-8">
+
+        <main class="space-y-8 md:space-y-12">
+            
+            <header class="text-center mb-4 md:mb-6">
+                <h1 class="3xl md:text-4xl font-bold text-gray-800">FinPlan</h1>
+                <h2 id="page-title" class="text-xl font-semibold text-gray-700 mt-2">Account</h2>
+                <div id="user-status" class="text-xs text-gray-500 mt-2 p-2 bg-gray-100 rounded-lg">
+                    Status: Local Mode (Data saved to this device only)
+                </div>
+            </header>
+
+            <div id="view-account" class="view-container hidden space-y-8">
+                <section id="login-form-card" class="bg-white p-6 rounded-2xl shadow-sm max-w-md mx-auto">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center" id="account-header">Account Login</h2>
+                    <p class="text-sm text-gray-500 mb-6 text-center">Login to sync your data across all devices, or register a new account.</p>
+
+                    <form id="login-form" class="space-y-4">
+                        <div>
+                            <label for="auth-username" class="block text-sm font-medium text-gray-700">Username</label>
+                            <input type="text" id="auth-username" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="auth-password" class="block text-sm font-medium text-gray-700">Password</label>
+                            <input type="password" id="auth-password" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="flex justify-between space-x-2 pt-4">
+                            <button type="submit" data-action="login" class="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">Login</button>
+                            <button type="button" id="register-btn" class="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">Register</button>
+                        </div>
+                    </form>
+                    
+                    <div id="logout-container" class="mt-8 text-center hidden">
+                         <p id="logged-in-message" class="text-lg font-semibold text-gray-700 mb-4">Logged in as: User</p>
+                         <button type="button" id="logout-btn" class="w-full py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold">Logout</button>
+                    </div>
+                </section>
+            </div>
+            <div id="view-calendar" class="view-container hidden space-y-8">
+                
+                <section id="calendar-view" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 sm:mb-0">Transaction Calendar</h2>
+                        <button id="add-one-time-btn" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold">Add One-Time Event</button>
+                    </div>
+                    <p class="text-center text-gray-500 mb-6 max-w-2xl mx-auto">This calendar displays all your financial events—recurring, one-time, and debt payments—for the selected month.</p>
+                    <div id="calendar-controls" class="flex justify-between items-center mb-4">
+                        <button id="prev-month" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">&larr; Prev</button>
+                        <h3 id="calendar-month-year" class="text-xl font-semibold"></h3>
+                        <button id="next-month" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Next &rarr;</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <div id="calendar-grid" class="grid grid-cols-7 gap-1 calendar-grid min-w-[700px]"></div>
+                    </div>
+                    
+                    <div class="flex flex-col items-center mt-6 pt-4 border-t border-gray-200">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Calendar Controls:</p>
+                        <div class="flex justify-center space-x-3 mb-4">
+                            <button data-size="small" class="calendar-size-btn px-4 py-1 text-sm rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300">Small</button>
+                            <button data-size="medium" class="calendar-size-btn px-4 py-1 text-sm rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300">Medium</button>
+                            <button data-size="large" class="calendar-size-btn px-4 py-1 text-sm rounded-full bg-blue-600 text-white hover:bg-blue-700">Large</button>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2 p-2 bg-gray-100 rounded-lg">
+                            <input type="checkbox" id="toggleEODBalance" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
+                            <label for="toggleEODBalance" class="text-sm font-medium text-gray-700">Show End of Day Balance</label>
+                        </div>
+                        
+                    </div>
+                </section>
+
+                <section id="projection-controls" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">Settings</h2>
+                        <button id="manual-save-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">Save Settings</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        <div>
+                            <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Projection Start Date</label>
+                            <input type="date" id="startDate" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="projectionMonths" class="block text-sm font-medium text-gray-700 mb-1">Projection Length (Months)</label>
+                            <select id="projectionMonths" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="3">3 Months</option>
+                                <option value="6">6 Months</option>
+                                <option value="12" selected>12 Months</option>
+                                <option value="24">24 Months</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="startingBalance" class="block text-sm font-medium text-gray-700 mb-1">Starting Balance ($)</label>
+                            <input type="number" id="startingBalance" value="5000" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    </section>
+            </div>
+            
+            <div id="view-dashboard" class="view-container hidden space-y-8">
+                
+                <section id="key-metrics" class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm"><h3 class="text-md font-semibold text-gray-500">Projected End Balance</h3><p id="endBalance" class="text-3xl font-bold text-gray-800 mt-2">$0.00</p></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm"><h3 class="text-md font-semibold text-gray-500">Total Income</h3><p id="totalIncome" class="3xl font-bold text-green-600 mt-2">$0.00</p></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm"><h3 class="text-md font-semibold text-gray-500">Total Expenses</h3><p id="totalExpenses" class="3xl font-bold text-red-600 mt-2">$0.00</p></div>
+                </section>
+                
+                <section id="visualizations" class="bg-white p-6 rounded-2xl shadow-sm space-y-12">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Cash Flow Projection</h2>
+                        <p class="text-center text-gray-500 mb-4 max-w-2xl mx-auto">This chart shows the projected running balance over time, helping you anticipate future highs and lows.</p>
+                        <div class="chart-container"><canvas id="cashFlowChart"></canvas></div>
+                    </div>
+                    <div>
+                         <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Net Monthly Flow</h2>
+                        <p class="text-center text-gray-500 mb-4 max-w-2xl mx-auto">This bar chart illustrates the net financial result for each month—the difference between total income and total expenses.</p>
+                        <div class="chart-container"><canvas id="monthlyNetChart"></canvas></div>
+                    </div>
+                </section>
+
+                <section id="projection-controls-dashboard" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">Projection Settings</h2>
+                        <button id="manual-save-btn-dashboard" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">Save Settings</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        <div>
+                            <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Projection Start Date</label>
+                            <input type="date" id="startDate_dashboard" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="projectionMonths" class="block text-sm font-medium text-gray-700 mb-1">Projection Length (Months)</label>
+                            <select id="projectionMonths_dashboard" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="3">3 Months</option>
+                                <option value="6">6 Months</option>
+                                <option value="12" selected>12 Months</option>
+                                <option value="24">24 Months</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="startingBalance" class="block text-sm font-medium text-gray-700 mb-1">Starting Balance ($)</label>
+                            <input type="number" id="startingBalance_dashboard" value="5000" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </section>
+                
+            </div>
+            <div id="view-debt" class="view-container hidden space-y-8">
+                <section id="debt-plan-management" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">Debt Plan Management</h2>
+                        <button id="add-debt-plan-btn" class="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 font-semibold">Add New Debt Plan</button>
+                    </div>
+                    <p class="text-gray-500 mb-6">Define structured debt repayments here. Payments are calculated based on the payoff period and automatically removed from the forecast once completed.</p>
+                    <div id="debtPlansList" class="space-y-4"></div>
+                </section>
+                
+            </div>
+            
+            <div id="view-schedules" class="view-container hidden space-y-8">
+                <section id="schedules-management" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">Recurring Schedules Management</h2>
+                        <button id="add-schedule-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">Add New Recurring Schedule</button>
+                    </div>
+                    <p class="text-gray-500 mb-6">Manage all your **long-term, repeating** financial events here. Toggle items to run "what-if" scenarios.</p>
+                    <div id="schedulesList" class="space-y-4"></div>
+                </section>
+            </div>
+
+            <div id="view-plan" class="view-container hidden space-y-8">
+                <section id="plan-intro" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Projected Surplus Analysis</h2>
+                    <p class="text-gray-600 mb-4">Analyze your projected cash surplus over the selected period. Use the controls below to set your savings target and customize the weekly budget categories.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <h3 class="text-md font-semibold text-gray-500">Projected Savings Over Period</h3>
+                            <p id="savings-projection" class="text-2xl font-bold text-green-700 mt-1">$0.00</p>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <h3 class="text-md font-semibold text-gray-500">Available Weekly Spending</h3>
+                            <p id="weekly-spending-base" class="text-2xl font-bold text-blue-700 mt-1">$0.00</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="plan-controls" class="bg-white p-6 rounded-2xl shadow-sm space-y-6">
+                    <h2 class="text-xl font-bold text-gray-800">Savings Target & Customization</h2>
+
+                    <div class="pt-2">
+                        <label for="savings-slider" class="block text-sm font-medium text-gray-700 mb-2">
+                            Amount to Commit to Savings: <span id="saved-amount-display" class="font-bold text-xl text-green-700">$0</span>
+                        </label>
+                        <input type="range" id="savings-slider" min="0" max="0" value="0" step="10" 
+                               class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg"
+                               style="--slider-progress: 0%;">
+                        <p class="text-xs text-gray-500 mt-1">Slide to set your desired savings amount from your projected surplus.</p>
+                    </div>
+
+                    <div class="p-4 bg-blue-100 rounded-xl text-center border border-blue-200">
+                        <h3 class="text-md font-semibold text-blue-800">Remaining Budget for Weekly Spending:</h3>
+                        <p id="remaining-budget-base" class="text-3xl font-bold text-blue-700 mt-1">$0.00</p>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-700 mb-3">Included Spending Categories:</h3>
+                        <div id="category-toggles" class="grid grid-cols-2 gap-4">
+                            </div>
+                    </div>
+                </section>
+                
+                <section id="plan-creator" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Weekly Budget Allocation Plans</h2>
+                    <p class="text-gray-500 mb-6">Select a plan to spend a percentage of your **Remaining Budget** on the selected categories, and generate the weekly transactions.</p>
+                    <div id="plan-buttons" class="space-y-4">
+                        </div>
+                </section>
+                
+                <section class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h2 class="text-xl font-bold text-red-700 mb-4">Manage Current Plan</h2>
+                    <p class="text-sm text-gray-600 mb-4">Use this button to quickly remove all existing planned expenses (transactions tagged "(Planned)") from your forecast.</p>
+                    <button id="delete-plan-btn" class="w-full py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700">
+                        Delete Current Spending Plan & Transactions
+                    </button>
+                </section>
+            </div>
+            <div id="view-log" class="view-container hidden space-y-8">
+                 <section id="transaction-log" class="bg-white p-6 rounded-2xl shadow-sm">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Projected Transaction Log</h2>
+                    <p class="text-gray-500 mb-6">A detailed, day-by-day list of all projected transactions (recurring, one-time, and debt payments). Filter by type for a granular analysis.</p>
+                    <div class="mb-4">
+                         <select id="transactionFilter" class="p-2 border border-gray-300 rounded-lg">
+                             <option value="all">All Transactions</option><option value="income">Income Only</option><option value="expense">Expenses Only</option>
+                         </select>
+                    </div>
+                    <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th><th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th></tr></thead><tbody id="transactionTableBody" class="bg-white divide-y divide-gray-200"></tbody></table></div>
+                </section>
+            </div>
+            
+        </main>
+    </div>
+
+    <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-40">
+        <div class="container mx-auto px-4 sm:px-6 md:px-8 h-16 py-2">
+            <div class="flex overflow-x-auto flex-nowrap space-x-4 h-full items-center justify-center">
+                <button data-view="calendar" data-name="Calendar" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0 active-nav">Calendar</button>
+                <button data-view="dashboard" data-name="Dashboard" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Dashboard</button>
+                <button data-view="debt" data-name="Debt Plans" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Debt Plans</button>
+                <button data-view="schedules" data-name="Recurring Schedules" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Recurring</button>
+                <button data-view="plan" data-name="Spending Plan" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Plan</button>
+                <button data-view="log" data-name="Transaction Log" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Log</button>
+                <button data-view="account" data-name="Account" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Account</button>
+            </div>
         </div>
-    </section>
-</div>
-```
+    </nav>
 
-## 2\. HTML Navigation Update
 
-Update your fixed bottom navigation bar (`#bottom-nav`) to include the new "Account" button.
+    <div id="day-details-modal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-2xl bg-white">
+            <h3 id="day-details-title" class="2xl font-bold mb-6">Transactions on [Date]</h3>
+            <div id="day-details-list" class="space-y-3 max-h-96 overflow-y-auto">
+                </div>
+            <div class="mt-8 flex justify-between">
+                <button type="button" id="add-from-day-details" class="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold" data-date="">+ One-Time Event</button>
+                <button type="button" id="close-day-details-btn" class="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Close</button>
+            </div>
+        </div>
+    </div>
+    <div id="schedule-modal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-2xl bg-white">
+            <h3 id="modal-title" class="2xl font-bold mb-6">Add New Schedule</h3>
+            <form id="schedule-form">
+                <input type="hidden" id="schedule-id">
+                <div class="space-y-4">
+                    <div><label for="name" class="block text-sm font-medium">Name</label><input type="text" id="name" required class="w-full p-2 border rounded-lg"></div>
+                    
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium">Amount Type</label>
+                        <div class="flex rounded-lg border border-gray-300 overflow-hidden" id="schedule-type-toggle">
+                            <button type="button" data-type="expense" data-current="expense" class="flex-1 p-2 font-semibold text-center bg-red-100 text-red-700 transition">Expense</button>
+                            <button type="button" data-type="income" class="flex-1 p-2 font-semibold text-center text-gray-700 bg-white border-l transition">Income</button>
+                        </div>
+                        <div><label for="amount" class="block text-sm font-medium">Amount ($)</label><input type="number" step="0.01" min="0" id="amount" required class="w-full p-2 border rounded-lg"></div>
+                    </div>
+                    <div><label for="start_date" class="block text-sm font-medium">Start Date</label><input type="date" id="start_date" required class="w-full p-2 border rounded-lg"></div>
+                    <div>
+                        <label for="frequency" class="block text-sm font-medium">Frequency</label>
+                        <select id="frequency" required class="w-full p-2 border rounded-lg">
+                            <option value="Monthly">Monthly</option>
+                            <option value="Weekly">Weekly</option>
+                            <option value="BiWeekly">Bi-Weekly</option> </select>
+                    </div>
+                    <div id="day-value-monthly"><label for="day_value_month" class="block text-sm font-medium">Day of Month (1-31)</label><input type="number" id="day_value_month" min="1" max="31" class="w-full p-2 border rounded-lg"></div>
+                    <div id="day-value-weekly" class="hidden"><label for="day_value_week" class="block text-sm font-medium">Day of Week</label><select id="day_value_week" class="w-full p-2 border rounded-lg"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-4"><button type="button" class="cancel-btn px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button><button type="submit" class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Schedule</button></div>
+            </form>
+        </div>
+    </div>
 
-```html
-<button data-view="calendar" data-name="Calendar" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0 active-nav">Calendar</button>
-<button data-view="log" data-name="Transaction Log" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Log</button>
+    <div id="onetime-modal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-2xl bg-white">
+            <h3 class="2xl font-bold mb-6">Add One-Time Transaction</h3>
+            <form id="onetime-form">
+                <input type="hidden" id="onetime-id">
+                <div class="space-y-4">
+                    <div><label for="onetime-name" class="block text-sm font-medium">Name</label><input type="text" id="onetime-name" required class="w-full p-2 border rounded-lg"></div>
+                    
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium">Amount Type</label>
+                        <div class="flex rounded-lg border border-gray-300 overflow-hidden" id="onetime-type-toggle">
+                            <button type="button" data-type="expense" data-current="expense" class="flex-1 p-2 font-semibold text-center bg-red-100 text-red-700 transition">Expense</button>
+                            <button type="button" data-type="income" class="flex-1 p-2 font-semibold text-center text-gray-700 bg-white border-l transition">Income</button>
+                        </div>
+                        <div><label for="onetime-amount" class="block text-sm font-medium">Amount ($)</label><input type="number" step="0.01" min="0" id="onetime-amount" required class="w-full p-2 border rounded-lg"></div>
+                    </div>
+                    <div><label for="onetime-date" class="block text-sm font-medium">Date of Transaction</label><input type="date" id="onetime-date" required class="w-full p-2 border rounded-lg"></div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-4">
+                    <button type="button" class="cancel-btn px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Save Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-<button data-view="account" data-name="Account" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Account</button>
-```
+    <div id="debt-plan-modal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-2xl bg-white">
+            <h3 id="debt-modal-title" class="2xl font-bold mb-6">Add New Debt Plan</h3>
+            <form id="debt-plan-form">
+                <input type="hidden" id="debt-id">
+                <div class="space-y-4">
+                    <div><label for="debt-name" class="block text-sm font-medium">Debt Name</label><input type="text" id="debt-name" required class="w-full p-2 border rounded-lg"></div>
+                    <div><label for="total-amount" class="block text-sm font-medium">Total Debt Amount ($)</label><input type="number" step="0.01" id="total-amount" required class="w-full p-2 border rounded-lg"></div>
+                    <div><label for="payoff-months" class="block text-sm font-medium">Payoff Months (e.g., 12)</label><input type="number" id="payoff-months" min="1" required class="w-full p-2 border rounded-lg"></div>
+                    <div><label for="debt-start-date" class="block text-sm font-medium">First Payment Date</label><input type="date" id="debt-start-date" required class="w-full p-2 border rounded-lg"></div>
+                    <div><label for="debt-pay-day" class="block text-sm font-medium">Payment Day of Month (1-31)</label><input type="number" id="debt-pay-day" min="1" max="31" required class="w-full p-2 border rounded-lg"></div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-4">
+                    <button type="button" class="cancel-btn-debt px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700">Save Debt Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
------
-
-## 3\. Full Updated JavaScript (`<script type="module">` Content)
-
-**Replace the entire content** of your existing `<script type="module">` tag with the following code. This includes the new server logic, authentication functions, and API calls.
-
-```javascript
+<script type="module">
 import { addMonths, eachDayOfInterval, format, getDay, getDate, endOfMonth, startOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, subMonths, parseISO, subDays, getISOWeek, startOfWeek as startOfISOWeek, endOfWeek as endOfISOWeek, isBefore, isSameDay } from 'https://cdn.jsdelivr.net/npm/date-fns@2.29.3/esm/index.js';
 
 // =========================================================================
 // 0. CRITICAL CONFIGURATION
 // =========================================================================
-// !!! REPLACE THIS WITH YOUR RENDER PUBLIC URL !!!
-// e.g., const RENDER_URL = "https://finplan-app-xyz.onrender.com";
+// !!! REPLACE THIS WITH YOUR RENDER PUBLIC URL (e.g., https://finplan-app.onrender.com) !!!
 const RENDER_URL = "YOUR_RENDER_URL"; 
 // =========================================================================
 
@@ -82,7 +462,7 @@ let navButtons, viewContainers, calendarGridEl, calendarSizeButtons;
 
 // NEW ELEMENTS FOR PLAN VIEW
 let savingsSliderEl, savedAmountDisplayEl, remainingBudgetBaseEl, categoryTogglesEl, deletePlanBtnEl;
-let toggleEODBalanceEl; // NEW ELEMENT
+let toggleEODBalanceEl;
 // AUTH ELEMENTS
 let authUsernameEl, authPasswordEl, loginFormEl, registerBtnEl, logoutBtnEl, logoutContainerEl, loggedInMessageEl;
 
@@ -145,7 +525,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initDomElements();
 
     // =========================================================================
-    // 1. CORE APPLICATION VARIABLES (NO LONGER SYNCED DIRECTLY TO localStorage)
+    // 1. CORE APPLICATION VARIABLES 
     // =========================================================================
     let recurringSchedules = [];
     let oneTimeTransactions = [];
@@ -156,7 +536,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let dailyBalanceMap = {}; 
     
     let savedAmount = 0; 
-    let showEODBalance = false; // Default off, loaded from user_data
+    let showEODBalance = false; 
     let isLoggedIn = false;
     let currentUsername = 'Local User';
     
@@ -196,6 +576,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             getUserStatusEl().textContent = `Status: Local Mode (RENDER_URL not set)`;
             isLoggedIn = false;
             currentUsername = 'Local User';
+            // Disable sync buttons when not configured
+            manualSaveBtn.disabled = true;
+            manualSaveBtnDashboard.disabled = true;
             return { logged_in: false };
         }
         
@@ -205,12 +588,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             isLoggedIn = data.logged_in;
             currentUsername = data.username || 'Local User';
+            
+            // Enable/Disable save buttons based on login status
+            manualSaveBtn.disabled = !isLoggedIn;
+            manualSaveBtnDashboard.disabled = !isLoggedIn;
 
             if (isLoggedIn) {
                 getUserStatusEl().textContent = `Status: Synced (Logged in as ${currentUsername})`;
                 setAccountViewState(true);
             } else {
-                getUserStatusEl().textContent = `Status: Logged Out`;
+                getUserStatusEl().textContent = `Status: Logged Out (Data unsaved)`;
                 setAccountViewState(false);
             }
             return data;
@@ -219,6 +606,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             getUserStatusEl().textContent = `Status: OFFLINE (Server connection failed)`;
             isLoggedIn = false;
             setAccountViewState(false);
+            manualSaveBtn.disabled = true;
+            manualSaveBtnDashboard.disabled = true;
             return { logged_in: false };
         }
     }
@@ -257,44 +646,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (data.success) {
                 showStatus(`${data.message}. Redirecting to Calendar.`, 'bg-green-100 text-green-700');
-                // Re-run the full startup sequence to load data and switch views
+                
                 await checkAuthStatus();
-                await loadData(); // Load the fresh data (or defaults for new users)
+                await loadData();
                 updateDashboard();
                 changeView('calendar');
+                
+                // Clear inputs for security
+                authUsernameEl.value = '';
+                authPasswordEl.value = '';
+
             } else {
                 showStatus(`Authentication Failed: ${data.message}`, 'bg-red-100 text-red-700');
             }
         } catch (e) {
+            console.error("Auth server connection error:", e);
             showStatus('Server connection error. Please try again.', 'bg-red-100 text-red-700');
         }
     }
     
     async function handleLogout() {
         try {
+            // Attempt to clear session on the server
             await fetch(`${RENDER_URL}/api/auth/logout`);
-            isLoggedIn = false;
-            currentUsername = 'Local User';
-            showStatus('Logged out successfully. Data is now local (unsaved).', 'bg-blue-100 text-blue-700');
-            
-            // Revert app to a clean state
-            await loadData(); // Load local defaults 
-            updateDashboard();
-            setAccountViewState(false);
-            getUserStatusEl().textContent = `Status: Logged Out`;
-            changeView('account');
-            
         } catch (e) {
-             showStatus('Logout failed, but connection closed.', 'bg-yellow-100 text-yellow-700');
-             setAccountViewState(false);
+             console.warn("Logout endpoint unreachable, but clearing client-side state anyway.");
         }
+        
+        isLoggedIn = false;
+        currentUsername = 'Local User';
+        
+        // Clear inputs
+        authUsernameEl.value = '';
+        authPasswordEl.value = '';
+
+        showStatus('Logged out successfully. Data is now local (unsaved).', 'bg-blue-100 text-blue-700');
+        
+        // Revert app to a clean state
+        await loadData();
+        updateDashboard();
+        setAccountViewState(false);
+        getUserStatusEl().textContent = `Status: Logged Out (Data unsaved)`;
+        changeView('account');
     }
     
     // --- API LOAD DATA (Replaces localStorage load) ---
     async function loadData() {
-        // If not logged in, revert to hardcoded defaults (lost data)
+        // If not logged in, load local defaults
         if (!isLoggedIn) {
-            showStatus('Loading default settings. Your previous data is not saved.', 'bg-red-100 text-red-700');
             recurringSchedules = defaultSchedules;
             oneTimeTransactions = [];
             debtPlans = [];
@@ -307,6 +706,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             showEODBalance = false;
             savedAmount = 0;
             currentCalendarSize = 'large';
+
+            // Sync local defaults to dashboard inputs
+            syncProjectionInputs();
 
             return;
         }
@@ -328,7 +730,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             projectionMonthsEl.value = settings.projectionMonths || DEFAULT_PROJECTION_MONTHS;
             startingBalanceEl.value = settings.startingBalance || DEFAULT_STARTING_BALANCE;
 
-            showEODBalance = settings.showEODBalance === true; // explicitly check for true
+            // These are boolean and number/string settings, check for existence
+            showEODBalance = settings.showEODBalance === true; 
             savedAmount = parseFloat(settings.savedAmount) || 0;
             currentCalendarSize = settings.calendarSize || 'large';
             
@@ -351,7 +754,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- API SAVE DATA (Replaces localStorage save) ---
     function saveData() {
         if (!isLoggedIn) {
-            showStatus('Cannot save: You are not logged in. Data will be lost upon refresh.', 'bg-red-100 text-red-700');
+            // Only show the warning if user interacts with app elements that trigger save
+            // The initial loadData() handles the un-saved state warning.
             return;
         }
         
@@ -381,7 +785,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (response.ok) {
                 showStatus('Settings and Data saved successfully to cloud!', 'bg-blue-100 text-blue-700');
             } else {
-                 // Check if we got a 401 Unauthorized
                 if (response.status === 401) {
                     showStatus('ERROR: Save failed - Unauthorized. Please log in again.', 'bg-red-100 text-red-700');
                     isLoggedIn = false; 
@@ -411,11 +814,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // =========================================================================
     // 3. EVENT LISTENERS AND UTILITIES
-    // (Most functions remain the same, but the 'saveAndRender' call is crucial)
     // =========================================================================
 
     function saveAndRender() {
-        saveData(); // Now calls the API save
+        saveData(); 
         renderSchedules();
         renderDebtPlans(); 
         updateDashboard();
@@ -579,7 +981,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function addEventListeners() {
-        // AUTH LISTENERS (NEW)
+        // AUTH LISTENERS
         loginFormEl.addEventListener('submit', (e) => {
             e.preventDefault();
             handleAuth('login');
@@ -600,10 +1002,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 setCalendarSize(e.target.dataset.size);
                 updateDashboard();
             });
-        });
+        }));
 
-        // NOTE: All handlers call updateDashboard, which calls saveAndRender, which calls saveData.
-        
         // Sync inputs and trigger dashboard update/save
         [startDateEl, projectionMonthsEl, startingBalanceEl].forEach(el => el.addEventListener('change', (e) => {
             syncProjectionInputs();
@@ -883,7 +1283,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     function openRecurringModal(schedule = null) {
-        // ... (Modal logic remains the same, ensure to call saveAndRender on submit)
         scheduleForm.reset();
         let type = 'expense';
         let amountValue = '';
@@ -913,7 +1312,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function openOneTimeModal(transaction = null, dateKey = null) { 
-        // ... (Modal logic remains the same, ensure to call saveAndRender on submit)
         oneTimeForm.reset();
         document.getElementById('onetime-id').value = ''; 
         let type = 'expense';
@@ -936,7 +1334,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function openDebtPlanModal(plan = null) {
-        // ... (Modal logic remains the same, ensure to call saveAndRender on submit)
         debtPlanForm.reset();
         document.getElementById('debt-pay-day').value = 1; 
         if (plan) {
@@ -1162,7 +1559,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function renderCalendar(projections) {
-        // ... (Calendar rendering logic remains the same, using currentCalendarSize, showEODBalance)
         const calendarGrid = document.getElementById('calendar-grid');
         document.getElementById('calendar-month-year').textContent = format(currentCalendarDate, 'MMMM yyyy');
         calendarGrid.innerHTML = '';
@@ -1257,8 +1653,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
-    // The rest of the functions (updateKeyMetrics, renderTransactionTable, updateCashFlowChart, updateMonthlyNetChart, calculateTotalWeeks, renderCategoryToggles, generateSpendingPlans, applySpendingPlan, showDashboard) remain logically identical to the original and are included below for completeness.
-
     function updateKeyMetrics(projections) {
         const startingBalance = parseFloat(startingBalanceEl.value || startingBalanceDashboardEl.value);
         let totalIncome = 0;
@@ -1587,7 +1981,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             changeView('calendar');
         } else {
             // If not logged in, show the account view
-            await loadData(); // Load local defaults to prevent blank variables
+            await loadData(); 
             changeView('account');
         }
         
@@ -1598,4 +1992,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
 });
-```
+</script>
+</body>
+</html>
