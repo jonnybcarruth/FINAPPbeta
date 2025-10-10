@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive FinPlan Dashboard</title>
+    <!-- CRUCIAL CONFIGURATION FOR FULL-SCREEN APP MODE ON IPHONE -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="FinPlan">
+    <!-- APP ICON CONFIGURATION -->
     <link rel="apple-touch-icon" href="https://placehold.co/180x180/047857/ffffff?text=%24%E2%9C%93">
+    <!-- END FULL-SCREEN CONFIGURATION -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
@@ -89,47 +92,24 @@
 </head>
 <body class="antialiased">
     
+    <!-- STATUS MESSAGE BAR (FIXED AT TOP) -->
     <div id="status-message" class="fixed top-0 left-0 right-0 p-3 text-center text-sm font-medium transition duration-300 opacity-0 z-50"></div>
     
     <div class="container mx-auto p-4 sm:p-6 md:p-8">
 
         <main class="space-y-8 md:space-y-12">
             
+            <!-- Dynamic Header -->
             <header class="text-center mb-4 md:mb-6">
                 <h1 class="3xl md:text-4xl font-bold text-gray-800">FinPlan</h1>
-                <h2 id="page-title" class="text-xl font-semibold text-gray-700 mt-2">Account</h2>
+                <h2 id="page-title" class="text-xl font-semibold text-gray-700 mt-2">Calendar</h2>
                 <div id="user-status" class="text-xs text-gray-500 mt-2 p-2 bg-gray-100 rounded-lg">
                     Status: Local Mode (Data saved to this device only)
                 </div>
             </header>
 
-            <div id="view-account" class="view-container hidden space-y-8">
-                <section id="login-form-card" class="bg-white p-6 rounded-2xl shadow-sm max-w-md mx-auto">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center" id="account-header">Account Login</h2>
-                    <p class="text-sm text-gray-500 mb-6 text-center">Login to sync your data across all devices, or register a new account.</p>
-
-                    <form id="login-form" class="space-y-4">
-                        <div>
-                            <label for="auth-username" class="block text-sm font-medium text-gray-700">Username</label>
-                            <input type="text" id="auth-username" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label for="auth-password" class="block text-sm font-medium text-gray-700">Password</label>
-                            <input type="password" id="auth-password" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div class="flex justify-between space-x-2 pt-4">
-                            <button type="submit" data-action="login" class="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">Login</button>
-                            <button type="button" id="register-btn" class="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">Register</button>
-                        </div>
-                    </form>
-                    
-                    <div id="logout-container" class="mt-8 text-center hidden">
-                         <p id="logged-in-message" class="text-lg font-semibold text-gray-700 mb-4">Logged in as: User</p>
-                         <button type="button" id="logout-btn" class="w-full py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold">Logout</button>
-                    </div>
-                </section>
-            </div>
-            <div id="view-calendar" class="view-container hidden space-y-8">
+            <!-- 1. CALENDAR VIEW (HOME VIEW) -->
+            <div id="view-calendar" class="view-container space-y-8">
                 
                 <section id="calendar-view" class="bg-white p-6 rounded-2xl shadow-sm">
                     <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
@@ -142,10 +122,13 @@
                         <h3 id="calendar-month-year" class="text-xl font-semibold"></h3>
                         <button id="next-month" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Next &rarr;</button>
                     </div>
+                    <!-- Calendar Grid Wrapper (FIXED: Added overflow-x-auto for mobile scrolling) -->
                     <div class="overflow-x-auto">
+                        <!-- Added initial size via JS on load, set here as default placeholder -->
                         <div id="calendar-grid" class="grid grid-cols-7 gap-1 calendar-grid min-w-[700px]"></div>
                     </div>
                     
+                    <!-- NEW: Calendar Size Controls -->
                     <div class="flex flex-col items-center mt-6 pt-4 border-t border-gray-200">
                         <p class="text-sm font-semibold text-gray-700 mb-2">Calendar Controls:</p>
                         <div class="flex justify-center space-x-3 mb-4">
@@ -154,6 +137,7 @@
                             <button data-size="large" class="calendar-size-btn px-4 py-1 text-sm rounded-full bg-blue-600 text-white hover:bg-blue-700">Large</button>
                         </div>
                         
+                        <!-- NEW: EOD Balance Toggle -->
                         <div class="flex items-center space-x-2 p-2 bg-gray-100 rounded-lg">
                             <input type="checkbox" id="toggleEODBalance" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
                             <label for="toggleEODBalance" class="text-sm font-medium text-gray-700">Show End of Day Balance</label>
@@ -162,9 +146,11 @@
                     </div>
                 </section>
 
+                <!-- Projection Settings (MAIN CONTROL INPUTS) -->
                 <section id="projection-controls" class="bg-white p-6 rounded-2xl shadow-sm">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-bold text-gray-800">Settings</h2>
+                        <!-- MANUAL SAVE BUTTON ADDED -->
                         <button id="manual-save-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">Save Settings</button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
@@ -189,6 +175,7 @@
                     </section>
             </div>
             
+            <!-- 2. DASHBOARD VIEW (CHARTS & METRICS - MOVED PROJECTION SETTINGS HERE) -->
             <div id="view-dashboard" class="view-container hidden space-y-8">
                 
                 <section id="key-metrics" class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
@@ -210,9 +197,11 @@
                     </div>
                 </section>
 
+                <!-- PROJECTION CONTROLS MOVED TO DASHBOARD BOTTOM -->
                 <section id="projection-controls-dashboard" class="bg-white p-6 rounded-2xl shadow-sm">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-bold text-gray-800">Projection Settings</h2>
+                        <!-- MANUAL SAVE BUTTON ADDED -->
                         <button id="manual-save-btn-dashboard" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">Save Settings</button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
@@ -237,6 +226,9 @@
                 </section>
                 
             </div>
+            <!-- END DASHBOARD VIEW -->
+
+            <!-- 3. DEBT MANAGEMENT VIEW -->
             <div id="view-debt" class="view-container hidden space-y-8">
                 <section id="debt-plan-management" class="bg-white p-6 rounded-2xl shadow-sm">
                     <div class="flex justify-between items-center mb-4">
@@ -249,6 +241,7 @@
                 
             </div>
             
+            <!-- 4. RECURRING SCHEDULES VIEW -->
             <div id="view-schedules" class="view-container hidden space-y-8">
                 <section id="schedules-management" class="bg-white p-6 rounded-2xl shadow-sm">
                     <div class="flex justify-between items-center mb-4">
@@ -260,6 +253,7 @@
                 </section>
             </div>
 
+            <!-- 5. SPENDING PLAN VIEW (NEW) -->
             <div id="view-plan" class="view-container hidden space-y-8">
                 <section id="plan-intro" class="bg-white p-6 rounded-2xl shadow-sm">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">Projected Surplus Analysis</h2>
@@ -277,38 +271,47 @@
                     </div>
                 </section>
                 
+                <!-- Savings Target & Category Controls (NEW) -->
                 <section id="plan-controls" class="bg-white p-6 rounded-2xl shadow-sm space-y-6">
                     <h2 class="text-xl font-bold text-gray-800">Savings Target & Customization</h2>
 
+                    <!-- Savings Slider -->
                     <div class="pt-2">
                         <label for="savings-slider" class="block text-sm font-medium text-gray-700 mb-2">
                             Amount to Commit to Savings: <span id="saved-amount-display" class="font-bold text-xl text-green-700">$0</span>
                         </label>
+                        <!-- Custom CSS handles the dynamic progress bar -->
                         <input type="range" id="savings-slider" min="0" max="0" value="0" step="10" 
                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg"
                                style="--slider-progress: 0%;">
                         <p class="text-xs text-gray-500 mt-1">Slide to set your desired savings amount from your projected surplus.</p>
                     </div>
 
+                    <!-- Remaining Budget Display -->
                     <div class="p-4 bg-blue-100 rounded-xl text-center border border-blue-200">
                         <h3 class="text-md font-semibold text-blue-800">Remaining Budget for Weekly Spending:</h3>
                         <p id="remaining-budget-base" class="text-3xl font-bold text-blue-700 mt-1">$0.00</p>
                     </div>
 
+                    <!-- Category Toggles -->
                     <div class="pt-4 border-t border-gray-200">
                         <h3 class="text-lg font-bold text-gray-700 mb-3">Included Spending Categories:</h3>
                         <div id="category-toggles" class="grid grid-cols-2 gap-4">
-                            </div>
+                            <!-- Toggles generated by JS -->
+                        </div>
                     </div>
                 </section>
                 
+                <!-- Plan Options -->
                 <section id="plan-creator" class="bg-white p-6 rounded-2xl shadow-sm">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">Weekly Budget Allocation Plans</h2>
                     <p class="text-gray-500 mb-6">Select a plan to spend a percentage of your **Remaining Budget** on the selected categories, and generate the weekly transactions.</p>
                     <div id="plan-buttons" class="space-y-4">
-                        </div>
+                        <!-- Plans will be generated here -->
+                    </div>
                 </section>
                 
+                <!-- Delete Plan Section (NEW) -->
                 <section class="bg-white p-6 rounded-2xl shadow-sm">
                     <h2 class="text-xl font-bold text-red-700 mb-4">Manage Current Plan</h2>
                     <p class="text-sm text-gray-600 mb-4">Use this button to quickly remove all existing planned expenses (transactions tagged "(Planned)") from your forecast.</p>
@@ -317,6 +320,10 @@
                     </button>
                 </section>
             </div>
+            <!-- END SPENDING PLAN VIEW -->
+
+
+            <!-- 6. TRANSACTION LOG VIEW -->
             <div id="view-log" class="view-container hidden space-y-8">
                  <section id="transaction-log" class="bg-white p-6 rounded-2xl shadow-sm">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">Projected Transaction Log</h2>
@@ -333,8 +340,10 @@
         </main>
     </div>
 
+    <!-- NAVIGATION BAR (Fixed at Bottom) -->
     <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 z-40">
         <div class="container mx-auto px-4 sm:px-6 md:px-8 h-16 py-2">
+            <!-- Scrollable Button Container (Fixed to be centered and horizontally scrollable) -->
             <div class="flex overflow-x-auto flex-nowrap space-x-4 h-full items-center justify-center">
                 <button data-view="calendar" data-name="Calendar" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0 active-nav">Calendar</button>
                 <button data-view="dashboard" data-name="Dashboard" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Dashboard</button>
@@ -342,23 +351,30 @@
                 <button data-view="schedules" data-name="Recurring Schedules" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Recurring</button>
                 <button data-view="plan" data-name="Spending Plan" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Plan</button>
                 <button data-view="log" data-name="Transaction Log" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Log</button>
-                <button data-view="account" data-name="Account" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Account</button>
             </div>
         </div>
     </nav>
 
 
+    <!-- Modals (Global, accessible from all views) -->
+    
+    <!-- Modal for Daily Transaction Details (NEW) -->
     <div id="day-details-modal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
         <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-2xl bg-white">
             <h3 id="day-details-title" class="2xl font-bold mb-6">Transactions on [Date]</h3>
             <div id="day-details-list" class="space-y-3 max-h-96 overflow-y-auto">
-                </div>
+                <!-- Transaction items go here -->
+            </div>
             <div class="mt-8 flex justify-between">
+                <!-- NEW: Button to open One-Time Modal, passes the date key -->
                 <button type="button" id="add-from-day-details" class="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold" data-date="">+ One-Time Event</button>
                 <button type="button" id="close-day-details-btn" class="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Close</button>
             </div>
         </div>
     </div>
+    <!-- End Modal for Daily Transaction Details -->
+
+    <!-- Modal for Recurring Schedules (Complex) -->
     <div id="schedule-modal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
         <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-2xl bg-white">
             <h3 id="modal-title" class="2xl font-bold mb-6">Add New Schedule</h3>
@@ -367,6 +383,7 @@
                 <div class="space-y-4">
                     <div><label for="name" class="block text-sm font-medium">Name</label><input type="text" id="name" required class="w-full p-2 border rounded-lg"></div>
                     
+                    <!-- RECURRING SCHEDULE TYPE TOGGLE (NEW) -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium">Amount Type</label>
                         <div class="flex rounded-lg border border-gray-300 overflow-hidden" id="schedule-type-toggle">
@@ -375,13 +392,16 @@
                         </div>
                         <div><label for="amount" class="block text-sm font-medium">Amount ($)</label><input type="number" step="0.01" min="0" id="amount" required class="w-full p-2 border rounded-lg"></div>
                     </div>
+                    <!-- END RECURRING SCHEDULE TYPE TOGGLE -->
+                    
                     <div><label for="start_date" class="block text-sm font-medium">Start Date</label><input type="date" id="start_date" required class="w-full p-2 border rounded-lg"></div>
                     <div>
                         <label for="frequency" class="block text-sm font-medium">Frequency</label>
                         <select id="frequency" required class="w-full p-2 border rounded-lg">
                             <option value="Monthly">Monthly</option>
                             <option value="Weekly">Weekly</option>
-                            <option value="BiWeekly">Bi-Weekly</option> </select>
+                            <option value="BiWeekly">Bi-Weekly</option> <!-- ADDED BI-WEEKLY OPTION -->
+                        </select>
                     </div>
                     <div id="day-value-monthly"><label for="day_value_month" class="block text-sm font-medium">Day of Month (1-31)</label><input type="number" id="day_value_month" min="1" max="31" class="w-full p-2 border rounded-lg"></div>
                     <div id="day-value-weekly" class="hidden"><label for="day_value_week" class="block text-sm font-medium">Day of Week</label><select id="day_value_week" class="w-full p-2 border rounded-lg"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
@@ -391,6 +411,7 @@
         </div>
     </div>
 
+    <!-- Modal for One-Time Transactions (Simple) -->
     <div id="onetime-modal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
         <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-2xl bg-white">
             <h3 class="2xl font-bold mb-6">Add One-Time Transaction</h3>
@@ -399,6 +420,7 @@
                 <div class="space-y-4">
                     <div><label for="onetime-name" class="block text-sm font-medium">Name</label><input type="text" id="onetime-name" required class="w-full p-2 border rounded-lg"></div>
                     
+                    <!-- ONE-TIME TRANSACTION TYPE TOGGLE (NEW) -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium">Amount Type</label>
                         <div class="flex rounded-lg border border-gray-300 overflow-hidden" id="onetime-type-toggle">
@@ -407,6 +429,8 @@
                         </div>
                         <div><label for="onetime-amount" class="block text-sm font-medium">Amount ($)</label><input type="number" step="0.01" min="0" id="onetime-amount" required class="w-full p-2 border rounded-lg"></div>
                     </div>
+                    <!-- END ONE-TIME TRANSACTION TYPE TOGGLE -->
+                    
                     <div><label for="onetime-date" class="block text-sm font-medium">Date of Transaction</label><input type="date" id="onetime-date" required class="w-full p-2 border rounded-lg"></div>
                 </div>
                 <div class="mt-8 flex justify-end space-x-4">
@@ -417,6 +441,7 @@
         </div>
     </div>
 
+    <!-- Modal for Debt Plan -->
     <div id="debt-plan-modal" class="modal modal-inactive fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
         <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-2xl bg-white">
             <h3 id="debt-modal-title" class="2xl font-bold mb-6">Add New Debt Plan</h3>
@@ -441,18 +466,12 @@
 import { addMonths, eachDayOfInterval, format, getDay, getDate, endOfMonth, startOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, subMonths, parseISO, subDays, getISOWeek, startOfWeek as startOfISOWeek, endOfWeek as endOfISOWeek, isBefore, isSameDay } from 'https://cdn.jsdelivr.net/npm/date-fns@2.29.3/esm/index.js';
 
 // =========================================================================
-// 0. CRITICAL CONFIGURATION
-// =========================================================================
-// !!! REPLACE THIS WITH YOUR RENDER PUBLIC URL (e.g., https://finplan-app.onrender.com) !!!
-const RENDER_URL = "YOUR_RENDER_URL"; 
-// =========================================================================
-
-// =========================================================================
-// DOM ACCESS HELPERS 
+// DOM ACCESS HELPERS (For safe access during async startup)
 // =========================================================================
 function getUserStatusEl() { return document.getElementById('user-status'); }
 function getPageTitleEl() { return document.getElementById('page-title'); }
 
+// Function to synchronously initialize all DOM elements (moved out of listener for scope fix)
 let startDateEl, projectionMonthsEl, startingBalanceEl, startDateDashboardEl, projectionMonthsDashboardEl, startingBalanceDashboardEl;
 let schedulesListEl, debtPlansListEl, transactionFilterEl, statusMessageEl, manualSaveBtn, manualSaveBtnDashboard, planButtonsEl;
 let scheduleModal, oneTimeModal, debtPlanModal, dayDetailsModal;
@@ -462,15 +481,13 @@ let navButtons, viewContainers, calendarGridEl, calendarSizeButtons;
 
 // NEW ELEMENTS FOR PLAN VIEW
 let savingsSliderEl, savedAmountDisplayEl, remainingBudgetBaseEl, categoryTogglesEl, deletePlanBtnEl;
-let toggleEODBalanceEl;
-// AUTH ELEMENTS
-let authUsernameEl, authPasswordEl, loginFormEl, registerBtnEl, logoutBtnEl, logoutContainerEl, loggedInMessageEl;
-
+let toggleEODBalanceEl; // NEW ELEMENT
 
 function initDomElements() {
     startDateEl = document.getElementById('startDate');
     projectionMonthsEl = document.getElementById('projectionMonths');
     startingBalanceEl = document.getElementById('startingBalance');
+    // Dashboard elements
     startDateDashboardEl = document.getElementById('startDate_dashboard');
     projectionMonthsDashboardEl = document.getElementById('projectionMonths_dashboard');
     startingBalanceDashboardEl = document.getElementById('startingBalance_dashboard');
@@ -506,26 +523,19 @@ function initDomElements() {
     remainingBudgetBaseEl = document.getElementById('remaining-budget-base');
     categoryTogglesEl = document.getElementById('category-toggles');
     deletePlanBtnEl = document.getElementById('delete-plan-btn'); 
-    toggleEODBalanceEl = document.getElementById('toggleEODBalance');
     
-    // NEW AUTH ELEMENTS
-    authUsernameEl = document.getElementById('auth-username');
-    authPasswordEl = document.getElementById('auth-password');
-    loginFormEl = document.getElementById('login-form');
-    registerBtnEl = document.getElementById('register-btn');
-    logoutBtnEl = document.getElementById('logout-btn');
-    logoutContainerEl = document.getElementById('logout-container');
-    loggedInMessageEl = document.getElementById('logged-in-message');
+    toggleEODBalanceEl = document.getElementById('toggleEODBalance');
 }
 // =========================================================================
 
 
 document.addEventListener('DOMContentLoaded', async () => {
     
+    // FIX: Call synchronous initialization function immediately upon DOMContentLoaded
     initDomElements();
 
     // =========================================================================
-    // 1. CORE APPLICATION VARIABLES 
+    // 1. CORE APPLICATION VARIABLES
     // =========================================================================
     let recurringSchedules = [];
     let oneTimeTransactions = [];
@@ -535,15 +545,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     let dailyTransactionMap = {}; 
     let dailyBalanceMap = {}; 
     
+    // Global variable for the selected savings amount (synced from local storage)
     let savedAmount = 0; 
-    let showEODBalance = false; 
-    let isLoggedIn = false;
-    let currentUsername = 'Local User';
-    
-    // Default/Fallback Settings
-    const DEFAULT_STARTING_BALANCE = 5000;
-    const DEFAULT_PROJECTION_MONTHS = 12;
-    
+    let showEODBalance = localStorage.getItem('showEODBalance') === 'true'; // NEW: EOD Balance toggle state
+
     const defaultSchedules = [
         { id: 'RENT-01', name: 'Monthly Rent Payment', amount: -1010.00, startDate: '2024-01-03', frequency: 'Monthly', dayValue: 3, enabled: true },
         { id: 'SALARY-01', name: 'Weekly Salary', amount: 1000.00, startDate: '2024-01-04', frequency: 'Weekly', dayValue: 'Thursday', enabled: true },
@@ -553,273 +558,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     let cashFlowChart, monthlyNetChart;
     
-    const calendarSizes = { 'small': '320px', 'medium': '450px', 'large': '600px' };
-    let currentCalendarSize = 'large'; 
+    // Calendar Size Definitions (MOVED TO GLOBAL SCOPE FOR CLEANUP)
+    const calendarSizes = {
+        'small': '320px', // Adjusted to fit most vertical screens
+        'medium': '450px', 
+        'large': '600px'  
+    };
+    let currentCalendarSize = localStorage.getItem('calendarSize') || 'large'; 
     
+    // NEW: Updated SPENDING_CATEGORIES structure
     const SPENDING_CATEGORIES = [
         { name: 'Groceries', percentage: 40, fixedWeeklyAmount: 0, defaultEnabled: true },
         { name: 'Gas/Fuel', percentage: 30, fixedWeeklyAmount: 0, defaultEnabled: true },
         { name: 'Misc. Spending', percentage: 30, fixedWeeklyAmount: 0, defaultEnabled: true },
+        // Transportation category added as requested
         { name: 'Transportation', percentage: 0, fixedWeeklyAmount: 50.00, defaultEnabled: false } 
     ];
+    // This array holds the runtime status (enabled/disabled) of the categories
     let activeSpendingCategories = []; 
     
-    // --- APP STARTUP ---
-    await showDashboard();
-
     // =========================================================================
-    // 2. AUTHENTICATION & DATA SYNCHRONIZATION (NEW)
+    // 2. APP STARTUP
     // =========================================================================
-    
-    async function checkAuthStatus() {
-        if (RENDER_URL === "YOUR_RENDER_URL") {
-            getUserStatusEl().textContent = `Status: Local Mode (RENDER_URL not set)`;
-            isLoggedIn = false;
-            currentUsername = 'Local User';
-            // Disable sync buttons when not configured
-            manualSaveBtn.disabled = true;
-            manualSaveBtnDashboard.disabled = true;
-            return { logged_in: false };
-        }
-        
-        try {
-            const response = await fetch(`${RENDER_URL}/api/auth/status`);
-            const data = await response.json();
-            
-            isLoggedIn = data.logged_in;
-            currentUsername = data.username || 'Local User';
-            
-            // Enable/Disable save buttons based on login status
-            manualSaveBtn.disabled = !isLoggedIn;
-            manualSaveBtnDashboard.disabled = !isLoggedIn;
-
-            if (isLoggedIn) {
-                getUserStatusEl().textContent = `Status: Synced (Logged in as ${currentUsername})`;
-                setAccountViewState(true);
-            } else {
-                getUserStatusEl().textContent = `Status: Logged Out (Data unsaved)`;
-                setAccountViewState(false);
-            }
-            return data;
-        } catch (e) {
-            console.error("Authentication check failed. Server likely down.", e);
-            getUserStatusEl().textContent = `Status: OFFLINE (Server connection failed)`;
-            isLoggedIn = false;
-            setAccountViewState(false);
-            manualSaveBtn.disabled = true;
-            manualSaveBtnDashboard.disabled = true;
-            return { logged_in: false };
-        }
+    if (getUserStatusEl()) {
+        getUserStatusEl().textContent = `Status: Local Mode (Data saved to this device only)`;
     }
-    
-    function setAccountViewState(loggedIn) {
-        if (loggedIn) {
-            loginFormEl.classList.add('hidden');
-            logoutContainerEl.classList.remove('hidden');
-            loggedInMessageEl.textContent = `Logged in as: ${currentUsername}`;
-        } else {
-            loginFormEl.classList.remove('hidden');
-            logoutContainerEl.classList.add('hidden');
-            document.getElementById('account-header').textContent = 'Account Login';
-        }
-    }
+    showDashboard();
+    // --- END APP STARTUP ---
 
-    async function handleAuth(action) {
-        const username = authUsernameEl.value;
-        const password = authPasswordEl.value;
+
+    function showDashboard() {
+        // Initial setup calls
+        // Ensure initial values are set BEFORE loadData reads them
+        startDateEl.value = format(new Date(), 'yyyy-MM-dd');
+        startingBalanceEl.value = localStorage.getItem('startingBalance') || '5000'; 
         
-        if (!username || !password) {
-            showStatus('Username and password are required.', 'bg-red-100 text-red-700');
-            return;
-        }
-
-        const endpoint = action === 'login' ? '/api/auth/login' : '/api/auth/register';
-        
-        try {
-            const response = await fetch(`${RENDER_URL}${endpoint}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                showStatus(`${data.message}. Redirecting to Calendar.`, 'bg-green-100 text-green-700');
-                
-                await checkAuthStatus();
-                await loadData();
-                updateDashboard();
-                changeView('calendar');
-                
-                // Clear inputs for security
-                authUsernameEl.value = '';
-                authPasswordEl.value = '';
-
-            } else {
-                showStatus(`Authentication Failed: ${data.message}`, 'bg-red-100 text-red-700');
-            }
-        } catch (e) {
-            console.error("Auth server connection error:", e);
-            showStatus('Server connection error. Please try again.', 'bg-red-100 text-red-700');
-        }
-    }
-    
-    async function handleLogout() {
-        try {
-            // Attempt to clear session on the server
-            await fetch(`${RENDER_URL}/api/auth/logout`);
-        } catch (e) {
-             console.warn("Logout endpoint unreachable, but clearing client-side state anyway.");
-        }
-        
-        isLoggedIn = false;
-        currentUsername = 'Local User';
-        
-        // Clear inputs
-        authUsernameEl.value = '';
-        authPasswordEl.value = '';
-
-        showStatus('Logged out successfully. Data is now local (unsaved).', 'bg-blue-100 text-blue-700');
-        
-        // Revert app to a clean state
-        await loadData();
-        updateDashboard();
-        setAccountViewState(false);
-        getUserStatusEl().textContent = `Status: Logged Out (Data unsaved)`;
-        changeView('account');
-    }
-    
-    // --- API LOAD DATA (Replaces localStorage load) ---
-    async function loadData() {
-        // If not logged in, load local defaults
-        if (!isLoggedIn) {
-            recurringSchedules = defaultSchedules;
-            oneTimeTransactions = [];
-            debtPlans = [];
-            activeSpendingCategories = SPENDING_CATEGORIES.map(c => ({...c, enabled: c.defaultEnabled}));
-            
-            // Set defaults to inputs
-            startDateEl.value = format(new Date(), 'yyyy-MM-dd');
-            projectionMonthsEl.value = DEFAULT_PROJECTION_MONTHS;
-            startingBalanceEl.value = DEFAULT_STARTING_BALANCE;
-            showEODBalance = false;
-            savedAmount = 0;
-            currentCalendarSize = 'large';
-
-            // Sync local defaults to dashboard inputs
-            syncProjectionInputs();
-
-            return;
-        }
-
-        // --- Logged In: Load from API ---
-        try {
-            const response = await fetch(`${RENDER_URL}/api/load-data`);
-            const data = await response.json();
-            
-            // 1. Load Data Arrays
-            recurringSchedules = data.recurringSchedules || defaultSchedules;
-            oneTimeTransactions = data.oneTimeTransactions || [];
-            debtPlans = data.debtPlans || [];       
-            
-            // 2. Load Settings (Use defaults if settings key is empty)
-            const settings = data.settings || {};
-            
-            startDateEl.value = settings.startDate || format(new Date(), 'yyyy-MM-dd');
-            projectionMonthsEl.value = settings.projectionMonths || DEFAULT_PROJECTION_MONTHS;
-            startingBalanceEl.value = settings.startingBalance || DEFAULT_STARTING_BALANCE;
-
-            // These are boolean and number/string settings, check for existence
-            showEODBalance = settings.showEODBalance === true; 
-            savedAmount = parseFloat(settings.savedAmount) || 0;
-            currentCalendarSize = settings.calendarSize || 'large';
-            
-            // 3. Load Categories
-            activeSpendingCategories = settings.activeSpendingCategories || SPENDING_CATEGORIES.map(c => ({...c, enabled: c.defaultEnabled}));
-
-            // Sync all fields and state
-            if (toggleEODBalanceEl) toggleEODBalanceEl.checked = showEODBalance;
-            setCalendarSize(currentCalendarSize); 
-            syncProjectionInputs();
-            
-            showStatus('Data loaded and synchronized with the cloud.', 'bg-blue-100 text-blue-700');
-            
-        } catch (e) {
-            console.error("Error loading data from API:", e);
-            showStatus('ERROR: Failed to load data from server. Check connection.', 'bg-red-100 text-red-700');
-        }
-    }
-
-    // --- API SAVE DATA (Replaces localStorage save) ---
-    function saveData() {
-        if (!isLoggedIn) {
-            // Only show the warning if user interacts with app elements that trigger save
-            // The initial loadData() handles the un-saved state warning.
-            return;
-        }
-        
-        // Compile all state into a single object
-        const dataToSave = {
-            recurringSchedules: recurringSchedules,
-            oneTimeTransactions: oneTimeTransactions,
-            debtPlans: debtPlans,
-            
-            settings: {
-                startingBalance: startingBalanceEl.value,
-                projectionMonths: projectionMonthsEl.value,
-                startDate: startDateEl.value,
-                showEODBalance: showEODBalance,
-                savedAmount: savedAmount.toFixed(2),
-                calendarSize: currentCalendarSize,
-                activeSpendingCategories: activeSpendingCategories
-            }
-        };
-
-        fetch(`${RENDER_URL}/api/save-data`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dataToSave)
-        })
-        .then(response => {
-            if (response.ok) {
-                showStatus('Settings and Data saved successfully to cloud!', 'bg-blue-100 text-blue-700');
-            } else {
-                if (response.status === 401) {
-                    showStatus('ERROR: Save failed - Unauthorized. Please log in again.', 'bg-red-100 text-red-700');
-                    isLoggedIn = false; 
-                    setAccountViewState(false); 
-                    changeView('account');
-                } else {
-                    return response.json().then(err => { throw new Error(err.message || 'Server error'); });
-                }
-            }
-        })
-        .catch(e => {
-            console.error("Error saving data to API:", e);
-            showStatus(`ERROR: Save failed - ${e.message}`, 'bg-red-100 text-red-700');
-        });
-    }
-
-    // --- SYNCHRONIZE PROJECTION INPUTS ---
-    function syncProjectionInputs() {
-        const balance = startingBalanceEl.value;
-        const months = projectionMonthsEl.value;
-        const date = startDateEl.value;
-
-        if (startingBalanceDashboardEl) startingBalanceDashboardEl.value = balance;
-        if (projectionMonthsDashboardEl) projectionMonthsDashboardEl.value = months;
-        if (startDateDashboardEl) startDateDashboardEl.value = date;
-    }
-    
-    // =========================================================================
-    // 3. EVENT LISTENERS AND UTILITIES
-    // =========================================================================
-
-    function saveAndRender() {
-        saveData(); 
+        loadData();
         renderSchedules();
         renderDebtPlans(); 
+        setCalendarSize(currentCalendarSize); // Set initial size
+        addEventListeners();
+        changeView(activeView); // Set initial view to calendar
         updateDashboard();
     }
     
@@ -837,11 +616,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // NEW FUNCTION: Sets the calendar size and updates button visuals
     function setCalendarSize(size) {
         if (calendarSizes[size]) {
             currentCalendarSize = size;
+            localStorage.setItem('calendarSize', size);
             calendarGridEl.style.minWidth = calendarSizes[size];
             
+            // NEW: Add responsive text class based on size
             calendarGridEl.classList.remove('calendar-day-text-sm', 'calendar-day-text-medium');
             if (size === 'small') {
                 calendarGridEl.classList.add('calendar-day-text-sm');
@@ -849,6 +631,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 calendarGridEl.classList.add('calendar-day-text-medium');
             }
 
+            // Update button visuals
             calendarSizeButtons.forEach(btn => {
                 const isSelected = btn.dataset.size === size;
                 btn.classList.toggle('bg-blue-600', isSelected);
@@ -859,6 +642,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
+    // NEW: Function to manage the visual state of the Income/Expense toggles
     function setToggleVisuals(containerId, type) {
         const toggleContainer = document.getElementById(containerId);
         const expenseBtn = toggleContainer.querySelector('[data-type="expense"]');
@@ -881,6 +665,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // --- VIEW MANAGEMENT LOGIC ---
     function changeView(viewId) {
         activeView = viewId;
         viewContainers.forEach(container => {
@@ -888,6 +673,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         document.getElementById(`view-${viewId}`).classList.remove('hidden');
 
+        // Dynamic Header Update
         const activeNavButton = document.querySelector(`.nav-btn[data-view="${viewId}"]`);
         if (activeNavButton) {
             getPageTitleEl().textContent = activeNavButton.dataset.name;
@@ -900,18 +686,127 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
         
+        // Ensure charts are redrawn if switching to dashboard or plans are generated
         if (viewId === 'dashboard') {
             setTimeout(() => {
                 updateCashFlowChart(generateProjections());
                 updateMonthlyNetChart(generateProjections());
             }, 10); 
         } else if (viewId === 'plan') {
+            // Recalculate spending plans when entering the view
             const projections = generateProjections();
             const metrics = updateKeyMetrics(projections);
-            generateSpendingPlans(metrics); 
+            generateSpendingPlans(metrics); // This is the main plan calculation function
+        }
+    }
+    // --- END VIEW MANAGEMENT LOGIC ---
+
+    // =========================================================================
+    // LOCAL STORAGE LOAD DATA (Reverted to pure localStorage)
+    // =========================================================================
+    function loadData() {
+        try {
+            // Load and parse all main data arrays
+            const savedSchedules = localStorage.getItem('recurringSchedules');
+            const savedOneTime = localStorage.getItem('oneTimeTransactions');
+            const savedDebtPlans = localStorage.getItem('debtPlans'); 
+            const savedBalance = localStorage.getItem('startingBalance');
+            const savedProjectionMonths = localStorage.getItem('projectionMonths');
+            const savedStartDate = localStorage.getItem('startDate');
+            const savedSize = localStorage.getItem('calendarSize');
+            
+            // NEW: Load EOD Balance preference
+            const savedEOD = localStorage.getItem('showEODBalance');
+            showEODBalance = savedEOD ? savedEOD === 'true' : false; // Default to false
+            if (toggleEODBalanceEl) toggleEODBalanceEl.checked = showEODBalance;
+            
+            // NEW: Load saved amount and categories
+            const savedAmountLS = localStorage.getItem('savedAmount');
+            if (savedAmountLS) { savedAmount = parseFloat(savedAmountLS); }
+            
+            const savedCategories = localStorage.getItem('activeSpendingCategories');
+            if (savedCategories) { 
+                activeSpendingCategories = JSON.parse(savedCategories); 
+            } else {
+                 // Initialize categories with defaults if nothing saved
+                activeSpendingCategories = SPENDING_CATEGORIES.map(c => ({...c, enabled: c.defaultEnabled}));
+            }
+            
+            recurringSchedules = savedSchedules ? JSON.parse(savedSchedules) : defaultSchedules;
+            oneTimeTransactions = savedOneTime ? JSON.parse(savedOneTime) : []; 
+            debtPlans = savedDebtPlans ? JSON.parse(savedDebtPlans) : [];       
+            
+            // Load settings - Map dashboard controls to main element IDs
+            if (savedBalance) {
+                startingBalanceEl.value = savedBalance;
+                if (startingBalanceDashboardEl) startingBalanceDashboardEl.value = savedBalance;
+            } else {
+                 // Use HTML default if nothing saved
+                if (startingBalanceDashboardEl) startingBalanceDashboardEl.value = startingBalanceEl.value; 
+            }
+            if (savedProjectionMonths) {
+                projectionMonthsEl.value = savedProjectionMonths;
+                if (projectionMonthsDashboardEl) projectionMonthsDashboardEl.value = savedProjectionMonths;
+            }
+            if (savedStartDate) {
+                 startDateEl.value = savedStartDate;
+                 if (startDateDashboardEl) startDateDashboardEl.value = savedStartDate;
+            }
+            if (savedSize) setCalendarSize(savedSize);
+
+            showStatus('Data loaded from device memory.', 'bg-green-100 text-green-700');
+            
+        } catch (e) {
+            console.error("Error loading data from localStorage:", e);
+            // Revert to defaults if loading fails
+            recurringSchedules = defaultSchedules;
+            oneTimeTransactions = [];
+            debtPlans = [];
+            activeSpendingCategories = SPENDING_CATEGORIES.map(c => ({...c, enabled: c.defaultEnabled}));
+            showStatus('ERROR: Failed to load data from device. Using defaults.', 'bg-red-100 text-red-700');
         }
     }
 
+    // =========================================================================
+    // LOCAL STORAGE SAVE DATA (Reverted to pure localStorage)
+    // =========================================================================
+    function saveData() {
+        try {
+            // Sync settings between calendar and dashboard input fields before saving
+            const balance = startingBalanceEl.value;
+            const months = projectionMonthsEl.value;
+            const date = startDateEl.value;
+
+            // Save all data arrays
+            localStorage.setItem('recurringSchedules', JSON.stringify(recurringSchedules));
+            localStorage.setItem('oneTimeTransactions', JSON.stringify(oneTimeTransactions));
+            localStorage.setItem('debtPlans', JSON.stringify(debtPlans)); 
+            
+            // Save all settings
+            localStorage.setItem('startingBalance', balance); 
+            localStorage.setItem('projectionMonths', months); 
+            localStorage.setItem('startDate', date); 
+            localStorage.setItem('calendarSize', currentCalendarSize); 
+            // NEW: Save EOD Balance preference
+            localStorage.setItem('showEODBalance', showEODBalance);
+            // NEW: Save saved amount and categories status
+            localStorage.setItem('savedAmount', savedAmount.toFixed(2));
+            localStorage.setItem('activeSpendingCategories', JSON.stringify(activeSpendingCategories));
+            
+            showStatus('Settings and Data saved successfully to device memory!', 'bg-blue-100 text-blue-700');
+        } catch (e) {
+            console.error("Error saving data to localStorage:", e);
+            showStatus('ERROR: Could not save data. Check browser settings (incognito mode).', 'bg-red-100 text-red-700');
+        }
+    }
+    
+    function saveAndRender() {
+        saveData();
+        renderSchedules();
+        renderDebtPlans(); 
+        updateDashboard();
+    }
+    
     function renderDebtPlans() {
         debtPlansListEl.innerHTML = '';
         debtPlans.forEach(plan => {
@@ -981,16 +876,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function addEventListeners() {
-        // AUTH LISTENERS
-        loginFormEl.addEventListener('submit', (e) => {
-            e.preventDefault();
-            handleAuth('login');
-        });
-        registerBtnEl.addEventListener('click', () => {
-             handleAuth('register');
-        });
-        logoutBtnEl.addEventListener('click', handleLogout);
-        
         // Navigation Listener
         navButtons.forEach(btn => btn.addEventListener('click', (e) => {
             changeView(e.currentTarget.dataset.view);
@@ -1002,26 +887,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 setCalendarSize(e.target.dataset.size);
                 updateDashboard();
             });
-        }));
+        });
 
+        // NOTE: All handlers call updateDashboard, which calls saveAndRender, which calls saveData.
         // Sync inputs and trigger dashboard update/save
         [startDateEl, projectionMonthsEl, startingBalanceEl].forEach(el => el.addEventListener('change', (e) => {
-            syncProjectionInputs();
+            // Sync calendar inputs to dashboard controls
+            if (startDateDashboardEl) startDateDashboardEl.value = startDateEl.value;
+            if (projectionMonthsDashboardEl) projectionMonthsDashboardEl.value = projectionMonthsEl.value;
+            if (startingBalanceDashboardEl) startingBalanceDashboardEl.value = startingBalanceEl.value;
             updateDashboard();
         }));
         
         // Sync inputs from dashboard controls to calendar fields
         [startDateDashboardEl, projectionMonthsDashboardEl, startingBalanceDashboardEl].forEach(el => el.addEventListener('change', (e) => {
-            startDateEl.value = startDateDashboardEl.value;
-            projectionMonthsEl.value = projectionMonthsDashboardEl.value;
-            startingBalanceEl.value = startingBalanceDashboardEl.value;
-            syncProjectionInputs();
+            if (startDateEl) startDateEl.value = startDateDashboardEl.value;
+            if (projectionMonthsEl) projectionMonthsEl.value = projectionMonthsDashboardEl.value;
+            if (startingBalanceEl) startingBalanceEl.value = startingBalanceDashboardEl.value;
             updateDashboard();
         }));
         
         // Manual Save Button Listener (Calendar & Dashboard versions)
-        manualSaveBtn.addEventListener('click', updateDashboard);
-        document.getElementById('manual-save-btn-dashboard').addEventListener('click', updateDashboard);
+        manualSaveBtn.addEventListener('click', () => {
+            updateDashboard(); // Triggers full recalculate and saveData()
+        });
+        document.getElementById('manual-save-btn-dashboard').addEventListener('click', () => {
+            updateDashboard(); // Triggers full recalculate and saveData()
+        });
         
         // Listeners for type toggles (One-Time)
         document.getElementById('onetime-type-toggle').addEventListener('click', (e) => {
@@ -1113,12 +1005,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             closeModal(scheduleModal);
             closeModal(oneTimeModal);
         }));
-        document.getElementById('close-day-details-btn').addEventListener('click', () => closeModal(dayDetailsModal));
+        document.getElementById('close-day-details-btn').addEventListener('click', () => closeModal(dayDetailsModal)); // NEW close button listener
 
-        // MODAL ADD ONE-TIME EVENT LISTENER
+        // MODAL ADD ONE-TIME EVENT LISTENER (NEW)
         document.getElementById('add-from-day-details').addEventListener('click', (e) => {
             const dateKey = e.currentTarget.dataset.date;
-            closeModal(dayDetailsModal);
+            closeModal(dayDetailsModal); // Close the detail modal
+            
+            // Open the one-time modal, passing the specific date string
             openOneTimeModal(null, dateKey); 
         });
 
@@ -1182,11 +1076,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
 
             if (id) {
+                // Editing existing transaction
                 const index = oneTimeTransactions.findIndex(t => t.id === id);
                 if (index !== -1) {
                     oneTimeTransactions[index] = newTransaction;
                 }
             } else {
+                // Adding new
                 oneTimeTransactions.push(newTransaction);
             }
             
@@ -1213,7 +1109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
         
-        // Listener for buttons within the Day Details Modal
+        // FIX: Listener for buttons within the Day Details Modal
         document.getElementById('day-details-list').addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('.delete-onetime-btn');
             const editBtn = e.target.closest('.edit-onetime-btn');
@@ -1224,34 +1120,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (transactionToDelete && confirm(`Are you sure you want to delete the one-time event: "${transactionToDelete.name}"?`)) {
                     oneTimeTransactions = oneTimeTransactions.filter(t => t.id !== id);
-                    closeModal(dayDetailsModal);
+                    closeModal(dayDetailsModal); // Close the detail modal after action
                     saveAndRender();
                 } else if (!transactionToDelete) {
                      console.error(`Attempted to delete one-time transaction with ID ${id}, but it was not found.`);
                 }
             } else if (editBtn) {
                 const id = editBtn.dataset.id;
+                // Find the transaction object using the ID
                 const transactionToEdit = oneTimeTransactions.find(t => t.id === id);
                 if (transactionToEdit) {
-                    closeModal(dayDetailsModal);
-                    openOneTimeModal(transactionToEdit);
+                    closeModal(dayDetailsModal); // Close details modal
+                    openOneTimeModal(transactionToEdit); // Open edit modal
                 }
             }
         });
         
+        // --- NEW PLAN LISTENERS ---
+        
         // Savings Slider Listener
         savingsSliderEl.addEventListener('input', (e) => {
             savedAmount = parseFloat(e.target.value);
+            // Update the slider track progress for visual feedback
             const max = parseFloat(savingsSliderEl.max);
             const percentage = (max > 0) ? (savedAmount / max) * 100 : 0;
             savingsSliderEl.style.setProperty('--slider-progress', `${percentage}%`);
             savedAmountDisplayEl.textContent = `$${savedAmount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            updateDashboard();
+            updateDashboard(); // Recalculate everything based on new saved amount
         });
         
         // Delete Plan Listener
         deletePlanBtnEl.addEventListener('click', () => {
             if (confirm('Are you sure you want to DELETE the current spending plan (all transactions tagged "(Planned)")?')) {
+                // Filter out all one-time transactions that were generated by the plan
                 oneTimeTransactions = oneTimeTransactions.filter(t => !t.name.includes('(Planned)'));
                 showStatus('All planned spending transactions deleted.', 'bg-red-100 text-red-700');
                 saveAndRender();
@@ -1268,20 +1169,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const categoryIndex = activeSpendingCategories.findIndex(c => c.name === categoryName);
                 if (categoryIndex !== -1) {
                     activeSpendingCategories[categoryIndex].enabled = isChecked;
-                    updateDashboard();
+                    updateDashboard(); // Recalculate plan and metrics
                 }
             }
         });
         
-        // EOD Balance Toggle Listener
+        // EOD Balance Toggle Listener (NEW)
         if (toggleEODBalanceEl) {
             toggleEODBalanceEl.addEventListener('change', (e) => {
                 showEODBalance = e.target.checked;
-                updateDashboard();
+                updateDashboard(); // Redraw calendar
             });
         }
+        
+        // --- END NEW PLAN LISTENERS ---
     }
     
+    // Updates the Recurring Schedule Modal (for editing)
     function openRecurringModal(schedule = null) {
         scheduleForm.reset();
         let type = 'expense';
@@ -1305,30 +1209,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         document.getElementById('amount').value = amountValue || '';
-        setToggleVisuals('schedule-type-toggle', type);
+        setToggleVisuals('schedule-type-toggle', type); // Set initial visual state
         toggleDayValueInputs();
         scheduleModal.classList.remove('modal-inactive');
         scheduleModal.classList.add('modal-active');
     }
 
+    // Updates the One-Time Transaction Modal (for adding/editing)
+    // ADDED dateKey parameter for pre-filling date from calendar click
     function openOneTimeModal(transaction = null, dateKey = null) { 
         oneTimeForm.reset();
-        document.getElementById('onetime-id').value = ''; 
+        document.getElementById('onetime-id').value = ''; // Clear ID default
         let type = 'expense';
         let amountValue = '';
+        // Default date to set: either the passed dateKey or the current calendar date
         let dateToSet = dateKey || format(currentCalendarDate, 'yyyy-MM-dd'); 
 
         if (transaction) {
+            // Editing existing transaction
             document.getElementById('onetime-id').value = transaction.id;
             document.getElementById('onetime-name').value = transaction.name;
+            
             amountValue = Math.abs(transaction.amount);
             type = transaction.amount > 0 ? 'income' : 'expense';
+            
+            // Use transaction date for input field when editing
             dateToSet = format(parseISO(transaction.date), 'yyyy-MM-dd'); 
         }
         
         document.getElementById('onetime-date').value = dateToSet;
         document.getElementById('onetime-amount').value = amountValue || '';
-        setToggleVisuals('onetime-type-toggle', type);
+        setToggleVisuals('onetime-type-toggle', type); // Default to expense
         oneTimeModal.classList.remove('modal-inactive');
         oneTimeModal.classList.add('modal-active');
     }
@@ -1364,7 +1275,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('day-value-weekly').classList.add('hidden');
             document.getElementById('day_value_month').required = true;
             document.getElementById('day_value_week').required = false;
-        } else if (frequencySelect.value === 'Weekly' || frequencySelect.value === 'BiWeekly') {
+        } else if (frequencySelect.value === 'Weekly' || frequencySelect.value === 'BiWeekly') { // UPDATED FOR BI-WEEKLY
             document.getElementById('day-value-monthly').classList.add('hidden');
             document.getElementById('day-value-weekly').classList.remove('hidden');
             document.getElementById('day_value_month').required = false;
@@ -1377,38 +1288,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
+    // NEW HELPER FUNCTION: Finds the EOD balance for any given date key, even if it's empty
     function getEndOfDayBalance(dateKey) {
         const startingBalance = parseFloat(startingBalanceEl.value) || 0;
         
+        // 1. Check if the balance is directly available (i.e., day had transactions)
         if (dailyBalanceMap[dateKey] !== undefined) {
             return dailyBalanceMap[dateKey];
         }
 
+        // 2. If not, look backward for the most recent transaction day's balance
         let currentDate = parseISO(dateKey);
         const projectionStartDate = parseISO(startDateEl.value);
 
+        // Iterate backwards from the day before the target date
         let lookBackDate = subDays(currentDate, 1);
         
         while (lookBackDate >= projectionStartDate) {
             const lookBackKey = format(lookBackDate, 'yyyy-MM-dd');
             if (dailyBalanceMap[lookBackKey] !== undefined) {
-                return dailyBalanceMap[lookBackKey];
+                return dailyBalanceMap[lookBackKey]; // Found the balance from the most recent transaction day
             }
             lookBackDate = subDays(lookBackDate, 1);
         }
 
+        // 3. If no transaction day was found before the target date, return the starting balance
         return startingBalance;
     }
 
+    // FUNCTION: Opens the modal showing transactions for the selected day
     function openDayDetailsModal(dateKey) {
         const transactions = dailyTransactionMap[dateKey] || [];
+        
+        // FIX: Use the new robust lookup function
         const rawFinalBalance = getEndOfDayBalance(dateKey); 
+        
         const finalBalanceText = `$${rawFinalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             
         const titleEl = document.getElementById('day-details-title');
         const listEl = document.getElementById('day-details-list');
-        const addOneTimeBtn = document.getElementById('add-from-day-details');
+        const addOneTimeBtn = document.getElementById('add-from-day-details'); // NEW BUTTON ELEMENT
 
+        // NEW: Include the End of Day Balance in the title
         titleEl.innerHTML = `Transactions on ${format(parseISO(dateKey), 'EEEE, MMM do')}
                              <span class="block text-base font-medium text-gray-600 mt-1">End of Day Balance: <span class="font-bold text-lg text-blue-600">${finalBalanceText}</span></span>`;
         listEl.innerHTML = '';
@@ -1427,6 +1348,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const item = document.createElement('div');
             item.className = `flex justify-between items-center p-3 rounded-lg border ${colorClass}`;
             
+            // --- FIX: Allow editing/deleting of all One-Time events (including Planned) ---
             let controlsHTML = '';
             if (t.type === 'One-Time') { 
                  controlsHTML = `
@@ -1440,6 +1362,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 `;
             }
+            // --- END FIX ---
 
             item.innerHTML = `
                 <div class="flex flex-col flex-grow">
@@ -1454,19 +1377,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             listEl.appendChild(item);
         });
         
+        // NEW: Set the date on the "Add One-Time Event" button
         addOneTimeBtn.dataset.date = dateKey;
 
         dayDetailsModal.classList.remove('modal-inactive');
         dayDetailsModal.classList.add('modal-active');
     }
 
+    // NEW FUNCTION: Calculates the running balance for every projected transaction date
     function calculateDailyBalances(projections) {
         let runningBalance = parseFloat(startingBalanceEl.value);
-        dailyBalanceMap = {};
+        dailyBalanceMap = {}; // Reset map
+
+        // Note: The projections array is already sorted by date.
 
         projections.forEach(t => {
             runningBalance += t.amount;
             const dateKey = format(t.date, 'yyyy-MM-dd');
+            
+            // Always record the balance after the transaction
             dailyBalanceMap[dateKey] = runningBalance;
         });
     }
@@ -1493,7 +1422,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else if (schedule.frequency === 'Weekly' && getDay(day) === weeklyDayMap[schedule.dayValue]) {
                     shouldPay = true;
                 } else if (schedule.frequency === 'BiWeekly' && getDay(day) === weeklyDayMap[schedule.dayValue]) {
+                    // Check if the number of days elapsed since the start date is a multiple of 14
                     const daysSinceStart = (day.getTime() - scheduleStart.getTime()) / (1000 * 60 * 60 * 24);
+                    // Use a small margin (e.g., 0.5 day) for float point safety near 0
                     if (daysSinceStart >= -0.5 && Math.abs(daysSinceStart % 14) < 0.5) { 
                         shouldPay = true;
                     }
@@ -1531,7 +1462,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         oneTimeTransactions.forEach(t => {
             const tDate = new Date(t.date + 'T00:00:00');
             if (tDate >= startDate && tDate <= endDate) {
-                projections.push({ date: tDate, name: t.name, amount: t.amount, type: 'One-Time', id: t.id });
+                projections.push({ date: tDate, name: t.name, amount: t.amount, type: 'One-Time', id: t.id }); // Ensure ID is passed
             }
         });
 
@@ -1540,15 +1471,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     function updateDashboard() {
         const projections = generateProjections();
-        calculateDailyBalances(projections);
-        const metrics = updateKeyMetrics(projections);
+        calculateDailyBalances(projections); // NEW CALL
+        const metrics = updateKeyMetrics(projections); // Store metrics for plan view
         
-        syncProjectionInputs();
+        // Sync the dashboard settings fields with the main calendar settings fields
+        if (startDateDashboardEl) startDateDashboardEl.value = startDateEl.value;
+        if (projectionMonthsDashboardEl) projectionMonthsDashboardEl.value = projectionMonthsEl.value;
+        if (startingBalanceDashboardEl) startingBalanceDashboardEl.value = startingBalanceEl.value;
         
+        // Update plan view data
         if (activeView === 'plan' || document.getElementById('view-plan').classList.contains('hidden') === false) {
              generateSpendingPlans(metrics);
         }
 
+        // Only call chart updates if the dashboard view is active or immediately after controls change
         if (activeView === 'dashboard') {
             updateCashFlowChart(generateProjections());
             updateMonthlyNetChart(generateProjections());
@@ -1568,8 +1504,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const endDate = endOfWeek(monthEnd);
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         
-        dailyTransactionMap = {};
+        dailyTransactionMap = {}; // Clear map for the new month
         
+        // Render Day Headers
         days.forEach(day => {
             const dayEl = document.createElement('div');
             dayEl.className = "text-center font-semibold text-sm text-gray-600 py-2";
@@ -1581,46 +1518,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         while(day <= endDate) {
             const dateKey = format(day, 'yyyy-MM-dd');
             const dailyTransactions = projections.filter(p => format(p.date, 'yyyy-MM-dd') === dateKey);
-            const inCurrentMonth = isSameMonth(day, monthStart);
+            const inCurrentMonth = isSameMonth(day, monthStart); // NEW: Check if day is in current month
 
             const dayEl = document.createElement('div');
             dayEl.className = `calendar-day p-2 border border-gray-200 rounded-md ${!inCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'}`;
             if (isToday(day)) { dayEl.classList.add('border-blue-500', 'border-2'); }
             
+            // 1. Element for the Day Number (Date)
             const dateNumberEl = document.createElement('div');
-            dateNumberEl.className = "text-sm font-semibold text-right flex flex-col items-end";
+            // Using flex-col here to handle stacking for smaller sizes
+            dateNumberEl.className = "text-sm font-semibold text-right flex flex-col items-end"; 
             
+            // Append the date number
             const dateSpan = document.createElement('span');
             dateSpan.textContent = format(day, 'd');
             dateNumberEl.appendChild(dateSpan);
             
+            // 2. --- NEW: Add EOD Balance Display (Stacked Below Date) ---
             if (showEODBalance && inCurrentMonth) {
                 const eodBalance = getEndOfDayBalance(dateKey);
-                const balanceDisplay = document.createElement('div');
+                const balanceDisplay = document.createElement('div'); // Changed to div for block-level stacking
                 
+                // Determine color for the balance based on overall EOD value
                 let balanceColor = 'text-gray-500';
                 if (eodBalance >= 1000) balanceColor = 'text-green-600';
                 else if (eodBalance < 0) balanceColor = 'text-red-600';
 
-                const roundedEOD = Math.round(eodBalance / 100) / 10;
+                // Display the End of Day balance concisely (rounded to the nearest k)
+                const roundedEOD = Math.round(eodBalance / 100) / 10; // Round to 0.1k
                 
+                // FIX: Removed ml-1 and $ sign
                 balanceDisplay.className = `text-xs font-bold ${balanceColor} text-right leading-none truncate`;
                 balanceDisplay.textContent = `${roundedEOD.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}k`; 
                 
                 balanceDisplay.title = `End of Day: $${eodBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                 
-                dateNumberEl.appendChild(balanceDisplay);
+                dateNumberEl.appendChild(balanceDisplay); // Append balance as child of dateNumberEl
             }
+            // --- END NEW EOD Balance Display ---
             
-            dayEl.appendChild(dateNumberEl);
+            dayEl.appendChild(dateNumberEl); // Append the date container
 
             if (inCurrentMonth) {
+                // FIX: Make ALL days in the current month interactive
                 dayEl.dataset.date = dateKey;
                 dayEl.classList.add('cursor-pointer', 'hover:shadow-lg'); 
                 
                 if (dailyTransactions.length > 0) {
                     dailyTransactionMap[dateKey] = dailyTransactions;
-                    dayEl.classList.add('bg-blue-50');
+                    dayEl.classList.add('bg-blue-50'); // Highlight if transactions exist
                 }
             }
 
@@ -1634,6 +1580,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     colorClass = 'bg-pink-100 text-pink-800';
                     borderClass = 'border-l-2 border-pink-500';
                 } else if (t.type === 'One-Time') {
+                    // Check if it's a planned expense (purple)
                     colorClass = t.name.includes('(Planned)') ? 'bg-purple-50 text-purple-800' : (t.amount > 0 ? 'bg-purple-100 text-purple-800' : 'bg-red-100 text-red-800');
                     borderClass = 'border-l-2 border-purple-500';
                 } else if (t.amount > 0) {
@@ -1652,7 +1599,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             day = addDays(day, 1);
         }
     }
-    
+
     function updateKeyMetrics(projections) {
         const startingBalance = parseFloat(startingBalanceEl.value || startingBalanceDashboardEl.value);
         let totalIncome = 0;
@@ -1677,6 +1624,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const filtered = projections.filter(p => {
             if (filter === 'all') return true;
             if (filter === 'income') return p.amount > 0;
+            // Treat debt payments and normal expenses as 'expense' for this filter
             if (filter === 'expense') return p.amount < 0; 
         });
 
@@ -1783,6 +1731,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     
+    // =========================================================================
+    // SPENDING PLAN LOGIC 
+    // =========================================================================
+    
+    // Helper: Calculate total weeks in the projection period
     function calculateTotalWeeks(startDate, projectionMonths) {
         const start = parseISO(startDate);
         const end = addMonths(start, projectionMonths);
@@ -1823,30 +1776,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         document.getElementById('savings-projection').textContent = `$${totalSavings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         
-        const sliderMax = Math.max(0, Math.floor(totalSavings / 100) * 100);
+        // 1. Set Slider Max
+        const sliderMax = Math.max(0, Math.floor(totalSavings / 100) * 100); // Round down to nearest 100
         savingsSliderEl.max = sliderMax.toFixed(0); 
-        savingsSliderEl.value = Math.min(savedAmount, sliderMax).toFixed(0);
-        savedAmount = parseFloat(savingsSliderEl.value);
+        savingsSliderEl.value = Math.min(savedAmount, sliderMax).toFixed(0); // Ensure current value doesn't exceed new max
+        savedAmount = parseFloat(savingsSliderEl.value); // Re-sync savedAmount
         
+        // Update slider progress visual
         const percentage = (sliderMax > 0) ? (savedAmount / sliderMax) * 100 : 0;
         savingsSliderEl.style.setProperty('--slider-progress', `${percentage}%`);
         savedAmountDisplayEl.textContent = `$${savedAmount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
+        // 2. Calculate Remaining Budget
         const remainingBudget = totalSavings - savedAmount;
         
         if (remainingBudget <= 0) {
             remainingBudgetBaseEl.textContent = '$0.00';
             planButtonsEl.innerHTML = `<p class="text-red-500 font-semibold p-4 bg-red-100 rounded-lg">Warning: Your selected savings goal ($${savedAmount.toLocaleString()}) exceeds or equals the projected surplus. No budget available for spending plans.</p>`;
-            renderCategoryToggles(activeSpendingCategories);
+            renderCategoryToggles(activeSpendingCategories); // Render toggles even if no budget
             return;
         }
 
         const baseWeeklyBudget = remainingBudget / totalWeeks;
         remainingBudgetBaseEl.textContent = `$${remainingBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+        // NEW LOGIC: Plan margins based on the *remaining* budget
         const planDefinitions = [
+            // Plan 1: Spends 100% of the remaining budget (0% savings of remainder) -> Aggressive Spending
             { name: 'Aggressive Spending (100% Budget)', margin: 1.00, buttonClass: 'bg-red-600 hover:bg-red-700' }, 
+            // Plan 2: Spends 75% of the remaining budget (25% savings of remainder) -> Balanced Spending
             { name: 'Balanced Spending (75% Budget)', margin: 0.75, buttonClass: 'bg-blue-600 hover:bg-blue-700' },    
+            // Plan 3: Spends 50% of the remaining budget (50% savings of remainder) -> Conservative Spending
             { name: 'Conservative Spending (50% Budget)', margin: 0.50, buttonClass: 'bg-green-600 hover:bg-green-700' } 
         ];
 
@@ -1854,19 +1814,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const enabledCategories = activeSpendingCategories.filter(c => c.enabled);
         
+        // Calculate total weekly fixed costs (e.g., Transportation)
         const totalFixedWeeklyCost = enabledCategories.filter(c => c.fixedWeeklyAmount > 0)
                                                      .reduce((sum, cat) => sum + cat.fixedWeeklyAmount, 0);
 
+        // Calculate total percentage only for the *variable* categories (Groceries, Gas, Misc)
         const variableCategories = enabledCategories.filter(c => c.fixedWeeklyAmount === 0);
-        const totalVariablePercentage = variableCategories.reduce((sum, cat) => sum + cat.percentage, 0);
+        // Ensure total is 100, assuming default percentages hold
+        const totalVariablePercentage = variableCategories.reduce((sum, cat) => sum + cat.percentage, 0); 
         
-        renderCategoryToggles(activeSpendingCategories);
+        renderCategoryToggles(activeSpendingCategories); // Render toggles here
 
         planDefinitions.forEach(plan => {
+            // Apply the plan margin to the base weekly budget, then subtract fixed costs
             const weeklyBudgetForVariable = (baseWeeklyBudget * plan.margin) - totalFixedWeeklyCost;
             
+            // This is the total weekly amount this plan allocates (fixed + variable)
             const totalWeeklyAllocation = totalFixedWeeklyCost + (weeklyBudgetForVariable > 0 ? weeklyBudgetForVariable : 0);
             
+            // Calculate breakdown for display and data
             const categoryBreakdown = enabledCategories.map(cat => {
                 let amount;
                 let isFixed = cat.fixedWeeklyAmount > 0;
@@ -1874,18 +1840,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (isFixed) {
                     amount = cat.fixedWeeklyAmount;
                 } else {
+                    // Only allocate from the variable budget if the variable budget is positive
                     if (weeklyBudgetForVariable > 0 && totalVariablePercentage > 0) {
+                        // Allocate based on the category's relative percentage share of the total variable percentage
                         amount = (weeklyBudgetForVariable * (cat.percentage / totalVariablePercentage));
                     } else {
                         amount = 0;
                     }
                 }
                 
+                // Enforce Gas maximum/minimum (only applies to variable allocation)
                 if (cat.name === 'Gas/Fuel' && !isFixed) {
                     if (amount > 100) amount = 100;
                     if (amount < 30) amount = 30;
                 }
                 
+                // Ensure no negative allocation
                 amount = Math.max(0, amount); 
                 
                 return {
@@ -1928,6 +1898,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // 1. Clear any existing planned entries
         oneTimeTransactions = oneTimeTransactions.filter(t => !t.name.includes('(Planned)'));
         
         const breakdown = planData.breakdown;
@@ -1939,16 +1910,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const limitDate = addMonths(parseISO(startDate), projectionMonths);
         let transactionCount = 0;
 
+        // 2. Generate new planned one-time expenses for each week
         for (let i = 0; i < totalWeeks; i++) {
-            const weekDate = addDays(currentWeekStart, 4);
+            const weekDate = addDays(currentWeekStart, 4); // Use Thursday as default date for weekly plans
             
             if (isBefore(weekDate, limitDate) || isSameDay(weekDate, limitDate)) {
 
                 breakdown.forEach(cat => {
                     const amount = cat.amount;
                     
-                    if (amount > 0.01) {
-                        const finalAmount = -amount;
+                    if (amount > 0.01) { // Only generate a transaction if the amount is significant
+                        const finalAmount = -amount; // Expenses are negative
                         
                         oneTimeTransactions.push({
                             id: `PLAN-${Date.now()}-${i}-${cat.name}`,
@@ -1965,31 +1937,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         showStatus(`Generated ${transactionCount} planned weekly expenses for the forecast!`, 'bg-blue-100 text-blue-700');
+        
+        // 3. Save and redraw everything
         saveAndRender();
     }
 
 
-    async function showDashboard() {
-        addEventListeners();
-        
-        // Check authentication status first
-        const authStatus = await checkAuthStatus();
-        
-        if (authStatus.logged_in) {
-            // If logged in, load data from the cloud and show the main view
-            await loadData();
-            changeView('calendar');
-        } else {
-            // If not logged in, show the account view
-            await loadData(); 
-            changeView('account');
-        }
-        
-        // Initial rendering based on loaded data (or defaults)
-        renderSchedules();
-        renderDebtPlans(); 
-        updateDashboard();
-    }
+    // The main entry point is already called near the start of the DOMContentLoaded block:
+    // showDashboard();
     
 });
 </script>
