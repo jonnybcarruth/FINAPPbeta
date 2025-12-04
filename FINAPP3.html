@@ -1525,22 +1525,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             dateSpan.className = inCurrentMonth ? 'text-gray-800' : 'text-gray-400';
             
             // Transactions (badge/indicator)
-            const transactionBadge = document.createElement('span');
-            transactionBadge.className = 'text-xs font-semibold px-1 py-0.5 rounded-full';
-
+            let transactionBadgeHtml = '';
             if (dailyTransactions.length > 0) {
-                // Determine transaction color summary
+                // Determine transaction color and value summary
                 const netAmount = dailyTransactions.reduce((sum, t) => sum + t.amount, 0);
-                if (netAmount > 0) {
-                    transactionBadge.classList.add('bg-green-100', 'text-green-700');
-                    transactionBadge.textContent = '↑';
-                } else if (netAmount < 0) {
-                    transactionBadge.classList.add('bg-red-100', 'text-red-700');
-                    transactionBadge.textContent = '↓';
+                
+                // Calculate abbreviated value (rounded to nearest 1000, e.g., 1000 -> 1.0k)
+                const roundedAmount = Math.round(netAmount / 100) / 10;
+                let amountText = roundedAmount.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'k';
+                
+                let badgeClass = 'text-xs font-semibold px-1 py-0.5 rounded-full';
+                let icon = '';
+                
+                if (netAmount >= 0) {
+                    badgeClass += ' bg-green-100 text-green-700';
+                    icon = '+';
                 } else {
-                    transactionBadge.classList.add('bg-gray-100', 'text-gray-500');
-                    transactionBadge.textContent = '•';
+                    badgeClass += ' bg-red-100 text-red-700';
+                    icon = '-';
+                    amountText = amountText.replace('-', ''); // Remove the negative sign since we use the icon
                 }
+                
+                // FINAL FIX: Only show the magnitude and icon/sign. E.g. +1.0k or -1.0k
+                const netFlowLabel = icon + amountText;
+
+                transactionBadgeHtml = `<span class="${badgeClass}">${netFlowLabel}</span>`;
             }
 
 
@@ -1563,12 +1572,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // Build the date header element
-            dateHeaderEl.appendChild(dateSpan);
-            dateHeaderEl.appendChild(transactionBadge); // Badge is now next to the date
+            dateHeaderEl.innerHTML = ''; // Clear previous content
+            
             if (eodBalanceEl) {
-                // If EOD is shown, we need to restructure to handle the space better.
-                // For this Google Calender style, we'll put the date on the left and EOD on the right.
-                 dateHeaderEl.innerHTML = ''; // Clear previous
+                 // Stacked at top left (date) and top right (EOD balance) with transaction badge below
                  dateHeaderEl.classList.remove('justify-between');
                  dateHeaderEl.classList.add('justify-start', 'flex-col', 'items-start', 'space-y-0.5'); // Stacked at top left
                  
@@ -1578,12 +1585,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                  topRow.appendChild(eodBalanceEl); // EOD goes to the top right
                  
                  dateHeaderEl.appendChild(topRow);
-                 dateHeaderEl.appendChild(transactionBadge); // Keep badge visible
-                 transactionBadge.classList.add('ml-0');
+                 dateHeaderEl.innerHTML += transactionBadgeHtml; // Badge goes below
                  
             } else {
                 dateHeaderEl.classList.remove('justify-start', 'flex-col', 'items-start', 'space-y-0.5');
                 dateHeaderEl.classList.add('justify-between');
+                
+                const dateAndBadge = document.createElement('div');
+                dateAndBadge.className = 'flex items-center space-x-1';
+                dateAndBadge.appendChild(dateSpan);
+                dateAndBadge.innerHTML += transactionBadgeHtml;
+                dateHeaderEl.appendChild(dateAndBadge);
             }
             
             dayEl.appendChild(dateHeaderEl); // Append the date container
