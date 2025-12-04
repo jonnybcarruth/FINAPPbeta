@@ -8,8 +8,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="DinDin">
-    <!-- APP ICON CONFIGURATION -->
-    <link rel="apple-touch-icon" href="Dindin.png">
     <!-- END FULL-SCREEN CONFIGURATION -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -45,6 +43,7 @@
             --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.15);
         }
         
+        /* Dark Mode Contrast Fixes */
         .dark .bg-white { background-color: var(--card-bg) !important; color: var(--text-secondary) !important; }
         .dark .bg-gray-50 { background-color: var(--bg-secondary) !important; color: var(--text-secondary) !important; }
         .dark .bg-gray-100 { background-color: var(--bg-secondary) !important; }
@@ -53,6 +52,14 @@
         .dark .text-gray-600 { color: var(--text-secondary) !important; }
         .dark .text-gray-500 { color: var(--text-secondary) !important; }
         .dark .border-gray-200 { border-color: var(--border-color) !important; }
+        
+        /* Fix text color for controls like Prev/Next and Cancel buttons */
+        .dark .text-gray-800 { color: var(--text-primary) !important; }
+        .dark .bg-gray-200 { background-color: #374151 !important; color: var(--text-primary) !important; }
+        .dark .hover\:bg-gray-300:hover { background-color: #4B5563 !important; }
+        .dark .bg-blue-100 { background-color: #1F2937 !important; border-color: #374151 !important; }
+        .dark .text-blue-800 { color: #60A5FA !important; } /* Blue for contrast */
+
         .dark input, .dark select { background-color: var(--bg-primary) !important; border-color: var(--border-color) !important; color: var(--text-primary) !important; }
         
         /* Dark mode nav fix */
@@ -75,8 +82,10 @@
         /* Toggle styling for dark mode toggle - UPDATED TO DINDIN GREEN */
         .toggle-checkbox {
             height: 24px; width: 24px;
-            top: 2px;
+            /* FIX: Removed top: 2px which caused misalignment in some browsers */
             transition: all 0.2s ease;
+            right: 0; /* Align to the right of the label track */
+            border-color: #D1D5DB; /* Light mode default */
         }
         .toggle-label {
             height: 28px; width: 48px;
@@ -84,7 +93,10 @@
             background-color: #D1D5DB; /* Gray 300 */
         }
         /* Use DinDin Green for toggle checked state */
-        .toggle-checkbox:checked { right: 2px; border-color: #4CAF50; } 
+        .toggle-checkbox:checked { 
+            right: 22px; /* Adjusted position to align correctly within the 48px width track */
+            border-color: #4CAF50; 
+        } 
         .toggle-checkbox:checked + .toggle-label { background-color: #4CAF50; } 
         
         /* Active Nav Accent (Use DinDin Green) */
@@ -193,6 +205,7 @@
                     </div>
                     <p class="text-center text-gray-500 mb-6 max-w-2xl mx-auto px-6">This calendar displays all your financial events—recurring, one-time, and debt payments—for the selected month.</p>
                     <div id="calendar-controls" class="flex justify-between items-center mb-4 px-6">
+                        <!-- FIX: These buttons are now correctly styled via .dark .bg-gray-200 CSS rule -->
                         <button id="prev-month" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">&larr; Prev</button>
                         <h3 id="calendar-month-year" class="text-xl font-semibold"></h3>
                         <button id="next-month" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Next &rarr;</button>
@@ -230,7 +243,7 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                         
-                        <!-- DARK MODE TOGGLE -->
+                        <!-- DARK MODE TOGGLE (Fixed alignment using flex properties) -->
                         <div class="flex items-center justify-between p-3 bg-gray-100 rounded-lg col-span-full md:col-span-3">
                             <label for="darkModeToggle" class="text-sm font-medium text-gray-700">Dark Mode</label>
                             <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
@@ -347,11 +360,11 @@
                     <p class="text-gray-600 mb-4">Analyze your projected cash surplus over the selected period. Use the controls below to set your savings target and customize the weekly budget categories.</p>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
-                        <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="bg-white p-4 rounded-lg"> <!-- Changed bg-gray-50 to bg-white for Dark Mode consistency -->
                             <h3 class="text-md font-semibold text-gray-500">Projected Savings Over Period</h3>
                             <p id="savings-projection" class="text-2xl font-bold text-green-700 mt-1">$0.00</p>
                         </div>
-                        <div class="p-4 bg-gray-50 rounded-lg">
+                        <div class="bg-white p-4 rounded-lg"> <!-- Changed bg-gray-50 to bg-white for Dark Mode consistency -->
                             <h3 class="text-md font-semibold text-gray-500">Available Weekly Spending</h3>
                             <p id="weekly-spending-base" class="text-2xl font-bold text-blue-700 mt-1">$0.00</p>
                         </div>
@@ -522,7 +535,7 @@
                     <div><label for="onetime-date" class="block text-sm font-medium">Date of Transaction</label><input type="date" id="onetime-date" required class="w-full p-2 border rounded-lg"></div>
                 </div>
                 <div class="mt-8 flex justify-end space-x-4">
-                    <button type="button" class="cancel-btn px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
+                    <button type="button" id="onetime-cancel-btn" class="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
                     <!-- BUTTON COLOR CHANGED TO DINDIN GREEN ACCENT -->
                     <button type="submit" class="px-5 py-2 bg-dindin-green text-white rounded-lg hover:bg-dindin-green-dark">Save Transaction</button>
                 </div>
@@ -1118,10 +1131,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('add-one-time-btn').addEventListener('click', () => openOneTimeModal());
         
         // Cancel buttons for all modals
-        document.querySelectorAll('.cancel-btn').forEach(btn => btn.addEventListener('click', () => {
-            closeModal(scheduleModal);
-            closeModal(oneTimeModal);
-        }));
+        // Note: one-time cancel button id was fixed above
+        document.getElementById('onetime-cancel-btn').addEventListener('click', () => closeModal(oneTimeModal)); 
+        document.querySelector('#schedule-modal .cancel-btn').addEventListener('click', () => closeModal(scheduleModal));
+        
         document.getElementById('close-day-details-btn').addEventListener('click', () => closeModal(dayDetailsModal)); // NEW close button listener
 
         // MODAL ADD ONE-TIME EVENT LISTENER (NEW)
@@ -1801,8 +1814,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 datasets: [{
                     label: 'Projected Balance',
                     data: dataPoints,
-                    borderColor: '#3B82F6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    // FIX: Ensure consistent colors in dark mode charts
+                    borderColor: document.body.classList.contains('dark') ? '#4CAF50' : '#3B82F6',
+                    backgroundColor: document.body.classList.contains('dark') ? 'rgba(76, 175, 80, 0.2)' : 'rgba(59, 130, 246, 0.1)',
                     fill: true,
                     tension: 0.1,
                     pointRadius: 3
@@ -1811,10 +1825,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             options: {
                 responsive: true, maintainAspectRatio: false,
                 scales: {
-                    x: { type: 'time', time: { unit: 'month' } },
-                    y: { ticks: { callback: (value) => `$${value.toLocaleString()}` } }
+                    x: { type: 'time', time: { unit: 'month' }, grid: { color: 'rgba(100,100,100,0.2)' }, ticks: { color: 'var(--text-secondary, #343a40)' } },
+                    y: { ticks: { callback: (value) => `$${value.toLocaleString()}`, color: 'var(--text-secondary, #343a40)' }, grid: { color: 'rgba(100,100,100,0.2)' } }
                 },
                 plugins: {
+                    legend: { labels: { color: 'var(--text-primary, #343a40)' } },
                     tooltip: {
                          callbacks: {
                             label: (context) => ` Balance: ${context.formattedValue}`
@@ -1845,14 +1860,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 datasets: [{
                     label: 'Net Monthly Flow',
                     data: data,
-                    backgroundColor: data.map(v => v >= 0 ? 'rgba(22, 163, 74, 0.7)' : 'rgba(220, 38, 38, 0.7)'),
-                    borderColor: data.map(v => v >= 0 ? 'rgb(22, 163, 74)' : 'rgb(220, 38, 38)'),
+                    // FIX: Ensure consistent colors in dark mode charts
+                    backgroundColor: data.map(v => v >= 0 ? 'rgba(76, 175, 80, 0.8)' : 'rgba(220, 38, 38, 0.7)'),
+                    borderColor: data.map(v => v >= 0 ? '#4CAF50' : 'rgb(220, 38, 38)'),
                     borderWidth: 1
                 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                scales: { y: { ticks: { callback: (value) => `$${value.toLocaleString()}` } } }
+                scales: { 
+                    x: { grid: { color: 'rgba(100,100,100,0.2)' }, ticks: { color: 'var(--text-secondary, #343a40)' } },
+                    y: { ticks: { callback: (value) => `$${value.toLocaleString()}`, color: 'var(--text-secondary, #343a40)' }, grid: { color: 'rgba(100,100,100,0.2)' } }
+                },
+                 plugins: {
+                    legend: { labels: { color: 'var(--text-primary, #343a40)' } },
+                }
             }
         });
     }
@@ -1883,6 +1905,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 : `(${cat.percentage}% Allocation)`;
 
             const item = document.createElement('div');
+            // FIX: Use bg-white/bg-gray-100/text-gray-900 to rely on general dark mode overrides
             item.className = 'flex items-center space-x-3 p-3 bg-gray-100 rounded-lg';
             item.innerHTML = `
                 <input type="checkbox" id="toggle-${cat.name.replace(/\s/g, '-')}" data-category="${cat.name}" ${cat.enabled ? 'checked' : ''} class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
@@ -2000,7 +2023,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const card = document.createElement('div');
             card.className = 'bg-gray-50 p-4 rounded-xl border border-gray-200';
             card.innerHTML = `
-                <h3 class="text-lg font-bold mb-3">${plan.name}</h3>
+                <h3 class="text-lg font-bold text-gray-800 mb-3">${plan.name}</h3>
                 <p class="text-sm text-gray-500">
                     Saves ${((1 - plan.margin) * 100).toFixed(0)}% of the **Remaining Budget** (after fixed savings goal).
                 </p>
@@ -2077,4 +2100,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 </body>
 </html>
-
