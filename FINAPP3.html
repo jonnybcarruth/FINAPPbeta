@@ -27,22 +27,23 @@
         .modal-inactive { opacity: 0; pointer-events: none; }
         
         /* ADJUSTED CALENDAR GRID FOR MOBILE-FIRST FULL-WIDTH VIEW */
-        /* Min-height is crucial for the events stacking up to be visible */
         .calendar-grid { 
-            /* Reduced gap from gap-1 to gap-[2px] for tighter packing */
+            /* Minimized gap between cells */
             grid-template-rows: auto repeat(6, minmax(100px, 1fr)); 
-            gap: 2px;
+            gap: 1px; /* Even smaller gap */
         }
         .calendar-day { 
-            /* Ensure days take minimum space but stretch if content needs it */
             min-height: 100px; 
-            /* Flex column to stack date/balance and transactions */
             display: flex;
             flex-direction: column;
+            /* Minimized internal padding for max content area */
+            padding: 1px; 
         }
-        /* Further reduce padding inside the calendar cell for max content size */
-        .calendar-day {
-            padding: 2px;
+        
+        /* Custom smaller text size for events */
+        .event-text {
+            font-size: 10px; /* Smaller than Tailwind's text-xs (12px) */
+            line-height: 1.1;
         }
 
         .toggle-checkbox:checked { right: 0; border-color: #48BB78; }
@@ -90,8 +91,6 @@
             background: #10b981;
             box-shadow: 0 0 2px rgba(0,0,0,0.5);
         }
-        
-        /* REMOVED PREVIOUS CALENDAR SIZE STYLES - Relying on default responsiveness now */
     </style>
 </head>
 <body class="antialiased">
@@ -99,8 +98,8 @@
     <!-- STATUS MESSAGE BAR (FIXED AT TOP) -->
     <div id="status-message" class="fixed top-0 left-0 right-0 p-3 text-center text-sm font-medium transition duration-300 opacity-0 z-50"></div>
     
-    <!-- REDUCED PADDING: Changed sm:p-6 md:p-8 to p-2 sm:p-4 md:p-6 -->
-    <div class="container mx-auto p-2 sm:p-4 md:p-6">
+    <!-- REDUCED PADDING: Minimized overall container padding to hug edges -->
+    <div class="container mx-auto p-1 sm:p-2 md:p-4">
 
         <main class="space-y-8 md:space-y-12">
             
@@ -117,7 +116,7 @@
             <!-- 1. CALENDAR VIEW (HOME VIEW) -->
             <div id="view-calendar" class="view-container space-y-8">
                 
-                <!-- REDUCED PADDING: Changed sm:p-6 to p-2 sm:p-4 -->
+                <!-- REDUCED PADDING: Minimized section padding to allow grid to expand -->
                 <section id="calendar-view" class="bg-white p-2 sm:p-4 rounded-2xl shadow-sm">
                     <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
                         <h2 class="text-xl font-bold text-gray-800 mb-4 sm:mb-0">Transaction Calendar</h2>
@@ -129,11 +128,10 @@
                         <h3 id="calendar-month-year" class="text-xl font-semibold"></h3>
                         <button id="next-month" class="px-3 py-1 text-sm bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Next &rarr;</button>
                     </div>
-                    <!-- Calendar Grid Wrapper (REMOVED overflow-x-auto and min-width for full responsiveness) -->
-                    <!-- Changed gap-1 to use custom CSS gap: 2px -->
+                    <!-- Calendar Grid is now much tighter -->
                     <div id="calendar-grid" class="grid grid-cols-7 calendar-grid"></div>
                     
-                    <!-- Calendar Controls (REMOVED SIZE BUTTONS) -->
+                    <!-- Calendar Controls -->
                     <div class="flex flex-col items-center mt-6 pt-4 border-t border-gray-200">
                         <!-- EOD Balance Toggle -->
                         <div class="flex items-center space-x-2 p-2 bg-gray-100 rounded-lg">
@@ -1013,116 +1011,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // Submit Recurring Schedule
-        scheduleForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const id = scheduleIdInput.value;
-            const rawAmount = parseFloat(document.getElementById('amount').value);
-            const isIncome = document.querySelector('#schedule-type-toggle [data-current="income"]');
-            const finalAmount = isIncome ? rawAmount : -rawAmount; // Apply sign based on toggle
-
-            const newSchedule = {
-                id: id || `SCH-${Date.now()}`,
-                name: document.getElementById('name').value,
-                amount: finalAmount, // Use signed amount
-                startDate: document.getElementById('start_date').value,
-                frequency: frequencySelect.value,
-                dayValue: frequencySelect.value === 'Monthly' ? parseInt(document.getElementById('day_value_month').value) : document.getElementById('day_value_week').value,
-                enabled: true
-            };
-
-            if (id) {
-                const index = recurringSchedules.findIndex(s => s.id === id);
-                newSchedule.enabled = recurringSchedules[index].enabled;
-                recurringSchedules[index] = newSchedule;
-            } else {
-                recurringSchedules.push(newSchedule);
-            }
-            closeModal(scheduleModal);
-            saveAndRender();
-        });
-
-        // Submit One-Time Transaction (UPDATED TO HANDLE EDITING)
-        oneTimeForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const id = document.getElementById('onetime-id').value; // Get ID for editing
-            const rawAmount = parseFloat(document.getElementById('onetime-amount').value);
-            const isIncome = document.querySelector('#onetime-type-toggle [data-current="income"]');
-            const finalAmount = isIncome ? rawAmount : -rawAmount; // Apply sign based on toggle
-            
-            const newTransaction = {
-                id: id || `ONE-${Date.now()}`,
-                name: document.getElementById('onetime-name').value,
-                amount: finalAmount, // Use signed amount
-                date: document.getElementById('onetime-date').value,
-            };
-
-            if (id) {
-                // Editing existing transaction
-                const index = oneTimeTransactions.findIndex(t => t.id === id);
-                if (index !== -1) {
-                    oneTimeTransactions[index] = newTransaction;
-                }
-            } else {
-                // Adding new
-                oneTimeTransactions.push(newTransaction);
-            }
-            
-            closeModal(oneTimeModal);
-            saveAndRender();
-        });
-
-        frequencySelect.addEventListener('change', toggleDayValueInputs);
-
-        document.getElementById('prev-month').addEventListener('click', () => {
-            currentCalendarDate = subMonths(currentCalendarDate, 1);
-            updateDashboard(); 
-        });
-        document.getElementById('next-month').addEventListener('click', () => {
-            currentCalendarDate = addMonths(currentCalendarDate, 1);
-            updateDashboard(); 
-        });
-        
-        // Listener for clicking on calendar days
-        document.getElementById('calendar-grid').addEventListener('click', (e) => {
-            const dayEl = e.target.closest('.calendar-day');
-            if (dayEl && dayEl.dataset.date) {
-                openDayDetailsModal(dayEl.dataset.date);
-            }
-        });
-        
-        // FIX: Listener for buttons within the Day Details Modal
-        document.getElementById('day-details-list').addEventListener('click', (e) => {
-            const deleteBtn = e.target.closest('.delete-onetime-btn');
-            const editBtn = e.target.closest('.edit-onetime-btn');
-            
-            if (deleteBtn) {
-                const id = deleteBtn.dataset.id;
-                const transactionToDelete = oneTimeTransactions.find(t => t.id === id);
-
-                // IMPORTANT: Replacing window.confirm() with custom error message as required
-                console.error('Cannot use confirm() in this environment. One-time transaction delete logic prevented.');
-
-                // if (transactionToDelete && confirm(`Are you sure you want to delete the one-time event: "${transactionToDelete.name}"?`)) {
-                //     oneTimeTransactions = oneTimeTransactions.filter(t => t.id !== id);
-                //     closeModal(dayDetailsModal); // Close the detail modal after action
-                //     saveAndRender();
-                // } else if (!transactionToDelete) {
-                //      console.error(`Attempted to delete one-time transaction with ID ${id}, but it was not found.`);
-                // }
-            } else if (editBtn) {
-                const id = editBtn.dataset.id;
-                // Find the transaction object using the ID
-                const transactionToEdit = oneTimeTransactions.find(t => t.id === id);
-                if (transactionToEdit) {
-                    closeModal(dayDetailsModal); // Close details modal
-                    openOneTimeModal(transactionToEdit); // Open edit modal
-                }
-            }
-        });
-        
-        // --- NEW PLAN LISTENERS ---
-        
         // Savings Slider Listener
         savingsSliderEl.addEventListener('input', (e) => {
             savedAmount = parseFloat(e.target.value);
@@ -1623,30 +1511,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let textClass;
                 let amountText;
                 
+                // Determine transaction color based on type and status
                 if (t.type === 'Debt Payment') {
-                    colorClass = 'bg-pink-200';
-                    textClass = 'text-gray-800';
-                    amountText = `-$${Math.abs(t.amount).toFixed(0)}`;
+                    colorClass = 'bg-pink-300'; // Darker pink for better visibility
+                    textClass = 'text-black';
                 } else if (t.name.includes('(Planned)')) {
-                    colorClass = 'bg-purple-200';
-                    textClass = 'text-gray-800';
-                    amountText = `-$${Math.abs(t.amount).toFixed(0)}`;
+                    colorClass = 'bg-purple-300'; // Darker purple
+                    textClass = 'text-black';
                 } else if (t.amount > 0) {
-                    colorClass = 'bg-green-200';
-                    textClass = 'text-gray-800';
-                    amountText = `+$${Math.abs(t.amount).toFixed(0)}`;
+                    colorClass = 'bg-green-300';
+                    textClass = 'text-black';
                 } else {
-                    colorClass = 'bg-red-200';
-                    textClass = 'text-gray-800';
-                    amountText = `-$${Math.abs(t.amount).toFixed(0)}`;
+                    colorClass = 'bg-red-300';
+                    textClass = 'text-black';
                 }
                 
                 const li = document.createElement('li');
-                // Use inline-flex for better full-width wrapping
-                li.className = `text-xs inline-flex w-full items-center p-0.5 rounded ${colorClass} ${textClass} font-medium leading-tight`;
+                // Use the custom event-text class for smallest font, and block-level styling
+                li.className = `event-text inline-flex w-full items-center px-1 rounded-sm ${colorClass} ${textClass} font-medium leading-tight`;
                 
-                // Show the name and amount
-                li.innerHTML = `<span class="truncate ml-1">${t.name.replace(/\s\(Planned\)$/, '')}</span> <span class="ml-1 flex-shrink-0">(${amountText})</span>`;
+                // Show only the name. The amount is now implicitly reflected in the daily net flow badge.
+                li.innerHTML = `<span class="truncate">${t.name.replace(/\s\(Planned\)$/, '')}</span>`;
                 transactionList.appendChild(li);
             });
 
@@ -1654,7 +1539,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (dailyTransactions.length > 3) {
                 const moreCount = dailyTransactions.length - 3;
                 const li = document.createElement('li');
-                li.className = 'text-xs text-gray-500 mt-1 pl-1 italic';
+                li.className = 'event-text text-gray-500 mt-1 px-1 italic';
                 li.textContent = `+ ${moreCount} more events...`;
                 transactionList.appendChild(li);
             }
