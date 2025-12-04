@@ -24,7 +24,8 @@
         .modal { transition: opacity 0.25s ease; }
         .modal-active { opacity: 1; pointer-events: auto; }
         .modal-inactive { opacity: 0; pointer-events: none; }
-        .calendar-grid { grid-template-rows: auto repeat(6, minmax(0, 1fr)); }
+        .calendar-grid {  grid-template-rows: auto repeat(6, minmax(100px, 1fr)); 
+            gap: 1px; }
         .calendar-day { min-height: 100px; }
         .toggle-checkbox:checked { right: 0; border-color: #48BB78; }
         .toggle-checkbox:checked + .toggle-label { background-color: #48BB78; }
