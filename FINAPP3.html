@@ -8,8 +8,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="DinDin">
-    <!-- APP ICON CONFIGURATION -->
-    <link rel="apple-touch-icon" href="Dindin.png">
     <!-- END FULL-SCREEN CONFIGURATION -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,8 +15,51 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Define Custom DinDin Green */
+        .text-dindin-green { color: #4CAF50; }
+        .bg-dindin-green { background-color: #4CAF50 !important; }
+        .hover\:bg-dindin-green-dark:hover { background-color: #45A045 !important; } /* Darker shade for hover */
+        .border-dindin-green { border-color: #4CAF50 !important; }
+        
         /* FIX: Adjusted padding-bottom to 150px for max bottom clearance from the fixed nav */
-        body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; color: #343a40; padding-top: 16px; padding-bottom: 150px; }
+        /* --- DARK MODE BASE STYLES --- */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-primary, #F8F9FA); /* Controlled by CSS vars now */
+            color: var(--text-primary, #343a40); 
+            padding-top: 16px; 
+            padding-bottom: 150px; 
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Dark mode colors - UPDATED TO CHARCOAL THEME */
+        .dark {
+            --bg-primary: #1A1A1A; /* Deep Charcoal from Logo */
+            --bg-secondary: #292929; /* Slightly lighter card/section */
+            --text-primary: #F3F4F6; /* Light Text */
+            --text-secondary: #D1D5DB; /* Lighter Text for hints */
+            --border-color: #4B5563; /* Gray 600 */
+            --card-bg: #292929; /* Card background color */
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.15);
+        }
+        
+        .dark .bg-white { background-color: var(--card-bg) !important; color: var(--text-secondary) !important; }
+        .dark .bg-gray-50 { background-color: var(--bg-secondary) !important; color: var(--text-secondary) !important; }
+        .dark .bg-gray-100 { background-color: var(--bg-secondary) !important; }
+        .dark .text-gray-800 { color: var(--text-primary) !important; }
+        .dark .text-gray-700 { color: var(--text-secondary) !important; }
+        .dark .text-gray-600 { color: var(--text-secondary) !important; }
+        .dark .text-gray-500 { color: var(--text-secondary) !important; }
+        .dark .border-gray-200 { border-color: var(--border-color) !important; }
+        .dark input, .dark select { background-color: var(--bg-primary) !important; border-color: var(--border-color) !important; color: var(--text-primary) !important; }
+        
+        /* Dark mode nav fix */
+        .dark #bottom-nav { background-color: var(--bg-secondary) !important; border-color: var(--border-color) !important; }
+        .dark .nav-btn { color: var(--text-secondary) !important; }
+        /* Active Nav Border/Text uses DinDin Green */
+        .dark .active-nav { border-color: #4CAF50 !important; color: #4CAF50 !important; }
+
+
         .chart-container { position: relative; width: 100%; max-width: 900px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
         @media (min-width: 768px) { .chart-container { height: 400px; } }
         .modal { transition: opacity 0.25s ease; }
@@ -29,9 +70,23 @@
         /* UX IMPROVEMENT 1: INCREASED MIN-HEIGHT FOR BIGGER DAY BOXES */
         .calendar-day { min-height: 120px; } 
 
-        .toggle-checkbox:checked { right: 0; border-color: #48BB78; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #48BB78; }
-        .active-nav { border-b-2 border-blue-600 text-blue-600 font-semibold; }
+        /* Toggle styling for dark mode toggle - UPDATED TO DINDIN GREEN */
+        .toggle-checkbox {
+            height: 24px; width: 24px;
+            top: 2px;
+            transition: all 0.2s ease;
+        }
+        .toggle-label {
+            height: 28px; width: 48px;
+            border-radius: 9999px;
+            background-color: #D1D5DB; /* Gray 300 */
+        }
+        /* Use DinDin Green for toggle checked state */
+        .toggle-checkbox:checked { right: 2px; border-color: #4CAF50; } 
+        .toggle-checkbox:checked + .toggle-label { background-color: #4CAF50; } 
+        
+        /* Active Nav Accent (Use DinDin Green) */
+        .active-nav { border-b-2 border-dindin-green text-dindin-green font-semibold; }
         
         /* NEW FIXED BOTTOM NAV STYLING */
         #bottom-nav {
@@ -116,7 +171,8 @@
             
             <!-- Dynamic Header -->
             <header class="text-center mb-4 md:mb-6">
-                <h1 class="3xl md:text-4xl font-bold text-gray-800">FinPlan</h1>
+                <!-- LOGO TEXT COLOR CHANGED TO DINDIN GREEN -->
+                <h1 class="3xl md:text-4xl font-bold text-dindin-green">DinDin</h1>
                 <h2 id="page-title" class="text-xl font-semibold text-gray-700 mt-2">Calendar</h2>
                 <div id="user-status" class="text-xs text-gray-500 mt-2 p-2 bg-gray-100 rounded-lg">
                     Status: Local Mode (Data saved to this device only)
@@ -130,7 +186,8 @@
                 <section id="calendar-view" class="bg-white py-6 px-0 rounded-2xl shadow-sm">
                     <div class="flex flex-col sm:flex-row justify-between items-center mb-6 px-6">
                         <h2 class="text-xl font-bold text-gray-800 mb-4 sm:mb-0">Transaction Calendar</h2>
-                        <button id="add-one-time-btn" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold">Add One-Time Event</button>
+                        <!-- BUTTON COLOR CHANGED TO DINDIN GREEN ACCENT -->
+                        <button id="add-one-time-btn" class="px-4 py-2 bg-dindin-green text-white rounded-lg hover:bg-dindin-green-dark font-semibold">Add One-Time Event</button>
                     </div>
                     <p class="text-center text-gray-500 mb-6 max-w-2xl mx-auto px-6">This calendar displays all your financial events—recurring, one-time, and debt payments—for the selected month.</p>
                     <div id="calendar-controls" class="flex justify-between items-center mb-4 px-6">
@@ -166,10 +223,21 @@
                 <section id="projection-controls" class="bg-white p-6 rounded-2xl shadow-sm">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-bold text-gray-800">Settings</h2>
-                        <!-- MANUAL SAVE BUTTON ADDED -->
-                        <button id="manual-save-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">Save Settings</button>
+                        <!-- MANUAL SAVE BUTTON COLOR CHANGED TO DINDIN GREEN ACCENT -->
+                        <button id="manual-save-btn" class="px-4 py-2 bg-dindin-green text-white rounded-lg hover:bg-dindin-green-dark font-semibold">Save Settings</button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        
+                        <!-- DARK MODE TOGGLE -->
+                        <div class="flex items-center justify-between p-3 bg-gray-100 rounded-lg col-span-full md:col-span-3">
+                            <label for="darkModeToggle" class="text-sm font-medium text-gray-700">Dark Mode</label>
+                            <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="toggle" id="darkModeToggle" class="toggle-checkbox absolute block appearance-none cursor-pointer" />
+                                <label for="darkModeToggle" class="toggle-label block overflow-hidden cursor-pointer"></label>
+                            </div>
+                        </div>
+                        <!-- END DARK MODE TOGGLE -->
+
                         <div>
                             <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Projection Start Date</label>
                             <input type="date" id="startDate" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -217,8 +285,8 @@
                 <section id="projection-controls-dashboard" class="bg-white p-6 rounded-2xl shadow-sm">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-bold text-gray-800">Projection Settings</h2>
-                        <!-- MANUAL SAVE BUTTON ADDED -->
-                        <button id="manual-save-btn-dashboard" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">Save Settings</button>
+                        <!-- MANUAL SAVE BUTTON COLOR CHANGED TO DINDIN GREEN ACCENT -->
+                        <button id="manual-save-btn-dashboard" class="px-4 py-2 bg-dindin-green text-white rounded-lg hover:bg-dindin-green-dark font-semibold">Save Settings</button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                         <div>
@@ -245,7 +313,7 @@
             <!-- END DASHBOARD VIEW -->
 
             <!-- 3. DEBT MANAGEMENT VIEW -->
-            <div id="view-debt" class="view-container hidden space-y-8">
+            <div id="view-debt" class="view-container space-y-8">
                 <section id="debt-plan-management" class="bg-white p-6 rounded-2xl shadow-sm">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-gray-800">Debt Plan Management</h2>
@@ -262,7 +330,8 @@
                 <section id="schedules-management" class="bg-white p-6 rounded-2xl shadow-sm">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-bold text-gray-800">Recurring Schedules Management</h2>
-                        <button id="add-schedule-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">Add New Recurring Schedule</button>
+                        <!-- BUTTON COLOR CHANGED TO DINDIN GREEN ACCENT -->
+                        <button id="add-schedule-btn" class="px-4 py-2 bg-dindin-green text-white rounded-lg hover:bg-dindin-green-dark font-semibold">Add New Recurring Schedule</button>
                     </div>
                     <p class="text-gray-500 mb-6">Manage all your **long-term, repeating** financial events here. Toggle items to run "what-if" scenarios.</p>
                     <div id="schedulesList" class="space-y-4"></div>
@@ -361,12 +430,13 @@
         <div class="container mx-auto px-4 sm:px-6 md:px-8 h-16 py-2">
             <!-- Scrollable Button Container (Fixed to be centered and horizontally scrollable) -->
             <div class="flex overflow-x-auto flex-nowrap space-x-4 h-full items-center justify-center">
-                <button data-view="calendar" data-name="Calendar" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0 active-nav">Calendar</button>
-                <button data-view="dashboard" data-name="Dashboard" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Dashboard</button>
-                <button data-view="debt" data-name="Debt Plans" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Debt Plans</button>
-                <button data-view="schedules" data-name="Recurring Schedules" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Recurring</button>
-                <button data-view="plan" data-name="Spending Plan" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Plan</button>
-                <button data-view="log" data-name="Transaction Log" class="nav-btn px-3 py-2 text-gray-600 hover:text-blue-600 transition flex-shrink-0">Log</button>
+                <!-- RENAMED TABS TO DINDIN -->
+                <button data-view="calendar" data-name="DinDin Calendar" class="nav-btn px-3 py-2 text-gray-600 hover:text-dindin-green transition flex-shrink-0 active-nav">Calendar</button>
+                <button data-view="dashboard" data-name="DinDin Dashboard" class="nav-btn px-3 py-2 text-gray-600 hover:text-dindin-green transition flex-shrink-0">Dashboard</button>
+                <button data-view="debt" data-name="DinDin Debt Plans" class="nav-btn px-3 py-2 text-gray-600 hover:text-dindin-green transition flex-shrink-0">Debt Plans</button>
+                <button data-view="schedules" data-name="DinDin Recurring Schedules" class="nav-btn px-3 py-2 text-gray-600 hover:text-dindin-green transition flex-shrink-0">Recurring</button>
+                <button data-view="plan" data-name="DinDin Spending Plan" class="nav-btn px-3 py-2 text-gray-600 hover:text-dindin-green transition flex-shrink-0">Plan</button>
+                <button data-view="log" data-name="DinDin Transaction Log" class="nav-btn px-3 py-2 text-gray-600 hover:text-dindin-green transition flex-shrink-0">Log</button>
             </div>
         </div>
     </nav>
@@ -382,8 +452,8 @@
                 <!-- Transaction items go here -->
             </div>
             <div class="mt-8 flex justify-between">
-                <!-- NEW: Button to open One-Time Modal, passes the date key -->
-                <button type="button" id="add-from-day-details" class="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold" data-date="">+ One-Time Event</button>
+                <!-- BUTTON COLOR CHANGED TO DINDIN GREEN ACCENT -->
+                <button type="button" id="add-from-day-details" class="px-5 py-2 bg-dindin-green text-white rounded-lg hover:bg-dindin-green-dark font-semibold" data-date="">+ One-Time Event</button>
                 <button type="button" id="close-day-details-btn" class="px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Close</button>
             </div>
         </div>
@@ -422,7 +492,7 @@
                     <div id="day-value-monthly"><label for="day_value_month" class="block text-sm font-medium">Day of Month (1-31)</label><input type="number" id="day_value_month" min="1" max="31" class="w-full p-2 border rounded-lg"></div>
                     <div id="day-value-weekly" class="hidden"><label for="day_value_week" class="block text-sm font-medium">Day of Week</label><select id="day_value_week" class="w-full p-2 border rounded-lg"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div>
                 </div>
-                <div class="mt-8 flex justify-end space-x-4"><button type="button" class="cancel-btn px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button><button type="submit" class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Schedule</button></div>
+                <div class="mt-8 flex justify-end space-x-4"><button type="button" class="cancel-btn px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button><button type="submit" class="px-5 py-2 bg-dindin-green text-white rounded-lg hover:bg-dindin-green-dark">Save Schedule</button></div>
             </form>
         </div>
     </div>
@@ -451,7 +521,8 @@
                 </div>
                 <div class="mt-8 flex justify-end space-x-4">
                     <button type="button" class="cancel-btn px-5 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
-                    <button type="submit" class="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Save Transaction</button>
+                    <!-- BUTTON COLOR CHANGED TO DINDIN GREEN ACCENT -->
+                    <button type="submit" class="px-5 py-2 bg-dindin-green text-white rounded-lg hover:bg-dindin-green-dark">Save Transaction</button>
                 </div>
             </form>
         </div>
@@ -494,6 +565,7 @@ let scheduleModal, oneTimeModal, debtPlanModal, dayDetailsModal;
 let scheduleForm, oneTimeForm, debtPlanForm;
 let scheduleIdInput, frequencySelect, debtIdInput;
 let navButtons, viewContainers, calendarGridEl, calendarSizeButtons;
+let darkModeToggleEl; // NEW ELEMENT
 
 // NEW ELEMENTS FOR PLAN VIEW
 let savingsSliderEl, savedAmountDisplayEl, remainingBudgetBaseEl, categoryTogglesEl, deletePlanBtnEl;
@@ -541,6 +613,7 @@ function initDomElements() {
     deletePlanBtnEl = document.getElementById('delete-plan-btn'); 
     
     toggleEODBalanceEl = document.getElementById('toggleEODBalance');
+    darkModeToggleEl = document.getElementById('darkModeToggle'); // NEW
 }
 // =========================================================================
 
@@ -594,8 +667,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     let activeSpendingCategories = []; 
     
     // =========================================================================
-    // 2. APP STARTUP
+    // 2. APP STARTUP & DARK MODE INITIALIZATION
     // =========================================================================
+    
+    function initializeDarkMode() {
+        const isDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (isDarkMode) {
+            document.body.classList.add('dark');
+            if (darkModeToggleEl) darkModeToggleEl.checked = true;
+        } else {
+            document.body.classList.remove('dark');
+            if (darkModeToggleEl) darkModeToggleEl.checked = false;
+        }
+    }
+    
+    initializeDarkMode();
+
     if (getUserStatusEl()) {
         getUserStatusEl().textContent = `Status: Local Mode (Data saved to this device only)`;
     }
@@ -692,7 +779,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Dynamic Header Update
         const activeNavButton = document.querySelector(`.nav-btn[data-view="${viewId}"]`);
         if (activeNavButton) {
-            getPageTitleEl().textContent = activeNavButton.dataset.name;
+            // Updated to show "DinDin" + View Name
+            getPageTitleEl().textContent = activeNavButton.dataset.name.replace('DinDin ', '');
         }
 
         navButtons.forEach(btn => {
@@ -792,6 +880,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const balance = startingBalanceEl.value;
             const months = projectionMonthsEl.value;
             const date = startDateEl.value;
+            const isDarkMode = document.body.classList.contains('dark');
 
             // Save all data arrays
             localStorage.setItem('recurringSchedules', JSON.stringify(recurringSchedules));
@@ -803,12 +892,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.setItem('projectionMonths', months); 
             localStorage.setItem('startDate', date); 
             localStorage.setItem('calendarSize', currentCalendarSize); 
-            // NEW: Save EOD Balance preference
             localStorage.setItem('showEODBalance', showEODBalance);
-            // NEW: Save saved amount and categories status
             localStorage.setItem('savedAmount', savedAmount.toFixed(2));
             localStorage.setItem('activeSpendingCategories', JSON.stringify(activeSpendingCategories));
-            
+            // Save dark mode state
+            localStorage.setItem('darkMode', isDarkMode);
+
             showStatus('Settings and Data saved successfully to device memory!', 'bg-blue-100 text-blue-700');
         } catch (e) {
             console.error("Error saving data to localStorage:", e);
@@ -892,6 +981,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function addEventListeners() {
+        // Dark Mode Toggle Listener
+        if (darkModeToggleEl) {
+            darkModeToggleEl.addEventListener('change', () => {
+                document.body.classList.toggle('dark');
+                saveData(); // Save the new mode preference
+            });
+        }
+        
         // Navigation Listener
         navButtons.forEach(btn => btn.addEventListener('click', (e) => {
             changeView(e.currentTarget.dataset.view);
@@ -1406,7 +1503,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // NEW FUNCTION: Calculates the running balance for every projected transaction date
     function calculateDailyBalances(projections) {
-        let runningBalance = parseFloat(startingBalanceEl.value);
+        const startingBalance = parseFloat(startingBalanceEl.value);
+        let runningBalance = startingBalance;
         dailyBalanceMap = {}; // Reset map
 
         // Note: The projections array is already sorted by date.
