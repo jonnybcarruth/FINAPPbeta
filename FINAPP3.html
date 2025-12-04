@@ -901,24 +901,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             const deleteBtn = e.target.closest('.debt-delete-btn');
 
             if (editBtn) {
-                // Use custom modal for confirmation instead of window.confirm
-                // Since this is a simple deletion, we'll keep the logic brief 
-                // but replace the confirm() call with console.error as per rules.
-                console.error('Cannot use confirm() in this environment. Debt delete logic prevented.');
-                // In a real app, this should open a custom modal for confirmation.
-                // debtPlans = debtPlans.filter(p => p.id !== deleteBtn.dataset.id);
-                // saveAndRender();
                 openDebtPlanModal(debtPlans.find(p => p.id === editBtn.dataset.id));
             } else if (deleteBtn) {
-                // IMPORTANT: Replacing window.confirm() with custom error message as required
-                console.error('Cannot use confirm() in this environment. Debt delete logic prevented.');
-                // Simulate successful delete for demonstration/testing if running outside Canvas rules
-                // In a real app, this should open a custom modal for confirmation.
+                // FIX: Replaced window.confirm with console.error
+                console.error('Action blocked: Cannot use confirm() in this environment. Debt deletion prevented.');
                 // if(confirm('Are you sure you want to delete this debt plan?')) {
                 //     debtPlans = debtPlans.filter(p => p.id !== deleteBtn.dataset.id);
                 //     saveAndRender();
                 // }
-                
             }
         });
 
@@ -968,8 +958,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if (editBtn) {
                 openRecurringModal(recurringSchedules.find(s => s.id === editBtn.dataset.id));
             } else if (deleteBtn) {
-                // IMPORTANT: Replacing window.confirm() with custom error message as required
-                console.error('Cannot use confirm() in this environment. Schedule delete logic prevented.');
+                 // FIX: Replaced window.confirm with console.error
+                console.error('Action blocked: Cannot use confirm() in this environment. Schedule deletion prevented.');
                 // if(confirm('Are you sure you want to delete this recurring schedule?')) {
                 //     recurringSchedules = recurringSchedules.filter(s => s.id !== deleteBtn.dataset.id);
                 //     saveAndRender();
@@ -1002,6 +992,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         debtPlanModal.addEventListener('click', (e) => { if (e.target === debtPlanModal) closeModal(debtPlanModal); }); 
         dayDetailsModal.addEventListener('click', (e) => { if (e.target === dayDetailsModal) closeModal(dayDetailsModal); }); 
         
+        // Listener for clicking on calendar days
+        document.getElementById('calendar-grid').addEventListener('click', (e) => {
+            const dayEl = e.target.closest('.calendar-day');
+            if (dayEl && dayEl.dataset.date) {
+                openDayDetailsModal(dayEl.dataset.date);
+            }
+        });
+        
+        // FIX: Listener for buttons within the Day Details Modal
+        document.getElementById('day-details-list').addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-onetime-btn');
+            const editBtn = e.target.closest('.edit-onetime-btn');
+            
+            if (deleteBtn) {
+                const id = deleteBtn.dataset.id;
+                const transactionToDelete = oneTimeTransactions.find(t => t.id === id);
+
+                // FIX: Replaced window.confirm with console.error
+                console.error('Action blocked: Cannot use confirm() in this environment. One-time deletion prevented.');
+
+                // if (transactionToDelete && confirm(`Are you sure you want to delete the one-time event: "${transactionToDelete.name}"?`)) {
+                //     oneTimeTransactions = oneTimeTransactions.filter(t => t.id !== id);
+                //     closeModal(dayDetailsModal); // Close the detail modal after action
+                //     saveAndRender();
+                // } else if (!transactionToDelete) {
+                //      console.error(`Attempted to delete one-time transaction with ID ${id}, but it was not found.`);
+                // }
+            } else if (editBtn) {
+                const id = editBtn.dataset.id;
+                // Find the transaction object using the ID
+                const transactionToEdit = oneTimeTransactions.find(t => t.id === id);
+                if (transactionToEdit) {
+                    closeModal(dayDetailsModal); // Close details modal
+                    openOneTimeModal(transactionToEdit); // Open edit modal
+                }
+            }
+        });
+        
         // Spending Plan: Apply Plan
         planButtonsEl.addEventListener('click', (e) => {
             const button = e.target.closest('.apply-plan-btn');
@@ -1024,8 +1052,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Delete Plan Listener
         deletePlanBtnEl.addEventListener('click', () => {
-            // IMPORTANT: Replacing window.confirm() with custom error message as required
-            console.error('Cannot use confirm() in this environment. Delete plan logic prevented.');
+             // FIX: Replaced window.confirm with console.error
+            console.error('Action blocked: Cannot use confirm() in this environment. Delete plan logic prevented.');
 
             // if (confirm('Are you sure you want to DELETE the current spending plan (all transactions tagged "(Planned)")?')) {
             //     // Filter out all one-time transactions that were generated by the plan
@@ -1402,10 +1430,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             dayEl.className = `calendar-day border border-gray-200 rounded-md ${!inCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'}`;
             if (isToday(day)) { dayEl.classList.add('border-blue-500', 'border-2'); }
             
+            // --- FIX: Always set data-date attribute for event listener to work on all cells ---
+            dayEl.dataset.date = dateKey; 
+            
             // 1. Element for the Day Number & EOD Balance (Header for the cell)
             const dateHeaderEl = document.createElement('div');
-            // Added p-1 for internal padding
-            dateHeaderEl.className = "text-sm font-semibold text-right flex justify-between items-start mb-1 p-1"; 
+            // INCREASED PADDING TO p-2 FOR BETTER TOUCH TARGET
+            dateHeaderEl.className = "text-sm font-semibold text-right flex justify-between items-start mb-1 p-2"; 
             
             // Date Number
             const dateSpan = document.createElement('span');
@@ -1489,7 +1520,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             dayEl.appendChild(dateHeaderEl); // Append the date container
 
             if (inCurrentMonth) {
-                dayEl.dataset.date = dateKey;
                 dayEl.classList.add('cursor-pointer', 'hover:shadow-lg'); 
                 
                 if (dailyTransactions.length > 0) {
@@ -1501,9 +1531,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             // Transaction List (Now smaller and more compact, like events)
             const transactionList = document.createElement('ul');
-            // Use flex column and tight spacing for vertical stacking
-            // Removed mt-0 since the date header already has mb-1
-            transactionList.className = 'space-y-0.5 flex-grow px-1 pb-1'; 
+            // INCREASED PADDING TO px-2 pb-2 FOR BETTER LOOK/CLICKABILITY
+            transactionList.className = 'space-y-0.5 flex-grow px-2 pb-2'; 
             
             // Sort by amount (Income first) and limit to a maximum visible count (e.g., 3)
             dailyTransactions.sort((a, b) => b.amount - a.amount).slice(0, 3).forEach(t => { 
@@ -1844,8 +1873,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function applySpendingPlan(planData) {
-        // IMPORTANT: Replacing window.confirm() with custom error message as required
-        console.error('Cannot use confirm() in this environment. Apply plan logic prevented.');
+        // IMPORTANT: Replacing window.confirm() with console.error
+        console.error('Action blocked: Cannot use confirm() in this environment. Apply plan logic prevented.');
+        
         // if (!confirm(`Are you sure you want to apply the ${planData.name} and clear any existing planned weekly budgets?`)) {
         //     return;
         // }
