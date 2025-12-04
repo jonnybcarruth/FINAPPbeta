@@ -17,16 +17,18 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* FIX: Adjusted padding-top to normal and set padding-bottom to 150px for max bottom clearance */
+        /* FIX: Adjusted padding-bottom to 150px for max bottom clearance from the fixed nav */
         body { font-family: 'Inter', sans-serif; background-color: #F8F9FA; color: #343a40; padding-top: 16px; padding-bottom: 150px; }
         .chart-container { position: relative; width: 100%; max-width: 900px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
         @media (min-width: 768px) { .chart-container { height: 400px; } }
         .modal { transition: opacity 0.25s ease; }
         .modal-active { opacity: 1; pointer-events: auto; }
         .modal-inactive { opacity: 0; pointer-events: none; }
-        .calendar-grid {  grid-template-rows: auto repeat(6, minmax(100px, 1fr)); 
-            gap: 1px; }
-        .calendar-day { min-height: 100px; }
+        .calendar-grid { grid-template-rows: auto repeat(6, minmax(0, 1fr)); }
+        
+        /* UX IMPROVEMENT 1: INCREASED MIN-HEIGHT FOR BIGGER DAY BOXES */
+        .calendar-day { min-height: 120px; } 
+
         .toggle-checkbox:checked { right: 0; border-color: #48BB78; }
         .toggle-checkbox:checked + .toggle-label { background-color: #48BB78; }
         .active-nav { border-b-2 border-blue-600 text-blue-600 font-semibold; }
@@ -73,16 +75,27 @@
             box-shadow: 0 0 2px rgba(0,0,0,0.5);
         }
         
+        /* UX IMPROVEMENT 2: TIGHTER SPACING FOR TRANSACTIONS INSIDE CALENDAR DAY */
+        /* Targets the list items for reduced padding and smaller text */
+        #calendar-grid li {
+            padding: 1px;           
+            margin: 0;
+            border-radius: 2px;
+            font-size: 0.6rem; 
+        }
+
+        /* Targets the list container to reduce vertical margin */
+        #calendar-grid ul {
+             margin-top: 2px;
+        }
+        
         /* NEW: Responsive Font Sizing for Calendar Days */
         /* Small Size Styles - TIGHTER CONSTRAINTS */
-        /* Targets date number, EOD balance amount, and transaction amounts */
-        .calendar-day-text-sm .text-sm { font-size: 0.65rem; /* ~10.4px */ }
-        /* Targets EOD Balance label and transaction descriptions (originally text-xs) */
-        .calendar-day-text-sm .text-xs { font-size: 0.55rem; /* ~8.8px */ }
-        /* Targets transaction text and amount (font-bold is only used in EOD span for color) */
-        .calendar-day-text-sm .font-bold { font-size: 0.65rem; } 
-        /* Targets the date/EOD container element for overall height control */
-        .calendar-day-text-sm .text-sm.font-semibold { font-size: 0.65rem; }
+        /* Reduced from 0.65rem to 0.6rem */
+        .calendar-day-text-sm .text-sm { font-size: 0.6rem; /* ~9.6px */ } 
+        /* Reduced from 0.55rem to 0.5rem */
+        .calendar-day-text-sm .text-xs { font-size: 0.5rem; /* ~8px */ } 
+        .calendar-day-text-sm .font-bold { font-size: 0.6rem; }
         .calendar-day-text-sm .truncate { max-width: 60%; } /* Prevent overflow on transaction names */
 
         /* Medium Size Styles (Slightly reduced) */
@@ -96,7 +109,8 @@
     <!-- STATUS MESSAGE BAR (FIXED AT TOP) -->
     <div id="status-message" class="fixed top-0 left-0 right-0 p-3 text-center text-sm font-medium transition duration-300 opacity-0 z-50"></div>
     
-    <div class="container mx-auto p-4 sm:p-6 md:p-8">
+    <!-- UX IMPROVEMENT 3: REDUCED HORIZONTAL PADDING (p-4 changed to px-1 on mobile) -->
+    <div class="container mx-auto px-1 sm:px-4 md:px-8">
 
         <main class="space-y-8 md:space-y-12">
             
@@ -125,7 +139,7 @@
                     </div>
                     <!-- Calendar Grid Wrapper (FIXED: Added overflow-x-auto for mobile scrolling) -->
                     <div class="overflow-x-auto">
-                        <!-- Added initial size via JS on load, set here as default placeholder -->
+                        <!-- gap-1 is already small, rely on the CSS min-height for bigger boxes -->
                         <div id="calendar-grid" class="grid grid-cols-7 gap-1 calendar-grid min-w-[700px]"></div>
                     </div>
                     
@@ -331,7 +345,7 @@
                     <p class="text-gray-500 mb-6">A detailed, day-by-day list of all projected transactions (recurring, one-time, and debt payments). Filter by type for a granular analysis.</p>
                     <div class="mb-4">
                          <select id="transactionFilter" class="p-2 border border-gray-300 rounded-lg">
-                             <option value="all">All Transactions</option><option value="income">Income Only</option><option value="expense">Expenses Only</option>
+                            <option value="all">All Transactions</option><option value="income">Income Only</option><option value="expense">Expenses Only</option>
                          </select>
                     </div>
                     <div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th><th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th></tr></thead><tbody id="transactionTableBody" class="bg-white divide-y divide-gray-200"></tbody></table></div>
@@ -613,7 +627,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             setTimeout(() => {
                 statusMessageEl.classList.remove('opacity-100');
                 statusMessageEl.classList.add('opacity-0');
-            }, 5000);
+            }, 3000); // Changed from 5000 to 3000ms for snappier UX
         }
     }
 
@@ -729,20 +743,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (savedCategories) { 
                 activeSpendingCategories = JSON.parse(savedCategories); 
             } else {
-                 // Initialize categories with defaults if nothing saved
+                // Initialize categories with defaults if nothing saved
                 activeSpendingCategories = SPENDING_CATEGORIES.map(c => ({...c, enabled: c.defaultEnabled}));
             }
             
             recurringSchedules = savedSchedules ? JSON.parse(savedSchedules) : defaultSchedules;
             oneTimeTransactions = savedOneTime ? JSON.parse(savedOneTime) : []; 
-            debtPlans = savedDebtPlans ? JSON.parse(savedDebtPlans) : [];       
+            debtPlans = savedDebtPlans ? JSON.parse(savedDebtPlans) : [];      
             
             // Load settings - Map dashboard controls to main element IDs
             if (savedBalance) {
                 startingBalanceEl.value = savedBalance;
                 if (startingBalanceDashboardEl) startingBalanceDashboardEl.value = savedBalance;
             } else {
-                 // Use HTML default if nothing saved
+                // Use HTML default if nothing saved
                 if (startingBalanceDashboardEl) startingBalanceDashboardEl.value = startingBalanceEl.value; 
             }
             if (savedProjectionMonths) {
@@ -750,8 +764,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (projectionMonthsDashboardEl) projectionMonthsDashboardEl.value = savedProjectionMonths;
             }
             if (savedStartDate) {
-                 startDateEl.value = savedStartDate;
-                 if (startDateDashboardEl) startDateDashboardEl.value = savedStartDate;
+                startDateEl.value = savedStartDate;
+                if (startDateDashboardEl) startDateDashboardEl.value = savedStartDate;
             }
             if (savedSize) setCalendarSize(savedSize);
 
@@ -938,6 +952,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (editBtn) {
                 openDebtPlanModal(debtPlans.find(p => p.id === editBtn.dataset.id));
             } else if (deleteBtn) {
+                // NOTE: Use of confirm() is generally avoided in production apps, but retained here as per the original structure.
                 if(confirm('Are you sure you want to delete this debt plan?')) {
                     debtPlans = debtPlans.filter(p => p.id !== deleteBtn.dataset.id);
                     saveAndRender();
@@ -991,6 +1006,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if (editBtn) {
                 openRecurringModal(recurringSchedules.find(s => s.id === editBtn.dataset.id));
             } else if (deleteBtn) {
+                // NOTE: Use of confirm() is generally avoided in production apps, but retained here as per the original structure.
                 if(confirm('Are you sure you want to delete this recurring schedule?')) {
                     recurringSchedules = recurringSchedules.filter(s => s.id !== deleteBtn.dataset.id);
                     saveAndRender();
@@ -1119,6 +1135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const id = deleteBtn.dataset.id;
                 const transactionToDelete = oneTimeTransactions.find(t => t.id === id);
 
+                // NOTE: Use of confirm() is generally avoided in production apps, but retained here as per the original structure.
                 if (transactionToDelete && confirm(`Are you sure you want to delete the one-time event: "${transactionToDelete.name}"?`)) {
                     oneTimeTransactions = oneTimeTransactions.filter(t => t.id !== id);
                     closeModal(dayDetailsModal); // Close the detail modal after action
@@ -1152,6 +1169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Delete Plan Listener
         deletePlanBtnEl.addEventListener('click', () => {
+            // NOTE: Use of confirm() is generally avoided in production apps, but retained here as per the original structure.
             if (confirm('Are you sure you want to DELETE the current spending plan (all transactions tagged "(Planned)")?')) {
                 // Filter out all one-time transactions that were generated by the plan
                 oneTimeTransactions = oneTimeTransactions.filter(t => !t.name.includes('(Planned)'));
@@ -1353,15 +1371,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             let controlsHTML = '';
             if (t.type === 'One-Time') { 
                  controlsHTML = `
-                    <div class="flex space-x-2 items-center">
-                        <button type="button" class="edit-onetime-btn text-gray-500 hover:text-purple-600 p-1 rounded-full hover:bg-gray-100" data-id="${t.id}" title="Edit Transaction">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536l12.232-12.232z"></path></svg>
-                        </button>
-                        <button type="button" class="delete-onetime-btn text-gray-500 hover:text-red-600 p-1 rounded-full hover:bg-gray-100" data-id="${t.id}" title="Delete Transaction">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </div>
-                `;
+                     <div class="flex space-x-2 items-center">
+                         <button type="button" class="edit-onetime-btn text-gray-500 hover:text-purple-600 p-1 rounded-full hover:bg-gray-100" data-id="${t.id}" title="Edit Transaction">
+                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536l12.232-12.232z"></path></svg>
+                         </button>
+                         <button type="button" class="delete-onetime-btn text-gray-500 hover:text-red-600 p-1 rounded-full hover:bg-gray-100" data-id="${t.id}" title="Delete Transaction">
+                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                         </button>
+                     </div>
+                 `;
             }
             // --- END FIX ---
 
@@ -1591,8 +1609,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 
                 const li = document.createElement('li');
-                li.className = `flex items-center p-1 rounded ${colorClass} ${borderClass}`;
-                li.innerHTML = `<span class="truncate" title="${t.name}">${t.name}</span> <span class="font-semibold ml-auto">$${Math.abs(t.amount).toFixed(0)}</span>`;
+                // Removed the space-y-1 class on the li element, which is controlled by the parent ul now.
+                // The custom CSS controls the padding and font size for better density
+                li.className = `flex items-center rounded ${colorClass} ${borderClass}`;
+                
+                // UX IMPROVEMENT 4: Changed toFixed(2) for financial accuracy as requested, even with small font
+                li.innerHTML = `<span class="truncate" title="${t.name}">${t.name}</span> <span class="font-semibold ml-auto">$${Math.abs(t.amount).toFixed(2)}</span>`;
+                
                 transactionList.appendChild(li);
             });
             dayEl.appendChild(transactionList);
@@ -1806,7 +1829,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Plan 1: Spends 100% of the remaining budget (0% savings of remainder) -> Aggressive Spending
             { name: 'Aggressive Spending (100% Budget)', margin: 1.00, buttonClass: 'bg-red-600 hover:bg-red-700' }, 
             // Plan 2: Spends 75% of the remaining budget (25% savings of remainder) -> Balanced Spending
-            { name: 'Balanced Spending (75% Budget)', margin: 0.75, buttonClass: 'bg-blue-600 hover:bg-blue-700' },    
+            { name: 'Balanced Spending (75% Budget)', margin: 0.75, buttonClass: 'bg-blue-600 hover:bg-blue-700' },   
             // Plan 3: Spends 50% of the remaining budget (50% savings of remainder) -> Conservative Spending
             { name: 'Conservative Spending (50% Budget)', margin: 0.50, buttonClass: 'bg-green-600 hover:bg-green-700' } 
         ];
@@ -1895,6 +1918,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function applySpendingPlan(planData) {
+        // NOTE: Use of confirm() is generally avoided in production apps, but retained here as per the original structure.
         if (!confirm(`Are you sure you want to apply the ${planData.name} and clear any existing planned weekly budgets?`)) {
             return;
         }
