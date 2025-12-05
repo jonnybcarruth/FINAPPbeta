@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="DinDin">
-     <!-- APP ICON CONFIGURATION -->
+    <!-- APP ICON CONFIGURATION -->
     <link rel="apple-touch-icon" href="Dindin.png">
     <!-- END FULL-SCREEN CONFIGURATION -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -83,20 +83,22 @@
 
         /* Toggle styling for dark mode toggle - UPDATED TO DINDIN GREEN */
         .toggle-checkbox {
-            height: 24px; width: 24px;
-            /* FIX: Removed top: 2px which caused misalignment in some browsers */
+            /* FIX: Use 'left' for predictable movement */
+            left: 2px; 
             transition: all 0.2s ease;
-            right: 0; /* Align to the right of the label track */
+            position: absolute;
+            height: 24px; width: 24px;
             border-color: #D1D5DB; /* Light mode default */
         }
         .toggle-label {
-            height: 28px; width: 48px;
+            height: 28px; width: 48px; /* Set exact dimensions for the track */
             border-radius: 9999px;
             background-color: #D1D5DB; /* Gray 300 */
         }
         /* Use DinDin Green for toggle checked state */
         .toggle-checkbox:checked { 
-            right: 22px; /* Adjusted position to align correctly within the 48px width track */
+            /* FIX: Move thumb from 2px left to 22px left (48 - 24 - 2 = 22) */
+            left: 22px; 
             border-color: #4CAF50; 
         } 
         .toggle-checkbox:checked + .toggle-label { background-color: #4CAF50; } 
@@ -245,12 +247,14 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                         
-                        <!-- DARK MODE TOGGLE (Fixed alignment using flex properties) -->
+                        <!-- DARK MODE TOGGLE (Fixed alignment using class definitions) -->
                         <div class="flex items-center justify-between p-3 bg-gray-100 rounded-lg col-span-full md:col-span-3">
                             <label for="darkModeToggle" class="text-sm font-medium text-gray-700">Dark Mode</label>
                             <div class="relative inline-block w-12 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" name="toggle" id="darkModeToggle" class="toggle-checkbox absolute block appearance-none cursor-pointer" />
-                                <label for="darkModeToggle" class="toggle-label block overflow-hidden cursor-pointer"></label>
+                                <!-- VISIBILITY FIX: Added w-6 h-6 rounded-full bg-white border-4 to make the thumb visible -->
+                                <input type="checkbox" name="toggle" id="darkModeToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
+                                <!-- Added w-12 to the label to set the track width -->
+                                <label for="darkModeToggle" class="toggle-label block overflow-hidden cursor-pointer w-12"></label>
                             </div>
                         </div>
                         <!-- END DARK MODE TOGGLE -->
@@ -362,11 +366,11 @@
                     <p class="text-gray-600 mb-4">Analyze your projected cash surplus over the selected period. Use the controls below to set your savings target and customize the weekly budget categories.</p>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
-                        <div class="bg-white p-4 rounded-lg"> <!-- Changed bg-gray-50 to bg-white for Dark Mode consistency -->
+                        <div class="bg-white p-4 rounded-lg"> <!-- Fixed bg to bg-white for Dark Mode consistency -->
                             <h3 class="text-md font-semibold text-gray-500">Projected Savings Over Period</h3>
                             <p id="savings-projection" class="text-2xl font-bold text-green-700 mt-1">$0.00</p>
                         </div>
-                        <div class="bg-white p-4 rounded-lg"> <!-- Changed bg-gray-50 to bg-white for Dark Mode consistency -->
+                        <div class="bg-white p-4 rounded-lg"> <!-- Fixed bg to bg-white for Dark Mode consistency -->
                             <h3 class="text-md font-semibold text-gray-500">Available Weekly Spending</h3>
                             <p id="weekly-spending-base" class="text-2xl font-bold text-blue-700 mt-1">$0.00</p>
                         </div>
