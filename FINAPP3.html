@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="DinDin">
-    <!-- APP ICON CONFIGURATION -->
+    <!-- APP ICON -->
     <link rel="apple-touch-icon" href="Dindin.png">
     <!-- END FULL-SCREEN CONFIGURATION -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -49,18 +49,26 @@
         .dark .bg-white { background-color: var(--card-bg) !important; color: var(--text-secondary) !important; }
         .dark .bg-gray-50 { background-color: var(--bg-secondary) !important; color: var(--text-secondary) !important; }
         .dark .bg-gray-100 { background-color: var(--bg-secondary) !important; }
+        
+        /* General Text Color Overrides */
         .dark .text-gray-800 { color: var(--text-primary) !important; }
         .dark .text-gray-700 { color: var(--text-secondary) !important; }
         .dark .text-gray-600 { color: var(--text-secondary) !important; }
         .dark .text-gray-500 { color: var(--text-secondary) !important; }
         .dark .border-gray-200 { border-color: var(--border-color) !important; }
-        
+
         /* Fix text color for controls like Prev/Next and Cancel buttons */
-        .dark .text-gray-800 { color: var(--text-primary) !important; }
         .dark .bg-gray-200 { background-color: #374151 !important; color: var(--text-primary) !important; }
         .dark .hover\:bg-gray-300:hover { background-color: #4B5563 !important; }
         .dark .bg-blue-100 { background-color: #1F2937 !important; border-color: #374151 !important; }
         .dark .text-blue-800 { color: #60A5FA !important; } /* Blue for contrast */
+
+        /* FIX: Ensure dark text remains dark on light status indicators (e.g., in day details modal) */
+        /* These colors must be dark to contrast against bg-red-50, bg-green-50, etc. */
+        .dark .text-red-800 { color: #B91C1C !important; } 
+        .dark .text-green-800 { color: #15803D !important; } 
+        .dark .text-purple-800 { color: #7E22CE !important; } 
+        .dark .text-pink-800 { color: #BE185D !important; } 
 
         .dark input, .dark select { background-color: var(--bg-primary) !important; border-color: var(--border-color) !important; color: var(--text-primary) !important; }
         
@@ -571,7 +579,7 @@
     </div>
 
 <script type="module">
-import { addMonths, eachDayOfInterval, format, getDay, getDate, endOfMonth, startOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, subMonths, parseISO, subDays, getISOWeek, startOfWeek as startOfISOWeek, endOfWeek as endOfISOWeek, isBefore, isSameDay } from 'https://cdn.jsdelivr.net/npm/date-fns@2.29.3/esm/index.js';
+import { addMonths, eachDayOfInterval, format, getDay, getDate, endOfMonth, startOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, subMonths, parseISO, subDays, getISOWeek, startOfWeek as startOfISOWeek, endOfWeek as endOfISOWeek, isBefore, isSameDay, differenceInDays } from 'https://cdn.jsdelivr.net/npm/date-fns@2.29.3/esm/index.js';
 
 // =========================================================================
 // DOM ACCESS HELPERS (For safe access during async startup)
@@ -1561,12 +1569,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else if (schedule.frequency === 'Weekly' && getDay(day) === weeklyDayMap[schedule.dayValue]) {
                     shouldPay = true;
                 } else if (schedule.frequency === 'BiWeekly' && getDay(day) === weeklyDayMap[schedule.dayValue]) {
-                    // Check if the number of days elapsed since the start date is a multiple of 14
-                    const daysSinceStart = (day.getTime() - scheduleStart.getTime()) / (1000 * 60 * 60 * 24);
-                    // Use a small margin (e.g., 0.5 day) for float point safety near 0
-                    if (daysSinceStart >= -0.5 && Math.abs(daysSinceStart % 14) < 0.5) { 
-                        shouldPay = true;
+                    /* --- FIX: BI-WEEKLY LOGIC --- */
+                    const daysSinceStart = differenceInDays(day, scheduleStart);
+                    
+                    if (daysSinceStart >= 0) { 
+                        // 1. Calculate the day of the week difference between the start date and the target day of week
+                        const targetDayOfWeek = weeklyDayMap[schedule.dayValue];
+                        const startDayOfWeek = getDay(scheduleStart);
+                        let initialOffset = targetDayOfWeek - startDayOfWeek;
+                        if (initialOffset < 0) {
+                            initialOffset += 7; // Correct for wrap-around days (e.g., Mon start, Sun target)
+                        }
+
+                        // 2. Check if the current day lands on the correct day (initial offset) 
+                        // AND is an exact multiple of 14 days later.
+                        const relativeDays = daysSinceStart - initialOffset;
+
+                        if (relativeDays >= 0 && relativeDays % 14 === 0) {
+                            shouldPay = true;
+                        }
                     }
+                    /* --- END FIX --- */
                 }
 
                 if (shouldPay) {
