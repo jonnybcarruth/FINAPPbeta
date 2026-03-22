@@ -1,6 +1,6 @@
 import {
   addMonths, eachDayOfInterval, format, getDay, getDate,
-  startOfMonth, addDays, parseISO, isBefore, isSameDay,
+  startOfMonth, addDays, parseISO, isBefore,
   differenceInDays, startOfISOWeek,
 } from 'date-fns';
 import type { RecurringSchedule, OneTimeTransaction, DebtPlan, Projection, DailyBalanceMap } from './types';

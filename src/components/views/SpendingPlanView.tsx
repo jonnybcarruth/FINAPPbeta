@@ -1,11 +1,11 @@
 'use client';
 
 import { useApp } from '@/context/AppContext';
-import { computeMetrics, calculateTotalWeeks } from '@/lib/finance';
+import { calculateTotalWeeks } from '@/lib/finance';
 import { PLAN_DEFINITIONS, computePlanBreakdown, applyPlan } from '@/lib/spendingPlan';
 
 export default function SpendingPlanView() {
-  const { metrics, projections, settings, setSettings,
+  const { metrics, settings, setSettings,
     activeSpendingCategories, setActiveSpendingCategories,
     oneTimeTransactions, setOneTimeTransactions, saveAndRefresh } = useApp();
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, addMonths, subMonths, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, addMonths, subMonths } from 'date-fns';
 import { useApp } from '@/context/AppContext';
 import { getEndOfDayBalance } from '@/lib/finance';
 import { CALENDAR_SIZES } from '@/lib/constants';
@@ -12,7 +12,7 @@ import type { OneTimeTransaction } from '@/lib/types';
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function CalendarView() {
-  const { projections, dailyBalanceMap, dailyTransactionMap, settings, setSettings,
+  const { dailyBalanceMap, dailyTransactionMap, settings, setSettings,
     oneTimeTransactions, setOneTimeTransactions, saveAndRefresh, currentCalendarDate, setCurrentCalendarDate } = useApp();
   const [dayKey, setDayKey] = useState('');
   const [showDay, setShowDay] = useState(false);
