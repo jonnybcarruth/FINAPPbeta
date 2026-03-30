@@ -28,12 +28,12 @@ export default function ModalShell({ open, onClose, title, children }: ModalShel
 
   return (
     <div
-      className={`fixed inset-0 overflow-y-auto h-full w-full flex items-end sm:items-center justify-center z-50 ${phase === 'in' ? 'modal-backdrop-in' : 'modal-backdrop-out'}`}
+      className={`fixed inset-0 flex items-center justify-center z-50 p-4 ${phase === 'in' ? 'modal-backdrop-in' : 'modal-backdrop-out'}`}
       style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className={`relative w-full sm:max-w-md bg-white dark:bg-gray-800 sm:rounded-2xl rounded-t-2xl shadow-2xl p-6 sm:p-8 ${phase === 'in' ? 'modal-panel-in' : 'modal-panel-out'}`}
+        className={`relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-h-[85vh] overflow-y-auto ${phase === 'in' ? 'modal-panel-in' : 'modal-panel-out'}`}
       >
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100" style={{ letterSpacing: '-0.01em' }}>{title}</h3>
