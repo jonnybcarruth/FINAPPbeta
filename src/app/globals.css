@@ -49,9 +49,9 @@
 .modal-panel-in  { animation: modalIn  0.28s cubic-bezier(0.34, 1.4, 0.64, 1) both; }
 .modal-panel-out { animation: modalOut 0.18s ease both; }
 
-.view-slide-in { animation: viewSlideIn 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
-.view-slide-from-right { animation: viewSlideIn 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
-.view-slide-from-left  { animation: viewSlideInFromLeft 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+.view-slide-in { animation: viewSlideIn 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards; }
+.view-slide-from-right { animation: viewSlideIn 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards; }
+.view-slide-from-left  { animation: viewSlideInFromLeft 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards; }
 
 .cal-slide-from-right { animation: calSlideFromRight 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 .cal-slide-from-left  { animation: calSlideFromLeft  0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
