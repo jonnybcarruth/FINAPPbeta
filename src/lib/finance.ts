@@ -42,6 +42,7 @@ export function generateProjections(
       }
 
       if (shouldPay) {
+        if (schedule.endDate && day > new Date(schedule.endDate + 'T00:00:00')) return;
         projections.push({ date: day, name: schedule.name, amount: schedule.amount, type: 'Recurring' });
       }
     });

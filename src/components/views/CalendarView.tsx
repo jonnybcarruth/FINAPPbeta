@@ -19,6 +19,8 @@ export default function CalendarView() {
   const [showOneTime, setShowOneTime] = useState(false);
   const [editTx, setEditTx] = useState<OneTimeTransaction | null>(null);
   const [defaultDate, setDefaultDate] = useState('');
+  const [calAnimKey, setCalAnimKey] = useState(0);
+  const [calDir, setCalDir] = useState<'right' | 'left'>('left');
 
   const monthStart = startOfMonth(currentCalendarDate);
   const startDay = startOfWeek(monthStart);
@@ -100,12 +102,18 @@ export default function CalendarView() {
           </button>
         </div>
         <div className="flex justify-between items-center mb-4 px-6">
-          <button onClick={() => setCurrentCalendarDate(subMonths(currentCalendarDate, 1))} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">← Prev</button>
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">{format(currentCalendarDate, 'MMMM yyyy')}</h3>
-          <button onClick={() => setCurrentCalendarDate(addMonths(currentCalendarDate, 1))} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Next →</button>
+          <button onClick={() => { setCalDir('right'); setCalAnimKey(k => k + 1); setCurrentCalendarDate(subMonths(currentCalendarDate, 1)); }} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100" style={{ letterSpacing: '-0.01em' }}>{format(currentCalendarDate, 'MMMM yyyy')}</h3>
+          <button onClick={() => { setCalDir('left'); setCalAnimKey(k => k + 1); setCurrentCalendarDate(addMonths(currentCalendarDate, 1)); }} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
         </div>
         <div className="overflow-x-auto">
-          <div id="calendar-grid" style={calStyle} className={`grid grid-cols-7 gap-0 calendar-grid ${sizeClass}`}>{days}</div>
+          <div key={calAnimKey} className={calDir === 'left' ? 'cal-slide-from-right' : 'cal-slide-from-left'}>
+            <div id="calendar-grid" style={calStyle} className={`grid grid-cols-7 gap-0 calendar-grid ${sizeClass}`}>{days}</div>
+          </div>
         </div>
         <div className="flex flex-col items-center mt-6 pt-4 border-t border-gray-200 px-6 space-y-4">
           <div className="flex space-x-3">

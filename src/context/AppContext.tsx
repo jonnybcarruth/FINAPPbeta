@@ -19,6 +19,8 @@ interface AppContextType {
   setSettings: (s: AppSettings) => void;
   activeView: ViewId;
   setActiveView: (v: ViewId) => void;
+  viewSlideDir: 'left' | 'right';
+  setViewSlideDir: (d: 'left' | 'right') => void;
   currentCalendarDate: Date;
   setCurrentCalendarDate: (d: Date) => void;
   projections: Projection[];
@@ -54,6 +56,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     savedAmount: 0,
   });
   const [activeView, setActiveView] = useState<ViewId>('calendar');
+  const [viewSlideDir, setViewSlideDir] = useState<'left' | 'right'>('right');
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
   const [projections, setProjections] = useState<Projection[]>([]);
   const [dailyBalanceMap, setDailyBalanceMap] = useState<DailyBalanceMap>({});
@@ -122,6 +125,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       activeSpendingCategories, setActiveSpendingCategories,
       settings, setSettings,
       activeView, setActiveView,
+      viewSlideDir, setViewSlideDir,
       currentCalendarDate, setCurrentCalendarDate,
       projections, dailyBalanceMap, dailyTransactionMap, metrics,
       statusMessage, showStatus, saveAndRefresh, saveWithOverrides,

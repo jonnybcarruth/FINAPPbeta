@@ -3,6 +3,7 @@ export interface RecurringSchedule {
   name: string;
   amount: number;
   startDate: string;
+  endDate?: string;
   frequency: 'Monthly' | 'Weekly' | 'BiWeekly';
   dayValue: number | string;
   enabled: boolean;

@@ -20,6 +20,7 @@ export default function RecurringModal({ open, onClose, onSave, initial }: Props
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = useState('');
   const [frequency, setFrequency] = useState<'Monthly' | 'Weekly' | 'BiWeekly'>('Monthly');
   const [dayMonth, setDayMonth] = useState('1');
   const [dayWeek, setDayWeek] = useState('Thursday');
@@ -30,12 +31,14 @@ export default function RecurringModal({ open, onClose, onSave, initial }: Props
       setAmount(String(Math.abs(initial.amount)));
       setType(initial.amount > 0 ? 'income' : 'expense');
       setStartDate(initial.startDate);
+      setEndDate(initial.endDate || '');
       setFrequency(initial.frequency);
       if (initial.frequency === 'Monthly') setDayMonth(String(initial.dayValue));
       else setDayWeek(String(initial.dayValue));
     } else {
       setName(''); setAmount(''); setType('expense');
       setStartDate(format(new Date(), 'yyyy-MM-dd'));
+      setEndDate('');
       setFrequency('Monthly'); setDayMonth('1'); setDayWeek('Thursday');
     }
   }, [initial, open]);
@@ -45,7 +48,9 @@ export default function RecurringModal({ open, onClose, onSave, initial }: Props
     const finalAmount = type === 'income' ? parseFloat(amount) : -parseFloat(amount);
     onSave({
       id: initial?.id || `SCH-${Date.now()}`,
-      name, amount: finalAmount, startDate, frequency,
+      name, amount: finalAmount, startDate,
+      ...(endDate ? { endDate } : {}),
+      frequency,
       dayValue: frequency === 'Monthly' ? parseInt(dayMonth) : dayWeek,
       enabled: initial?.enabled ?? true,
     });
@@ -66,6 +71,12 @@ export default function RecurringModal({ open, onClose, onSave, initial }: Props
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
           <input type="date" required value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            End Date <span className="text-gray-400 font-normal">(optional — leave blank to repeat forever)</span>
+          </label>
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frequency</label>

@@ -68,7 +68,15 @@ const NAV_ITEMS: { id: ViewId; label: string; Icon: FC }[] = [
 ];
 
 export default function Navigation() {
-  const { activeView, setActiveView } = useApp();
+  const { activeView, setActiveView, setViewSlideDir } = useApp();
+
+  const handleNav = (id: ViewId) => {
+    const from = NAV_ITEMS.findIndex((n) => n.id === activeView);
+    const to = NAV_ITEMS.findIndex((n) => n.id === id);
+    setViewSlideDir(to < from ? 'left' : 'right');
+    setActiveView(id);
+  };
+
   return (
     <nav id="bottom-nav">
       <div className="flex justify-around items-center h-full max-w-2xl mx-auto px-1">
@@ -76,7 +84,7 @@ export default function Navigation() {
           <button
             key={id}
             data-view={id}
-            onClick={() => setActiveView(id)}
+            onClick={() => handleNav(id)}
             className={`nav-btn flex flex-col items-center justify-center flex-1 py-1 gap-0.5 transition-colors ${activeView === id ? 'active-nav' : ''}`}
           >
             <Icon />

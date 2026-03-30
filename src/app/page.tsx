@@ -21,7 +21,7 @@ const VIEW_LABELS: Record<string, string> = {
 };
 
 export default function Home() {
-  const { activeView } = useApp();
+  const { activeView, viewSlideDir } = useApp();
 
   return (
     <>
@@ -34,7 +34,7 @@ export default function Home() {
           </h1>
         </header>
 
-        <main className="space-y-4 md:space-y-6">
+        <main key={activeView} className={`${viewSlideDir === 'left' ? 'view-slide-from-right' : 'view-slide-from-left'} space-y-4 md:space-y-6`}>
           {activeView === 'calendar' && (
             <>
               <CalendarView />
