@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AppProvider } from '@/context/AppContext';
+import { AuthProvider } from '@/context/AuthContext';
+import AuthGate from '@/components/AuthGate';
 
 export const metadata: Metadata = {
   title: 'DinDin',
@@ -26,7 +28,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/Dindin.png" />
       </head>
       <body className="antialiased">
-        <AppProvider>{children}</AppProvider>
+        <AuthProvider>
+          <AppProvider>
+            <AuthGate>{children}</AuthGate>
+          </AppProvider>
+        </AuthProvider>
       </body>
     </html>
   );

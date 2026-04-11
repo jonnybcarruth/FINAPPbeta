@@ -1,9 +1,23 @@
 'use client';
 
+import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SettingsPanel() {
   const { settings, setSettings, saveAndRefresh } = useApp();
+  const { user, signOut, deleteAccount } = useAuth();
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function handleDelete() {
+    if (!confirm('Permanently delete your account and all saved data? This cannot be undone.')) return;
+    setDeleting(true);
+    setDeleteError(null);
+    const { error } = await deleteAccount();
+    setDeleting(false);
+    if (error) setDeleteError(error);
+  }
 
   const handleChange = (field: keyof typeof settings, value: string | number | boolean) => {
     setSettings({ ...settings, [field]: value });
@@ -51,6 +65,33 @@ export default function SettingsPanel() {
             className="w-full p-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
         </div>
       </div>
+
+      {user && (
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-3">Account</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            Signed in as <span className="font-medium text-gray-700 dark:text-gray-200">{user.email}</span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => signOut()}
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold text-sm"
+            >
+              Sign out
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-60 font-semibold text-sm"
+            >
+              {deleting ? 'Deleting…' : 'Delete account'}
+            </button>
+          </div>
+          {deleteError && (
+            <p className="mt-2 text-xs text-red-600 dark:text-red-400">{deleteError}</p>
+          )}
+        </div>
+      )}
     </section>
   );
 }
