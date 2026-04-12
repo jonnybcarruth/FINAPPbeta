@@ -3,6 +3,7 @@ import './globals.css';
 import { AppProvider } from '@/context/AppContext';
 import { AuthProvider } from '@/context/AuthContext';
 import AuthGate from '@/components/AuthGate';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'DinDin',
@@ -30,11 +31,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#ffffff" />
       </head>
       <body className="antialiased">
-        <AuthProvider>
-          <AppProvider>
-            <AuthGate>{children}</AuthGate>
-          </AppProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <AppProvider>
+              <AuthGate>{children}</AuthGate>
+            </AppProvider>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

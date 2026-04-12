@@ -49,7 +49,7 @@ export function generateProjections(
   });
 
   // 2. Debt payments
-  debtPlans.forEach((plan) => {
+  debtPlans.filter((p) => p.enabled).forEach((plan) => {
     let paymentsMade = 0;
     let currentMonth = startOfMonth(startDate);
     while (currentMonth <= endDate && paymentsMade < plan.payoffMonths) {
@@ -76,11 +76,11 @@ export function generateProjections(
 }
 
 export function calculateDailyBalances(projections: Projection[], startingBalance: number): DailyBalanceMap {
-  let running = startingBalance;
+  let runningCents = Math.round(startingBalance * 100);
   const map: DailyBalanceMap = {};
   projections.forEach((t) => {
-    running += t.amount;
-    map[format(t.date, 'yyyy-MM-dd')] = running;
+    runningCents += Math.round(t.amount * 100);
+    map[format(t.date, 'yyyy-MM-dd')] = runningCents / 100;
   });
   return map;
 }
@@ -112,10 +112,12 @@ export function calculateTotalWeeks(startDate: string, projectionMonths: number)
 }
 
 export function computeMetrics(projections: Projection[], startingBalance: number) {
-  let totalIncome = 0, totalExpenses = 0;
+  let incomeCents = 0, expenseCents = 0;
   projections.forEach((p) => {
-    if (p.amount > 0) totalIncome += p.amount;
-    else totalExpenses += p.amount;
+    if (p.amount > 0) incomeCents += Math.round(p.amount * 100);
+    else expenseCents += Math.round(p.amount * 100);
   });
-  return { totalIncome, totalExpenses, endBalance: startingBalance + totalIncome + totalExpenses, startingBalance };
+  const totalIncome = incomeCents / 100;
+  const totalExpenses = expenseCents / 100;
+  return { totalIncome, totalExpenses, endBalance: (Math.round(startingBalance * 100) + incomeCents + expenseCents) / 100, startingBalance };
 }

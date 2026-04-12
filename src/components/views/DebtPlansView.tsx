@@ -18,6 +18,12 @@ export default function DebtPlansView() {
     saveWithOverrides(undefined, undefined, updated, undefined, undefined);
   };
 
+  const handleToggle = (id: string, checked: boolean) => {
+    const updated = debtPlans.map((p) => p.id === id ? { ...p, enabled: checked } : p);
+    setDebtPlans(updated);
+    saveWithOverrides(undefined, undefined, updated, undefined, undefined);
+  };
+
   const handleDelete = (id: string) => {
     if (!confirm('Delete this debt plan?')) return;
     const updated = debtPlans.filter((p) => p.id !== id);
@@ -48,6 +54,11 @@ export default function DebtPlansView() {
             </div>
             <div className="flex items-center space-x-3 flex-shrink-0 ml-4">
               <p className="font-bold text-lg text-pink-600">${(plan.totalAmount / plan.payoffMonths).toFixed(2)}/mo</p>
+              <div className="relative inline-block w-10 align-middle select-none">
+                <input type="checkbox" id={`debt-tog-${plan.id}`} checked={plan.enabled} onChange={(e) => handleToggle(plan.id, e.target.checked)}
+                  className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
+                <label htmlFor={`debt-tog-${plan.id}`} className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer" />
+              </div>
               <button onClick={() => { setEditing(plan); setOpen(true); }} className="p-2 text-ios-gray hover:text-ios-blue rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>

@@ -20,9 +20,9 @@ export default function DashboardView() {
     if (!cashFlowRef.current) return;
     cashChart.current?.destroy();
 
-    let bal = settings.startingBalance;
-    const dataPoints: Point[] = [{ x: new Date(settings.startDate + 'T00:00:00').getTime(), y: bal }];
-    projections.forEach((p) => { bal += p.amount; dataPoints.push({ x: p.date.getTime(), y: bal }); });
+    let bal = Math.round(settings.startingBalance * 100);
+    const dataPoints: Point[] = [{ x: new Date(settings.startDate + 'T00:00:00').getTime(), y: bal / 100 }];
+    projections.forEach((p) => { bal += Math.round(p.amount * 100); dataPoints.push({ x: p.date.getTime(), y: bal / 100 }); });
 
     cashChart.current = new Chart<'line', Point[]>(cashFlowRef.current, {
       type: 'line',

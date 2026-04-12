@@ -5,7 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 
 export default function SettingsPanel() {
-  const { settings, setSettings, saveAndRefresh } = useApp();
+  const { settings, setSettings, saveAndRefresh, saveWithOverrides } = useApp();
   const { user, signOut, deleteAccount } = useAuth();
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -23,6 +23,8 @@ export default function SettingsPanel() {
     setSettings({ ...settings, [field]: value });
     if (field === 'darkMode') {
       document.documentElement.classList.toggle('dark', value as boolean);
+      // Auto-save dark mode immediately so it persists without clicking Save
+      saveWithOverrides(undefined, undefined, undefined, undefined, { ...settings, darkMode: value as boolean });
     }
   };
 

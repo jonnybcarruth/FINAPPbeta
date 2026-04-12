@@ -75,6 +75,7 @@ export default function Navigation() {
     const to = NAV_ITEMS.findIndex((n) => n.id === id);
     setViewSlideDir(to < from ? 'left' : 'right');
     setActiveView(id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (

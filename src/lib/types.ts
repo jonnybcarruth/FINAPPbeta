@@ -40,7 +40,7 @@ export interface AppSettings {
   startDate: string;
   projectionMonths: number;
   startingBalance: number;
-  calendarSize: 'small' | 'medium' | 'large';
+  calendarSize: 'small' | 'large';
   showEODBalance: boolean;
   darkMode: boolean;
   savedAmount: number;

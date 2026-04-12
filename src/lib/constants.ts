@@ -40,6 +40,5 @@ export const WEEKLY_DAY_MAP: Record<string, number> = {
 
 export const CALENDAR_SIZES: Record<string, string> = {
   small: '320px',
-  medium: '450px',
   large: '600px',
 };

@@ -21,7 +21,16 @@ const VIEW_LABELS: Record<string, string> = {
 };
 
 export default function Home() {
-  const { activeView, viewSlideDir } = useApp();
+  const { activeView, viewSlideDir, dataLoading } = useApp();
+
+  if (dataLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center space-y-3">
+        <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-gray-500">Loading your data…</p>
+      </div>
+    );
+  }
 
   return (
     <>
