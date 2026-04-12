@@ -3,7 +3,7 @@ import {
   startOfMonth, addDays, parseISO, isBefore,
   differenceInDays, startOfISOWeek,
 } from 'date-fns';
-import type { RecurringSchedule, OneTimeTransaction, DebtPlan, Projection, DailyBalanceMap } from './types';
+import type { RecurringSchedule, OneTimeTransaction, DebtPlan, SavingsPlan, Projection, DailyBalanceMap } from './types';
 import { WEEKLY_DAY_MAP } from './constants';
 
 export function generateProjections(
@@ -11,7 +11,8 @@ export function generateProjections(
   projectionMonths: number,
   recurringSchedules: RecurringSchedule[],
   oneTimeTransactions: OneTimeTransaction[],
-  debtPlans: DebtPlan[]
+  debtPlans: DebtPlan[],
+  savingsPlans: SavingsPlan[] = []
 ): Projection[] {
   const startDate = new Date(startDateStr + 'T00:00:00');
   const endDate = addMonths(startDate, projectionMonths);
@@ -64,7 +65,38 @@ export function generateProjections(
     }
   });
 
-  // 3. One-time transactions
+  // 3. Savings plans
+  const activeSavings = savingsPlans.filter((s) => s.enabled);
+  eachDayOfInterval({ start: startDate, end: endDate }).forEach((day) => {
+    activeSavings.forEach((plan) => {
+      if (day < new Date(plan.startDate + 'T00:00:00')) return;
+      if (plan.endDate && day > new Date(plan.endDate + 'T00:00:00')) return;
+      const planStart = parseISO(plan.startDate);
+      let shouldSave = false;
+
+      if (plan.frequency === 'Monthly' && getDate(day) === plan.dayValue) {
+        shouldSave = true;
+      } else if (plan.frequency === 'Weekly' && getDay(day) === WEEKLY_DAY_MAP[plan.dayValue as string]) {
+        shouldSave = true;
+      } else if (plan.frequency === 'BiWeekly' && getDay(day) === WEEKLY_DAY_MAP[plan.dayValue as string]) {
+        const daysSinceStart = differenceInDays(day, planStart);
+        if (daysSinceStart >= 0) {
+          const targetDow = WEEKLY_DAY_MAP[plan.dayValue as string];
+          const startDow = getDay(planStart);
+          let offset = targetDow - startDow;
+          if (offset < 0) offset += 7;
+          const rel = daysSinceStart - offset;
+          if (rel >= 0 && rel % 14 === 0) shouldSave = true;
+        }
+      }
+
+      if (shouldSave) {
+        projections.push({ date: day, name: `Savings: ${plan.name}`, amount: -plan.amount, type: 'Savings' });
+      }
+    });
+  });
+
+  // 4. One-time transactions
   oneTimeTransactions.forEach((t) => {
     const tDate = new Date(t.date + 'T00:00:00');
     if (tDate >= startDate && tDate <= endDate) {

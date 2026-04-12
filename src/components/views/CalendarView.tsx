@@ -77,7 +77,7 @@ export default function CalendarView() {
         </div>
         <ul className="mt-1 space-y-1 text-xs overflow-y-auto">
           {txs.map((t, i) => (
-            <li key={i} className={`flex items-center rounded px-1 ${t.type === 'Debt Payment' ? 'bg-pink-100 text-pink-800 border-l-2 border-pink-500' : t.type === 'One-Time' ? 'bg-purple-50 text-purple-800 border-l-2 border-purple-500' : t.amount > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            <li key={i} className={`flex items-center rounded px-1 ${t.type === 'Savings' ? 'bg-emerald-100 text-emerald-800 border-l-2 border-emerald-500' : t.type === 'Debt Payment' ? 'bg-pink-100 text-pink-800 border-l-2 border-pink-500' : t.type === 'One-Time' ? 'bg-purple-50 text-purple-800 border-l-2 border-purple-500' : t.amount > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
               <span className="truncate" title={t.name}>{t.name}</span>
               <span className="font-semibold ml-auto">${Math.abs(t.amount).toFixed(2)}</span>
             </li>

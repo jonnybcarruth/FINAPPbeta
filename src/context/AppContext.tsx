@@ -5,6 +5,7 @@ import type {
   RecurringSchedule,
   OneTimeTransaction,
   DebtPlan,
+  SavingsPlan,
   AppSettings,
   SpendingCategory,
   ViewId,
@@ -32,6 +33,8 @@ interface AppContextType {
   setOneTimeTransactions: (t: OneTimeTransaction[]) => void;
   debtPlans: DebtPlan[];
   setDebtPlans: (d: DebtPlan[]) => void;
+  savingsPlans: SavingsPlan[];
+  setSavingsPlans: (s: SavingsPlan[]) => void;
   activeSpendingCategories: SpendingCategory[];
   setActiveSpendingCategories: (c: SpendingCategory[]) => void;
   settings: AppSettings;
@@ -55,7 +58,8 @@ interface AppContextType {
     ot?: OneTimeTransaction[],
     dp?: DebtPlan[],
     cats?: SpendingCategory[],
-    s?: AppSettings
+    s?: AppSettings,
+    sp?: SavingsPlan[]
   ) => void;
 }
 
@@ -68,6 +72,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [recurringSchedules, setRecurringSchedules] = useState<RecurringSchedule[]>(initial.recurringSchedules);
   const [oneTimeTransactions, setOneTimeTransactions] = useState<OneTimeTransaction[]>(initial.oneTimeTransactions);
   const [debtPlans, setDebtPlans] = useState<DebtPlan[]>(initial.debtPlans);
+  const [savingsPlans, setSavingsPlans] = useState<SavingsPlan[]>(initial.savingsPlans);
   const [activeSpendingCategories, setActiveSpendingCategories] = useState<SpendingCategory[]>(
     initial.activeSpendingCategories
   );
@@ -81,9 +86,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [metrics, setMetrics] = useState({ totalIncome: 0, totalExpenses: 0, endBalance: 0, startingBalance: 0 });
   const [statusMessage, setStatusMessage] = useState<{ text: string; colorClass: string } | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
-
-  // Track whether the current in-memory state originated from a load (so we don't
-  // immediately overwrite the cloud with the default state during the initial render).
   const hasLoadedRef = useRef(false);
 
   const showStatus = useCallback((text: string, colorClass: string) => {
@@ -92,8 +94,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const recompute = useCallback(
-    (rs: RecurringSchedule[], ot: OneTimeTransaction[], dp: DebtPlan[], s: AppSettings) => {
-      const proj = generateProjections(s.startDate, s.projectionMonths, rs, ot, dp);
+    (rs: RecurringSchedule[], ot: OneTimeTransaction[], dp: DebtPlan[], s: AppSettings, sp: SavingsPlan[]) => {
+      const proj = generateProjections(s.startDate, s.projectionMonths, rs, ot, dp, sp);
       const balMap = calculateDailyBalances(proj, s.startingBalance);
       const txMap: DailyTransactionMap = {};
       proj.forEach((p) => {
@@ -114,34 +116,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setRecurringSchedules(data.recurringSchedules);
       setOneTimeTransactions(data.oneTimeTransactions);
       setDebtPlans(data.debtPlans);
+      setSavingsPlans(data.savingsPlans);
       setActiveSpendingCategories(data.activeSpendingCategories);
       setSettings(data.settings);
       if (data.settings.darkMode) document.documentElement.classList.add('dark');
       else document.documentElement.classList.remove('dark');
-      recompute(data.recurringSchedules, data.oneTimeTransactions, data.debtPlans, data.settings);
+      recompute(data.recurringSchedules, data.oneTimeTransactions, data.debtPlans, data.settings, data.savingsPlans);
     },
     [recompute]
   );
 
-  // Load data whenever the user changes (login, logout, initial mount).
   useEffect(() => {
     if (authLoading) return;
     let cancelled = false;
-
     async function run() {
       setDataLoading(true);
       hasLoadedRef.current = false;
       try {
         if (user) {
-          // Authenticated: pull from cloud, migrate local if needed.
           const migrated = await migrateLocalToCloudIfNeeded(user.id);
           const cloud = migrated ?? (await loadFromCloud(user.id));
           const data = cloud ?? defaultData();
           if (cancelled) return;
           applyData(data);
         } else {
-          // Not logged in — render a blank default so the UI doesn't flicker.
-          // (AuthGate redirects to /login, so this path is rarely visible.)
           const local = loadFromLocalStorage();
           if (cancelled) return;
           applyData(local);
@@ -150,27 +148,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         console.error('[AppContext] failed to load data', e);
         if (!cancelled) applyData(defaultData());
       } finally {
-        if (!cancelled) {
-          hasLoadedRef.current = true;
-          setDataLoading(false);
-        }
+        if (!cancelled) { hasLoadedRef.current = true; setDataLoading(false); }
       }
     }
-
     run();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [user, authLoading, applyData]);
 
   const persist = useCallback(
     async (data: AppData) => {
-      // Always keep a local copy as offline cache
       saveToLocalStorage(data);
       if (user) {
-        try {
-          await saveToCloud(user.id, data);
-        } catch (e) {
+        try { await saveToCloud(user.id, data); }
+        catch (e) {
           console.error('[AppContext] cloud save failed', e);
           showStatus('Saved locally — cloud sync failed', 'bg-yellow-100 text-yellow-800');
           return;
@@ -182,16 +172,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 
   const saveAndRefresh = useCallback(() => {
-    const data: AppData = {
-      recurringSchedules,
-      oneTimeTransactions,
-      debtPlans,
-      activeSpendingCategories,
-      settings,
-    };
-    recompute(recurringSchedules, oneTimeTransactions, debtPlans, settings);
+    const data: AppData = { recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, activeSpendingCategories, settings };
+    recompute(recurringSchedules, oneTimeTransactions, debtPlans, settings, savingsPlans);
     void persist(data);
-  }, [recurringSchedules, oneTimeTransactions, debtPlans, activeSpendingCategories, settings, recompute, persist]);
+  }, [recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, activeSpendingCategories, settings, recompute, persist]);
 
   const saveWithOverrides = useCallback(
     (
@@ -199,49 +183,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ot: OneTimeTransaction[] = oneTimeTransactions,
       dp: DebtPlan[] = debtPlans,
       cats: SpendingCategory[] = activeSpendingCategories,
-      s: AppSettings = settings
+      s: AppSettings = settings,
+      sp: SavingsPlan[] = savingsPlans
     ) => {
-      const data: AppData = {
-        recurringSchedules: rs,
-        oneTimeTransactions: ot,
-        debtPlans: dp,
-        activeSpendingCategories: cats,
-        settings: s,
-      };
-      recompute(rs, ot, dp, s);
+      const data: AppData = { recurringSchedules: rs, oneTimeTransactions: ot, debtPlans: dp, savingsPlans: sp, activeSpendingCategories: cats, settings: s };
+      recompute(rs, ot, dp, s, sp);
       void persist(data);
     },
-    [recurringSchedules, oneTimeTransactions, debtPlans, activeSpendingCategories, settings, recompute, persist]
+    [recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, activeSpendingCategories, settings, recompute, persist]
   );
 
   return (
     <AppContext.Provider
       value={{
-        recurringSchedules,
-        setRecurringSchedules,
-        oneTimeTransactions,
-        setOneTimeTransactions,
-        debtPlans,
-        setDebtPlans,
-        activeSpendingCategories,
-        setActiveSpendingCategories,
-        settings,
-        setSettings,
-        activeView,
-        setActiveView,
-        viewSlideDir,
-        setViewSlideDir,
-        currentCalendarDate,
-        setCurrentCalendarDate,
-        projections,
-        dailyBalanceMap,
-        dailyTransactionMap,
-        metrics,
-        statusMessage,
-        showStatus,
-        dataLoading,
-        saveAndRefresh,
-        saveWithOverrides,
+        recurringSchedules, setRecurringSchedules,
+        oneTimeTransactions, setOneTimeTransactions,
+        debtPlans, setDebtPlans,
+        savingsPlans, setSavingsPlans,
+        activeSpendingCategories, setActiveSpendingCategories,
+        settings, setSettings,
+        activeView, setActiveView,
+        viewSlideDir, setViewSlideDir,
+        currentCalendarDate, setCurrentCalendarDate,
+        projections, dailyBalanceMap, dailyTransactionMap, metrics,
+        statusMessage, showStatus, dataLoading,
+        saveAndRefresh, saveWithOverrides,
       }}
     >
       {children}

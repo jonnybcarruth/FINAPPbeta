@@ -28,6 +28,18 @@ export interface DebtPlan {
   enabled: boolean;
 }
 
+export interface SavingsPlan {
+  id: string;
+  name: string;
+  amount: number;
+  frequency: 'Weekly' | 'BiWeekly' | 'Monthly';
+  dayValue: number | string;
+  startDate: string;
+  endDate?: string;
+  goalAmount?: number;
+  enabled: boolean;
+}
+
 export interface SpendingCategory {
   name: string;
   percentage: number;
@@ -50,11 +62,11 @@ export interface Projection {
   date: Date;
   name: string;
   amount: number;
-  type: 'Recurring' | 'One-Time' | 'Debt Payment';
+  type: 'Recurring' | 'One-Time' | 'Debt Payment' | 'Savings';
   id?: string;
 }
 
-export type ViewId = 'calendar' | 'dashboard' | 'debt' | 'schedules' | 'plan' | 'log';
+export type ViewId = 'calendar' | 'dashboard' | 'debt' | 'schedules' | 'plan' | 'savings';
 
 export interface DailyBalanceMap {
   [dateKey: string]: number;

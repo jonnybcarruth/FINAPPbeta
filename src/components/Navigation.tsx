@@ -47,14 +47,12 @@ const PlanIcon = () => (
   </svg>
 );
 
-const LogIcon = () => (
+const SavingsIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="9" y1="6" x2="20" y2="6"/>
-    <line x1="9" y1="12" x2="20" y2="12"/>
-    <line x1="9" y1="18" x2="20" y2="18"/>
-    <circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/>
-    <circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/>
-    <circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/>
+    <path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16"/>
+    <path d="M3 21h18"/>
+    <path d="M12 7v7"/>
+    <path d="M9 10l3-3 3 3"/>
   </svg>
 );
 
@@ -64,7 +62,7 @@ const NAV_ITEMS: { id: ViewId; label: string; Icon: FC }[] = [
   { id: 'debt', label: 'Debt', Icon: DebtIcon },
   { id: 'schedules', label: 'Schedules', Icon: SchedulesIcon },
   { id: 'plan', label: 'Plan', Icon: PlanIcon },
-  { id: 'log', label: 'Log', Icon: LogIcon },
+  { id: 'savings', label: 'Savings', Icon: SavingsIcon },
 ];
 
 export default function Navigation() {

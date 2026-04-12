@@ -9,7 +9,7 @@ import DashboardView from '@/components/views/DashboardView';
 import DebtPlansView from '@/components/views/DebtPlansView';
 import RecurringSchedulesView from '@/components/views/RecurringSchedulesView';
 import SpendingPlanView from '@/components/views/SpendingPlanView';
-import TransactionLogView from '@/components/views/TransactionLogView';
+import SavingsView from '@/components/views/SavingsView';
 
 const VIEW_LABELS: Record<string, string> = {
   calendar: 'Calendar',
@@ -17,7 +17,7 @@ const VIEW_LABELS: Record<string, string> = {
   debt: 'Debt Plans',
   schedules: 'Recurring',
   plan: 'Spending Plan',
-  log: 'Transactions',
+  savings: 'Savings',
 };
 
 export default function Home() {
@@ -54,7 +54,7 @@ export default function Home() {
           {activeView === 'debt' && <DebtPlansView />}
           {activeView === 'schedules' && <RecurringSchedulesView />}
           {activeView === 'plan' && <SpendingPlanView />}
-          {activeView === 'log' && <TransactionLogView />}
+          {activeView === 'savings' && <SavingsView />}
         </main>
       </div>
       <Navigation />

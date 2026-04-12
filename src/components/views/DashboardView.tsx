@@ -23,6 +23,7 @@ export default function DashboardView() {
   const [minBalance, setMinBalance] = useState(0);
   const [minBalanceDate, setMinBalanceDate] = useState('');
   const [avgMonthlyIncome, setAvgMonthlyIncome] = useState(0);
+  const [totalSaved, setTotalSaved] = useState(0);
   const [avgMonthlyExpenses, setAvgMonthlyExpenses] = useState(0);
 
   // Compute extra stats
@@ -37,6 +38,9 @@ export default function DashboardView() {
     });
     setMinBalance(min);
     setMinBalanceDate(minDate);
+
+    const saved = projections.filter((p) => p.type === 'Savings').reduce((s, p) => s + Math.abs(p.amount), 0);
+    setTotalSaved(saved);
 
     const months: Record<string, { inc: number; exp: number }> = {};
     projections.forEach((p) => {
@@ -218,6 +222,12 @@ export default function DashboardView() {
 
       {/* Secondary stats */}
       <section className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+        {totalSaved > 0 && (
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm col-span-2 md:col-span-1">
+            <h3 className="text-xs font-semibold text-gray-500">Total Saved</h3>
+            <p className="text-lg font-bold text-emerald-600 mt-1">{fmt(totalSaved)}</p>
+          </div>
+        )}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
           <h3 className="text-xs font-semibold text-gray-500">Lowest Balance</h3>
           <p className={`text-lg font-bold mt-1 ${minBalance < 0 ? 'text-red-600' : 'text-gray-800 dark:text-gray-100'}`}>{fmt(minBalance)}</p>

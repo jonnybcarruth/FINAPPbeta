@@ -16,6 +16,7 @@ interface Props {
 }
 
 function txColor(t: Projection) {
+  if (t.type === 'Savings') return 'bg-emerald-50 text-emerald-800 border-emerald-200';
   if (t.type === 'Debt Payment') return 'bg-pink-50 text-pink-800 border-pink-200';
   if (t.type === 'One-Time') return t.amount > 0 ? 'bg-purple-100 text-purple-800 border-purple-200' : 'bg-red-50 text-red-800 border-red-200';
   return t.amount > 0 ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200';

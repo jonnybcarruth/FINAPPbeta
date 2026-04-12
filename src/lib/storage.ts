@@ -2,6 +2,7 @@ import type {
   RecurringSchedule,
   OneTimeTransaction,
   DebtPlan,
+  SavingsPlan,
   AppSettings,
   SpendingCategory,
 } from './types';
@@ -13,6 +14,7 @@ export interface AppData {
   recurringSchedules: RecurringSchedule[];
   oneTimeTransactions: OneTimeTransaction[];
   debtPlans: DebtPlan[];
+  savingsPlans: SavingsPlan[];
   activeSpendingCategories: SpendingCategory[];
   settings: AppSettings;
 }
@@ -22,6 +24,7 @@ function defaultData(): AppData {
     recurringSchedules: DEFAULT_SCHEDULES,
     oneTimeTransactions: [],
     debtPlans: [],
+    savingsPlans: [],
     activeSpendingCategories: SPENDING_CATEGORIES.map((c) => ({ ...c, enabled: c.defaultEnabled })),
     settings: {
       startDate: format(new Date(), 'yyyy-MM-dd'),
@@ -41,6 +44,7 @@ const LOCAL_KEYS = [
   'recurringSchedules',
   'oneTimeTransactions',
   'debtPlans',
+  'savingsPlans',
   'activeSpendingCategories',
   'startDate',
   'projectionMonths',
@@ -63,6 +67,8 @@ export function loadFromLocalStorage(): AppData {
 
   const debtPlans: DebtPlan[] = JSON.parse(localStorage.getItem('debtPlans') || '[]');
 
+  const savingsPlans: SavingsPlan[] = JSON.parse(localStorage.getItem('savingsPlans') || '[]');
+
   const activeSpendingCategories: SpendingCategory[] =
     JSON.parse(localStorage.getItem('activeSpendingCategories') || 'null') ??
     SPENDING_CATEGORIES.map((c) => ({ ...c, enabled: c.defaultEnabled }));
@@ -77,7 +83,7 @@ export function loadFromLocalStorage(): AppData {
     savedAmount: parseFloat(localStorage.getItem('savedAmount') || '0'),
   };
 
-  return { recurringSchedules, oneTimeTransactions, debtPlans, activeSpendingCategories, settings };
+  return { recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, activeSpendingCategories, settings };
 }
 
 export function saveToLocalStorage(data: AppData) {
@@ -85,6 +91,7 @@ export function saveToLocalStorage(data: AppData) {
   localStorage.setItem('recurringSchedules', JSON.stringify(data.recurringSchedules));
   localStorage.setItem('oneTimeTransactions', JSON.stringify(data.oneTimeTransactions));
   localStorage.setItem('debtPlans', JSON.stringify(data.debtPlans));
+  localStorage.setItem('savingsPlans', JSON.stringify(data.savingsPlans));
   localStorage.setItem('activeSpendingCategories', JSON.stringify(data.activeSpendingCategories));
   localStorage.setItem('startDate', data.settings.startDate);
   localStorage.setItem('projectionMonths', String(data.settings.projectionMonths));
