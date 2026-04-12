@@ -34,6 +34,8 @@ function defaultData(): AppData {
       showEODBalance: false,
       darkMode: false,
       savedAmount: 0,
+      hapticsEnabled: true,
+      soundsEnabled: true,
     },
   };
 }
@@ -81,6 +83,8 @@ export function loadFromLocalStorage(): AppData {
     showEODBalance: localStorage.getItem('showEODBalance') === 'true',
     darkMode: localStorage.getItem('darkMode') === 'true',
     savedAmount: parseFloat(localStorage.getItem('savedAmount') || '0'),
+    hapticsEnabled: localStorage.getItem('hapticsEnabled') !== 'false',
+    soundsEnabled: localStorage.getItem('soundsEnabled') !== 'false',
   };
 
   return { recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, activeSpendingCategories, settings };
@@ -100,6 +104,8 @@ export function saveToLocalStorage(data: AppData) {
   localStorage.setItem('showEODBalance', String(data.settings.showEODBalance));
   localStorage.setItem('darkMode', String(data.settings.darkMode));
   localStorage.setItem('savedAmount', data.settings.savedAmount.toFixed(2));
+  localStorage.setItem('hapticsEnabled', String(data.settings.hapticsEnabled));
+  localStorage.setItem('soundsEnabled', String(data.settings.soundsEnabled));
 }
 
 export function hasLocalData(): boolean {

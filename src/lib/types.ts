@@ -56,6 +56,8 @@ export interface AppSettings {
   showEODBalance: boolean;
   darkMode: boolean;
   savedAmount: number;
+  hapticsEnabled: boolean;
+  soundsEnabled: boolean;
 }
 
 export interface Projection {

@@ -1,15 +1,18 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import Navigation from '@/components/Navigation';
 import StatusMessage from '@/components/StatusMessage';
 import SettingsPanel from '@/components/SettingsPanel';
+import SlideMenu from '@/components/SlideMenu';
 import CalendarView from '@/components/views/CalendarView';
 import DashboardView from '@/components/views/DashboardView';
 import DebtPlansView from '@/components/views/DebtPlansView';
 import RecurringSchedulesView from '@/components/views/RecurringSchedulesView';
 import SpendingPlanView from '@/components/views/SpendingPlanView';
 import SavingsView from '@/components/views/SavingsView';
+import { setHapticsEnabled } from '@/lib/haptics';
 
 const VIEW_LABELS: Record<string, string> = {
   calendar: 'Calendar',
@@ -21,7 +24,13 @@ const VIEW_LABELS: Record<string, string> = {
 };
 
 export default function Home() {
-  const { activeView, viewSlideDir, dataLoading } = useApp();
+  const { activeView, viewSlideDir, dataLoading, settings } = useApp();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Sync haptics enabled state when settings load
+  useEffect(() => {
+    setHapticsEnabled(settings.hapticsEnabled);
+  }, [settings.hapticsEnabled]);
 
   if (dataLoading) {
     return (
@@ -36,11 +45,22 @@ export default function Home() {
     <>
       <StatusMessage />
       <div className="container mx-auto px-0 sm:px-4 md:px-8 pt-4 pb-40">
-        <header className="mb-5 px-4 sm:px-0">
-          <p className="text-xs font-semibold uppercase tracking-widest text-ios-gray mb-0.5">DinDin</p>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white" style={{ letterSpacing: '-0.02em' }}>
-            {VIEW_LABELS[activeView]}
-          </h1>
+        <header className="mb-5 px-4 sm:px-0 flex justify-between items-start">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-ios-gray mb-0.5">DinDin</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white" style={{ letterSpacing: '-0.02em' }}>
+              {VIEW_LABELS[activeView]}
+            </h1>
+          </div>
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mt-1"
+            aria-label="Open menu"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
         </header>
 
         <main key={activeView} className={`${viewSlideDir === 'left' ? 'view-slide-from-right' : 'view-slide-from-left'} space-y-4 md:space-y-6`}>
@@ -58,6 +78,7 @@ export default function Home() {
         </main>
       </div>
       <Navigation />
+      <SlideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </>
   );
 }
