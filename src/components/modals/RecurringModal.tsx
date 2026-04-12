@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { hapticSuccess } from '@/lib/haptics';
 import ModalShell from './ModalShell';
 import TypeToggle from './TypeToggle';
 import type { RecurringSchedule } from '@/lib/types';
@@ -46,6 +47,7 @@ export default function RecurringModal({ open, onClose, onSave, initial }: Props
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const finalAmount = type === 'income' ? parseFloat(amount) : -parseFloat(amount);
+    void hapticSuccess();
     onSave({
       id: initial?.id || `SCH-${Date.now()}`,
       name, amount: finalAmount, startDate,

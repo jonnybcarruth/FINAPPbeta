@@ -3,6 +3,7 @@
 import type { FC } from 'react';
 import { useApp } from '@/context/AppContext';
 import type { ViewId } from '@/lib/types';
+import { hapticLight } from '@/lib/haptics';
 
 const CalendarIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -73,6 +74,7 @@ export default function Navigation() {
     const to = NAV_ITEMS.findIndex((n) => n.id === id);
     setViewSlideDir(to < from ? 'left' : 'right');
     setActiveView(id);
+    void hapticLight();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 

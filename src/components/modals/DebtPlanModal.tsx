@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import ModalShell from './ModalShell';
 import type { DebtPlan } from '@/lib/types';
+import { hapticSuccess } from '@/lib/haptics';
 import { format } from 'date-fns';
 
 interface Props {
@@ -36,6 +37,7 @@ export default function DebtPlanModal({ open, onClose, onSave, initial }: Props)
     e.preventDefault();
     const total = parseFloat(totalAmount);
     const months = parseInt(payoffMonths);
+    void hapticSuccess();
     onSave({
       id: initial?.id || `DEBT-${Date.now()}`,
       name, totalAmount: total, payoffMonths: months,

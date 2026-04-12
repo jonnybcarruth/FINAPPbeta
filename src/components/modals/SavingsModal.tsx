@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import ModalShell from './ModalShell';
 import type { SavingsPlan } from '@/lib/types';
+import { hapticSuccess } from '@/lib/haptics';
 import { format } from 'date-fns';
 
 interface Props {
@@ -44,6 +45,7 @@ export default function SavingsModal({ open, onClose, onSave, initial }: Props) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    void hapticSuccess();
     onSave({
       id: initial?.id || `SAV-${Date.now()}`,
       name, amount: parseFloat(amount), frequency,

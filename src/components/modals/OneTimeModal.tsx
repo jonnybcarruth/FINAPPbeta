@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { hapticSuccess, hapticLight } from '@/lib/haptics';
 import ModalShell from './ModalShell';
 import TypeToggle from './TypeToggle';
 import type { OneTimeTransaction } from '@/lib/types';
@@ -45,6 +46,7 @@ export default function OneTimeModal({ open, onClose, onSave, initial, defaultDa
   }, [initial, defaultDate, open]);
 
   const handleKey = useCallback((key: string) => {
+    void hapticLight();
     setAmount((prev) => {
       if (key === 'del') return prev.slice(0, -1);
       if (key === '.' && prev.includes('.')) return prev;
@@ -59,6 +61,7 @@ export default function OneTimeModal({ open, onClose, onSave, initial, defaultDa
     const parsed = parseFloat(amount);
     if (!name.trim() || isNaN(parsed) || parsed <= 0) return;
     const finalAmount = type === 'income' ? parsed : -parsed;
+    void hapticSuccess();
     onSave({ id: initial?.id || `ONE-${Date.now()}`, name: name.trim(), amount: finalAmount, date });
   };
 
