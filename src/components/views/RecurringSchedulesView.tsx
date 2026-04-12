@@ -46,29 +46,33 @@ export default function RecurringSchedulesView() {
         {recurringSchedules.map((s) => {
           const isExpense = s.amount < 0;
           return (
-            <div key={s.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white dark:bg-gray-700 shadow-sm hover:shadow-md transition">
-              <div className="flex items-center min-w-0">
-                <div className={`flex-shrink-0 w-3 h-3 rounded-full mr-4 ${isExpense ? 'bg-red-500' : 'bg-green-500'}`} />
-                <div className="min-w-0">
+            <div key={s.id} className={`p-4 rounded-xl border border-gray-200 bg-white dark:bg-gray-700 shadow-sm hover:shadow-md transition ${!s.enabled ? 'opacity-50' : ''}`}>
+              {/* Row 1: indicator + name + toggle */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center min-w-0 mr-3">
+                  <div className={`flex-shrink-0 w-3 h-3 rounded-full mr-3 ${isExpense ? 'bg-red-500' : 'bg-green-500'}`} />
                   <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{s.name}</p>
-                  <p className="text-sm text-gray-500">{isExpense ? 'Expense' : 'Income'} · {s.frequency}</p>
                 </div>
-              </div>
-              <div className="flex items-center space-x-3 flex-shrink-0 ml-4">
-                <p className={`font-semibold text-lg w-24 text-right ${isExpense ? 'text-red-600' : 'text-green-600'}`}>
-                  ${Math.abs(s.amount).toFixed(2)}
-                </p>
-                <div className="relative inline-block w-10 align-middle select-none">
+                <div className="relative inline-block w-12 h-7 flex-shrink-0 select-none">
                   <input type="checkbox" id={`tog-${s.id}`} checked={s.enabled} onChange={(e) => handleToggle(s.id, e.target.checked)}
                     className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
-                  <label htmlFor={`tog-${s.id}`} className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer" />
+                  <label htmlFor={`tog-${s.id}`} className="toggle-label block overflow-hidden h-7 rounded-full bg-gray-300 cursor-pointer" />
                 </div>
-                <button onClick={() => { setEditing(s); setOpen(true); }} className="p-2 text-ios-gray hover:text-ios-blue rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                <button onClick={() => handleDelete(s.id)} className="p-2 text-ios-gray hover:text-ios-red rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                </button>
+              </div>
+              {/* Row 2: type/freq + amount + edit/delete */}
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-500">{isExpense ? 'Expense' : 'Income'} · {s.frequency}</p>
+                <div className="flex items-center space-x-2">
+                  <p className={`font-semibold text-base ${isExpense ? 'text-red-600' : 'text-green-600'}`}>
+                    ${Math.abs(s.amount).toFixed(2)}
+                  </p>
+                  <button onClick={() => { setEditing(s); setOpen(true); }} className="p-2 text-ios-gray hover:text-ios-blue rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button onClick={() => handleDelete(s.id)} className="p-2 text-ios-gray hover:text-ios-red rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
+                </div>
               </div>
             </div>
           );
