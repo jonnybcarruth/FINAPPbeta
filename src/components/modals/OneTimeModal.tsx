@@ -48,10 +48,8 @@ export default function OneTimeModal({ open, onClose, onSave, initial, defaultDa
     setAmount((prev) => {
       if (key === 'del') return prev.slice(0, -1);
       if (key === '.' && prev.includes('.')) return prev;
-      // Max 2 decimal places
       const parts = prev.split('.');
       if (parts[1] && parts[1].length >= 2) return prev;
-      // Cap at reasonable length
       if (prev.length >= 10) return prev;
       return prev + key;
     });
@@ -70,8 +68,35 @@ export default function OneTimeModal({ open, onClose, onSave, initial, defaultDa
   return (
     <ModalShell open={open} onClose={onClose} title={initial ? 'Edit Transaction' : 'Add Transaction'}>
       <div className="space-y-4">
+        {/* Type toggle first */}
+        <TypeToggle value={type} onChange={setType} />
+
+        {/* Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Car repair, Bonus"
+            className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm"
+          />
+        </div>
+
+        {/* Date */}
+        {showDatePicker ? (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+            <input type="date" required value={date} onChange={(e) => setDate(e.target.value)}
+              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm" />
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+            {format(new Date(date + 'T00:00:00'), 'EEEE, MMMM d, yyyy')}
+          </p>
+        )}
+
         {/* Amount display */}
-        <div className="text-center py-4">
+        <div className="text-center py-3">
           <span className={`text-4xl font-bold tracking-tight ${type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
             {type === 'expense' ? '-' : '+'}${displayAmount}
           </span>
@@ -98,33 +123,6 @@ export default function OneTimeModal({ open, onClose, onSave, initial, defaultDa
             </button>
           ))}
         </div>
-
-        {/* Type toggle */}
-        <TypeToggle value={type} onChange={setType} />
-
-        {/* Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Car repair, Bonus"
-            className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm"
-          />
-        </div>
-
-        {/* Date — hidden when adding from a specific day */}
-        {showDatePicker ? (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-            <input type="date" required value={date} onChange={(e) => setDate(e.target.value)}
-              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm" />
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-            {format(new Date(date + 'T00:00:00'), 'EEEE, MMMM d, yyyy')}
-          </p>
-        )}
 
         {/* Actions */}
         <div className="flex justify-end space-x-3 pt-2">

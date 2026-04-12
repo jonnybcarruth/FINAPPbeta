@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, addMonths, subMonths, addWeeks, subWeeks } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, addMonths, subMonths } from 'date-fns';
 import { useApp } from '@/context/AppContext';
 import { getEndOfDayBalance } from '@/lib/finance';
 import DayDetailsModal from '../modals/DayDetailsModal';
@@ -21,37 +21,9 @@ export default function CalendarView() {
   const [calAnimKey, setCalAnimKey] = useState(0);
   const [calDir, setCalDir] = useState<'right' | 'left'>('left');
 
-  const isBiweekly = settings.calendarSize === 'large';
-
-  // Biweekly: 2 rows of 7 days starting from the start of the current week
-  // Month: full month grid (original behavior)
-  const weekStart = startOfWeek(currentCalendarDate);
-  const biweeklyEnd = addDays(weekStart, 13); // 14 days total
-
   const monthStart = startOfMonth(currentCalendarDate);
-  const monthGridStart = startOfWeek(monthStart);
-  const monthGridEnd = endOfWeek(endOfMonth(currentCalendarDate));
-
-  const gridStart = isBiweekly ? weekStart : monthGridStart;
-  const gridEnd = isBiweekly ? biweeklyEnd : monthGridEnd;
-
-  const handlePrev = () => {
-    setCalDir('right');
-    setCalAnimKey((k) => k + 1);
-    if (isBiweekly) setCurrentCalendarDate(subWeeks(currentCalendarDate, 2));
-    else setCurrentCalendarDate(subMonths(currentCalendarDate, 1));
-  };
-
-  const handleNext = () => {
-    setCalDir('left');
-    setCalAnimKey((k) => k + 1);
-    if (isBiweekly) setCurrentCalendarDate(addWeeks(currentCalendarDate, 2));
-    else setCurrentCalendarDate(addMonths(currentCalendarDate, 1));
-  };
-
-  const headerLabel = isBiweekly
-    ? `${format(weekStart, 'MMM d')} – ${format(biweeklyEnd, 'MMM d, yyyy')}`
-    : format(currentCalendarDate, 'MMMM yyyy');
+  const gridStart = startOfWeek(monthStart);
+  const gridEnd = endOfWeek(endOfMonth(currentCalendarDate));
 
   const handleSaveOneTime = (tx: OneTimeTransaction) => {
     const exists = oneTimeTransactions.findIndex((t) => t.id === tx.id);
@@ -85,19 +57,19 @@ export default function CalendarView() {
   while (day <= gridEnd) {
     const dk = format(day, 'yyyy-MM-dd');
     const txs = dailyTransactionMap[dk] || [];
-    const inRange = isBiweekly ? true : isSameMonth(day, monthStart);
+    const inMonth = isSameMonth(day, monthStart);
     const today = isToday(day);
     const dayDate = day;
     days.push(
       <div
         key={dk}
         data-date={dk}
-        onClick={() => inRange && (setDayKey(dk), setShowDay(true))}
-        className={`calendar-day p-2 border border-gray-200 rounded-md ${!inRange ? 'bg-gray-50 text-gray-400' : 'bg-white cursor-pointer hover:shadow-lg'} ${today ? 'border-blue-500 border-2' : ''} ${txs.length > 0 && inRange ? 'bg-blue-50' : ''} ${isBiweekly ? 'calendar-day-biweekly' : ''}`}
+        onClick={() => inMonth && (setDayKey(dk), setShowDay(true))}
+        className={`calendar-day p-2 border border-gray-200 rounded-md ${!inMonth ? 'bg-gray-50 text-gray-400' : 'bg-white cursor-pointer hover:shadow-lg'} ${today ? 'border-blue-500 border-2' : ''} ${txs.length > 0 && inMonth ? 'bg-blue-50' : ''}`}
       >
         <div className="text-sm font-semibold text-right flex flex-col items-end">
-          <span>{isBiweekly ? format(dayDate, 'MMM d') : format(dayDate, 'd')}</span>
-          {settings.showEODBalance && inRange && (
+          <span>{format(dayDate, 'd')}</span>
+          {settings.showEODBalance && inMonth && (
             <span className={`text-xs font-bold leading-none truncate ${getEndOfDayBalance(dk, dailyBalanceMap, settings.startDate, settings.startingBalance) >= 1000 ? 'text-green-600' : getEndOfDayBalance(dk, dailyBalanceMap, settings.startDate, settings.startingBalance) < 0 ? 'text-red-600' : 'text-gray-500'}`}>
               {(Math.round(getEndOfDayBalance(dk, dailyBalanceMap, settings.startDate, settings.startingBalance) / 100) / 10).toFixed(1)}k
             </span>
@@ -116,42 +88,36 @@ export default function CalendarView() {
     day = addDays(day, 1);
   }
 
-  const sizeClass = !isBiweekly ? 'calendar-day-text-sm' : '';
-
   return (
     <div className="space-y-6">
       <section className="bg-white dark:bg-gray-800 py-6 px-0 rounded-2xl shadow-sm">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 px-6">
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-0">Transaction Calendar</h2>
-          <button onClick={() => { setEditTx(null); setDefaultDate(format(currentCalendarDate, 'yyyy-MM-dd')); setShowOneTime(true); }} className="px-4 py-2 bg-ios-blue text-white rounded-xl hover:bg-ios-blue-dark font-semibold text-sm">
+          <button onClick={() => { setEditTx(null); setDefaultDate(''); setShowOneTime(true); }} className="px-4 py-2 bg-ios-blue text-white rounded-xl hover:bg-ios-blue-dark font-semibold text-sm">
             Add Event
           </button>
         </div>
         <div className="flex justify-between items-center mb-4 px-6">
-          <button onClick={handlePrev} aria-label="Previous" className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+          <button onClick={() => { setCalDir('right'); setCalAnimKey(k => k + 1); setCurrentCalendarDate(subMonths(currentCalendarDate, 1)); }} aria-label="Previous month" className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100" style={{ letterSpacing: '-0.01em' }}>{headerLabel}</h3>
-          <button onClick={handleNext} aria-label="Next" className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100" style={{ letterSpacing: '-0.01em' }}>{format(currentCalendarDate, 'MMMM yyyy')}</h3>
+          <button onClick={() => { setCalDir('left'); setCalAnimKey(k => k + 1); setCurrentCalendarDate(addMonths(currentCalendarDate, 1)); }} aria-label="Next month" className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </div>
         <div className="overflow-x-auto">
           <div key={calAnimKey} className={calDir === 'left' ? 'cal-slide-from-right' : 'cal-slide-from-left'}>
-            <div id="calendar-grid" className={`grid grid-cols-7 gap-0 calendar-grid ${sizeClass}`}>{days}</div>
+            <div id="calendar-grid" className="grid grid-cols-7 gap-0 calendar-grid">{days}</div>
           </div>
         </div>
-        <div className="flex flex-col items-center mt-6 pt-4 border-t border-gray-200 px-6 space-y-4">
-          <div className="flex space-x-3">
-            {(['small', 'large'] as const).map((sz) => (
-              <button key={sz} onClick={() => { setSettings({ ...settings, calendarSize: sz }); saveWithOverrides(undefined, undefined, undefined, undefined, { ...settings, calendarSize: sz }); }}
-                className={`px-4 py-1.5 text-sm rounded-full font-medium ${settings.calendarSize === sz ? 'bg-ios-blue text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200'}`}>
-                {sz === 'small' ? 'Month' : 'Biweekly'}
-              </button>
-            ))}
-          </div>
+        <div className="flex justify-center mt-6 pt-4 border-t border-gray-200 px-6">
           <label className="flex items-center space-x-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg cursor-pointer">
-            <input type="checkbox" checked={settings.showEODBalance} onChange={(e) => setSettings({ ...settings, showEODBalance: e.target.checked })} className="w-4 h-4" />
+            <input type="checkbox" checked={settings.showEODBalance} onChange={(e) => {
+              const newSettings = { ...settings, showEODBalance: e.target.checked };
+              setSettings(newSettings);
+              saveWithOverrides(undefined, undefined, undefined, undefined, newSettings);
+            }} className="w-4 h-4" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Show End of Day Balance</span>
           </label>
         </div>

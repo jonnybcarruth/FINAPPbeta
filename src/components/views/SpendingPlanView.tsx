@@ -1,20 +1,32 @@
 'use client';
 
+import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { calculateTotalWeeks } from '@/lib/finance';
 import { PLAN_DEFINITIONS, computePlanBreakdown, applyPlan } from '@/lib/spendingPlan';
+import { format, addMonths, parseISO } from 'date-fns';
 
 export default function SpendingPlanView() {
   const { metrics, settings, setSettings,
     activeSpendingCategories, setActiveSpendingCategories,
     oneTimeTransactions, setOneTimeTransactions, saveWithOverrides } = useApp();
 
+  const [planStart, setPlanStart] = useState(settings.startDate);
+  const [planEnd, setPlanEnd] = useState(format(addMonths(parseISO(settings.startDate), settings.projectionMonths), 'yyyy-MM-dd'));
+
+  // Compute weeks within the plan date range
+  const planStartDate = planStart;
+  const planEndDate = planEnd;
+  const planMonths = Math.max(1, Math.round(
+    (new Date(planEnd + 'T00:00:00').getTime() - new Date(planStart + 'T00:00:00').getTime()) / (1000 * 60 * 60 * 24 * 30.44)
+  ));
+
   const totalSavings = metrics.endBalance - metrics.startingBalance;
-  const totalWeeks = calculateTotalWeeks(settings.startDate, settings.projectionMonths);
+  const totalWeeks = calculateTotalWeeks(planStartDate, planMonths);
   const sliderMax = Math.max(0, Math.floor(totalSavings / 100) * 100);
   const savedAmount = Math.min(settings.savedAmount, sliderMax);
   const remainingBudget = totalSavings - savedAmount;
-  const baseWeekly = remainingBudget > 0 ? remainingBudget / totalWeeks : 0;
+  const baseWeekly = remainingBudget > 0 && totalWeeks > 0 ? remainingBudget / totalWeeks : 0;
   const pct = sliderMax > 0 ? (savedAmount / sliderMax) * 100 : 0;
 
   const handleSlider = (v: number) => {
@@ -30,9 +42,9 @@ export default function SpendingPlanView() {
   };
 
   const handleApplyPlan = (planName: string, margin: number) => {
-    if (!confirm(`Apply the ${planName} and clear existing planned weekly budgets?`)) return;
+    if (!confirm(`Apply the ${planName} from ${format(new Date(planStart + 'T00:00:00'), 'MMM d')} to ${format(new Date(planEnd + 'T00:00:00'), 'MMM d, yyyy')}? This will clear existing planned budgets.`)) return;
     const breakdown = computePlanBreakdown(activeSpendingCategories, baseWeekly, margin);
-    const updated = applyPlan(breakdown, planName, settings.startDate, settings.projectionMonths, oneTimeTransactions);
+    const updated = applyPlan(breakdown, planName, planStartDate, planMonths, oneTimeTransactions);
     setOneTimeTransactions(updated);
     saveWithOverrides(undefined, updated, undefined, undefined, undefined);
   };
@@ -48,6 +60,26 @@ export default function SpendingPlanView() {
 
   return (
     <div className="space-y-6">
+      {/* Date range picker */}
+      <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Plan Period</h2>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
+            <input type="date" value={planStart} onChange={(e) => setPlanStart(e.target.value)}
+              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
+            <input type="date" value={planEnd} onChange={(e) => setPlanEnd(e.target.value)} min={planStart}
+              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm" />
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          {totalWeeks} weeks · {format(new Date(planStart + 'T00:00:00'), 'MMM d')} – {format(new Date(planEnd + 'T00:00:00'), 'MMM d, yyyy')}
+        </p>
+      </section>
+
       <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Projected Surplus Analysis</h2>
         <div className="grid grid-cols-2 gap-4 text-center">
@@ -56,7 +88,7 @@ export default function SpendingPlanView() {
             <p className="text-2xl font-bold text-green-700 mt-1">{fmt(totalSavings)}</p>
           </div>
           <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <p className="text-sm text-gray-500">Available Weekly Spending</p>
+            <p className="text-sm text-gray-500">Available Weekly</p>
             <p className="text-2xl font-bold text-blue-700 mt-1">{fmt(baseWeekly)}</p>
           </div>
         </div>

@@ -124,6 +124,17 @@ body {
   .chart-container { height: 400px; }
 }
 
+.chart-container-sm {
+  position: relative;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  height: 250px;
+}
+@media (min-width: 768px) {
+  .chart-container-sm { height: 300px; }
+}
+
 /* iOS-style toggle switch */
 .toggle-checkbox {
   left: 2px;
