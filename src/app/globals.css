@@ -127,6 +127,7 @@ body {
 /* iOS-style toggle switch */
 .toggle-checkbox {
   left: 2px;
+  top: 2px;
   transition: all 0.2s ease;
   position: absolute;
   height: 24px;
