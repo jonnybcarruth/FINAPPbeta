@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
+import { ptBR, enUS } from 'date-fns/locale';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
-import { setHapticsEnabled } from '@/lib/haptics';
-import { useT, useFmt } from '@/lib/i18n';
+import { setHapticsEnabled, hapticLight } from '@/lib/haptics';
+import { useT, useFmt, useLocale, useCurrencySymbol } from '@/lib/i18n';
 
 interface Props {
   open: boolean;
@@ -17,12 +18,16 @@ export default function SlideMenu({ open, onClose }: Props) {
   const { user, signOut, deleteAccount } = useAuth();
   const t = useT();
   const fmt = useFmt();
+  const sym = useCurrencySymbol();
+  const locale = useLocale();
+  const dateLocale = locale === 'pt-BR' ? ptBR : enUS;
   const [showLog, setShowLog] = useState(false);
   const [logFilter, setLogFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const toggleSetting = (field: 'darkMode' | 'hapticsEnabled' | 'soundsEnabled') => {
+    void hapticLight();
     const newVal = !settings[field];
     const newSettings = { ...settings, [field]: newVal };
     setSettings(newSettings);
@@ -36,13 +41,21 @@ export default function SlideMenu({ open, onClose }: Props) {
   };
 
   const setCurrency = (currency: 'USD' | 'BRL') => {
+    void hapticLight();
     const newSettings = { ...settings, currency };
     setSettings(newSettings);
     saveWithOverrides(undefined, undefined, undefined, undefined, newSettings);
   };
 
   const setLanguage = (language: 'en' | 'pt') => {
+    void hapticLight();
     const newSettings = { ...settings, language };
+    setSettings(newSettings);
+    saveWithOverrides(undefined, undefined, undefined, undefined, newSettings);
+  };
+
+  const updateProjection = <K extends 'startDate' | 'projectionMonths' | 'startingBalance'>(field: K, value: typeof settings[K]) => {
+    const newSettings = { ...settings, [field]: value };
     setSettings(newSettings);
     saveWithOverrides(undefined, undefined, undefined, undefined, newSettings);
   };
@@ -93,9 +106,9 @@ export default function SlideMenu({ open, onClose }: Props) {
               <div key={i} className="flex justify-between items-center px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                 <div className="min-w-0 flex-1 mr-3">
                   <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{p.name}</p>
-                  <p className="text-xs text-gray-500">{format(p.date, 'MMM d, yyyy')} · {typeLabel(p)}</p>
+                  <p className="text-xs text-gray-500">{format(p.date, 'MMM d, yyyy', { locale: dateLocale })} · {typeLabel(p)}</p>
                 </div>
-                <p className={`text-sm font-semibold flex-shrink-0 ${p.type === 'Savings' ? 'text-emerald-600' : p.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={`text-sm font-semibold flex-shrink-0 ${p.amount >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {p.amount >= 0 ? '+' : ''}{fmt(p.amount)}
                 </p>
               </div>
@@ -112,7 +125,7 @@ export default function SlideMenu({ open, onClose }: Props) {
         className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={onClose}
       />
-      <div className={`fixed inset-y-0 right-0 w-72 bg-white dark:bg-gray-900 z-50 transform transition-transform duration-300 shadow-2xl ${open ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
+      <div className={`fixed inset-y-0 right-0 w-80 max-w-full bg-white dark:bg-gray-900 z-50 transform transition-transform duration-300 shadow-2xl ${open ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">{t('menu')}</h2>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
@@ -131,50 +144,69 @@ export default function SlideMenu({ open, onClose }: Props) {
                 </span>
               </div>
               <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{user.email}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{t('dindin_account')}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{t('dindin_account')}</p>
             </div>
           )}
 
+          {/* Projection Settings */}
           <div className="p-5 space-y-4 border-b border-gray-200 dark:border-gray-700">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('preferences')}</p>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('settings')}</p>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t('starting_balance')} ({sym})</label>
+              <input type="number" value={settings.startingBalance}
+                onChange={(e) => updateProjection('startingBalance', parseFloat(e.target.value) || 0)}
+                className="w-full p-2 text-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t('projection_start_date')}</label>
+              <input type="date" value={settings.startDate}
+                onChange={(e) => updateProjection('startDate', e.target.value)}
+                className="w-full p-2 text-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t('projection_length')}</label>
+              <select value={settings.projectionMonths}
+                onChange={(e) => updateProjection('projectionMonths', parseInt(e.target.value))}
+                className="w-full p-2 text-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg">
+                <option value={3}>3 {t('months')}</option>
+                <option value={6}>6 {t('months')}</option>
+                <option value={12}>12 {t('months')}</option>
+                <option value={24}>24 {t('months')}</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Preferences */}
+          <div className="p-5 space-y-4 border-b border-gray-200 dark:border-gray-700">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('preferences')}</p>
 
             <ToggleRow label={t('dark_mode')} checked={settings.darkMode} onChange={() => toggleSetting('darkMode')} id="menu-dark" />
             <ToggleRow label={t('vibrations')} checked={settings.hapticsEnabled} onChange={() => toggleSetting('hapticsEnabled')} id="menu-haptics" />
             <ToggleRow label={t('sounds')} checked={settings.soundsEnabled} onChange={() => toggleSetting('soundsEnabled')} id="menu-sounds" />
 
-            {/* Currency pill selector */}
             <div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('currency')}</p>
               <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                <button
-                  onClick={() => setCurrency('USD')}
-                  className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition ${settings.currency === 'USD' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow' : 'text-gray-500'}`}
-                >
+                <button onClick={() => setCurrency('USD')}
+                  className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition ${settings.currency === 'USD' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow' : 'text-gray-500'}`}>
                   $ USD
                 </button>
-                <button
-                  onClick={() => setCurrency('BRL')}
-                  className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition ${settings.currency === 'BRL' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow' : 'text-gray-500'}`}
-                >
+                <button onClick={() => setCurrency('BRL')}
+                  className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition ${settings.currency === 'BRL' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow' : 'text-gray-500'}`}>
                   R$ BRL
                 </button>
               </div>
             </div>
 
-            {/* Language pill selector */}
             <div>
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('language')}</p>
               <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition ${settings.language === 'en' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow' : 'text-gray-500'}`}
-                >
+                <button onClick={() => setLanguage('en')}
+                  className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition ${settings.language === 'en' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow' : 'text-gray-500'}`}>
                   English
                 </button>
-                <button
-                  onClick={() => setLanguage('pt')}
-                  className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition ${settings.language === 'pt' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow' : 'text-gray-500'}`}
-                >
+                <button onClick={() => setLanguage('pt')}
+                  className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition ${settings.language === 'pt' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow' : 'text-gray-500'}`}>
                   Português
                 </button>
               </div>
@@ -194,7 +226,7 @@ export default function SlideMenu({ open, onClose }: Props) {
         </div>
 
         <div className="p-5 border-t border-gray-200 dark:border-gray-700 space-y-2">
-          <button onClick={() => signOut()} className="w-full py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700">
+          <button onClick={() => signOut()} className="w-full py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700">
             {t('sign_out')}
           </button>
           <button onClick={handleDeleteAccount} disabled={deleting}
@@ -211,7 +243,7 @@ export default function SlideMenu({ open, onClose }: Props) {
 function ToggleRow({ label, checked, onChange, id }: { label: string; checked: boolean; onChange: () => void; id: string }) {
   return (
     <div className="flex items-center justify-between">
-      <label htmlFor={id} className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+      <label htmlFor={id} className="text-sm font-medium text-gray-700 dark:text-gray-200">{label}</label>
       <div className="relative inline-block w-12 h-7 select-none">
         <input type="checkbox" id={id} checked={checked} onChange={onChange}
           className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />

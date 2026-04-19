@@ -202,58 +202,53 @@ export default function DashboardView() {
 
   return (
     <div className="space-y-6">
-      {/* Stat cards - top row */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">{t('end_balance')}</h3>
-          <p className={`text-xl font-bold mt-1 ${metrics.endBalance >= 0 ? 'text-gray-800 dark:text-gray-100' : 'text-red-600'}`}>{fmt(metrics.endBalance)}</p>
+      {/* Hero metric */}
+      <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm text-center">
+        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('end_balance')}</h3>
+        <p className={`text-4xl font-bold mt-2 ${metrics.endBalance >= 0 ? 'text-gray-900 dark:text-white' : 'text-red-600'}`}>{fmt(metrics.endBalance)}</p>
+        <p className={`text-sm font-semibold mt-2 ${metrics.totalIncome + metrics.totalExpenses >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+          {metrics.totalIncome + metrics.totalExpenses >= 0 ? '+' : ''}{fmt(metrics.totalIncome + metrics.totalExpenses)} {t('net_savings').toLowerCase()}
+        </p>
+      </section>
+
+      {/* Secondary stats - smaller */}
+      <section className="grid grid-cols-3 gap-3 text-center">
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm">
+          <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 truncate">{t('total_income')}</h3>
+          <p className="text-base font-bold text-emerald-600 mt-1">{fmt(metrics.totalIncome)}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">{t('total_income')}</h3>
-          <p className="text-xl font-bold text-green-600 mt-1">{fmt(metrics.totalIncome)}</p>
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm">
+          <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 truncate">{t('total_expenses')}</h3>
+          <p className="text-base font-bold text-red-600 mt-1">{fmt(Math.abs(metrics.totalExpenses))}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">{t('total_expenses')}</h3>
-          <p className="text-xl font-bold text-red-600 mt-1">{fmt(Math.abs(metrics.totalExpenses))}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">{t('net_savings')}</h3>
-          <p className={`text-xl font-bold mt-1 ${metrics.totalIncome + metrics.totalExpenses >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {fmt(metrics.totalIncome + metrics.totalExpenses)}
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm">
+          <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 truncate">{totalSaved > 0 ? t('total_saved') : t('lowest_balance')}</h3>
+          <p className={`text-base font-bold mt-1 ${totalSaved > 0 ? 'text-emerald-600' : minBalance < 0 ? 'text-red-600' : 'text-gray-700 dark:text-gray-200'}`}>
+            {totalSaved > 0 ? fmt(totalSaved) : fmt(minBalance)}
           </p>
         </div>
       </section>
 
-      {/* Secondary stats */}
-      <section className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
-        {totalSaved > 0 && (
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm col-span-2 md:col-span-1">
-            <h3 className="text-xs font-semibold text-gray-500">{t('total_saved')}</h3>
-            <p className="text-lg font-bold text-emerald-600 mt-1">{fmt(totalSaved)}</p>
-          </div>
-        )}
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">{t('lowest_balance')}</h3>
-          <p className={`text-lg font-bold mt-1 ${minBalance < 0 ? 'text-red-600' : 'text-gray-800 dark:text-gray-100'}`}>{fmt(minBalance)}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{minBalanceDate}</p>
+      {/* Tertiary stats */}
+      <section className="grid grid-cols-2 gap-3 text-center">
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm">
+          <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">{t('avg_monthly_income')}</h3>
+          <p className="text-sm font-bold text-emerald-600 mt-1">{fmt(avgMonthlyIncome)}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">{t('avg_monthly_income')}</h3>
-          <p className="text-lg font-bold text-green-600 mt-1">{fmt(avgMonthlyIncome)}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm col-span-2 md:col-span-1">
-          <h3 className="text-xs font-semibold text-gray-500">{t('avg_monthly_expenses')}</h3>
-          <p className="text-lg font-bold text-red-600 mt-1">{fmt(avgMonthlyExpenses)}</p>
+        <div className="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm">
+          <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">{t('avg_monthly_expenses')}</h3>
+          <p className="text-sm font-bold text-red-600 mt-1">{fmt(avgMonthlyExpenses)}</p>
         </div>
       </section>
 
-      {/* Negative balance warning */}
+      {/* Negative balance warning - prominent in-page card */}
       {minBalance < 0 && (
-        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-2xl p-4 flex items-start space-x-3">
-          <span className="text-red-600 text-xl flex-shrink-0">!</span>
+        <div className="bg-red-50 dark:bg-red-950/60 border-l-4 border-red-500 rounded-2xl p-4 flex items-start space-x-3">
+          <span className="text-red-600 text-2xl flex-shrink-0 leading-none">⚠️</span>
           <div>
-            <p className="text-sm font-semibold text-red-700 dark:text-red-300">{t('projected_negative_balance')}</p>
-            <p className="text-xs text-red-600 dark:text-red-400">{fmt(minBalance)} · {minBalanceDate} — {t('projected_negative_desc')}</p>
+            <p className="text-sm font-bold text-red-700 dark:text-red-300">{t('projected_negative_balance')}</p>
+            <p className="text-xs text-red-600 dark:text-red-400 mt-1">{fmt(minBalance)} · {minBalanceDate}</p>
+            <p className="text-xs text-red-600 dark:text-red-400 mt-1">{t('projected_negative_desc')}</p>
           </div>
         </div>
       )}

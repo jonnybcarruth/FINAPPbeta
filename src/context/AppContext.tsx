@@ -52,6 +52,7 @@ interface AppContextType {
   statusMessage: { text: string; colorClass: string } | null;
   showStatus: (msg: string, cls: string) => void;
   dataLoading: boolean;
+  syncState: 'idle' | 'syncing' | 'error';
   saveAndRefresh: () => void;
   saveWithOverrides: (
     rs?: RecurringSchedule[],
@@ -86,6 +87,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [metrics, setMetrics] = useState({ totalIncome: 0, totalExpenses: 0, endBalance: 0, startingBalance: 0 });
   const [statusMessage, setStatusMessage] = useState<{ text: string; colorClass: string } | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
+  const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'error'>('idle');
   const hasLoadedRef = useRef(false);
 
   const showStatus = useCallback((text: string, colorClass: string) => {
@@ -159,16 +161,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async (data: AppData) => {
       saveToLocalStorage(data);
       if (user) {
-        try { await saveToCloud(user.id, data); }
-        catch (e) {
+        setSyncState('syncing');
+        try {
+          await saveToCloud(user.id, data);
+          setSyncState('idle');
+        } catch (e) {
           console.error('[AppContext] cloud save failed', e);
+          setSyncState('error');
           const failMsg = data.settings.language === 'pt' ? 'Salvo localmente — sincronização com nuvem falhou' : 'Saved locally — cloud sync failed';
           showStatus(failMsg, 'bg-yellow-100 text-yellow-800');
-          return;
         }
       }
-      const savedText = data.settings.language === 'pt' ? 'Salvo!' : 'Saved!';
-      showStatus(savedText, 'bg-blue-100 text-blue-700');
     },
     [user, showStatus]
   );
@@ -208,7 +211,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         viewSlideDir, setViewSlideDir,
         currentCalendarDate, setCurrentCalendarDate,
         projections, dailyBalanceMap, dailyTransactionMap, metrics,
-        statusMessage, showStatus, dataLoading,
+        statusMessage, showStatus, dataLoading, syncState,
         saveAndRefresh, saveWithOverrides,
       }}
     >

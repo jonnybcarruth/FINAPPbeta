@@ -101,8 +101,8 @@ export default function OneTimeModal({ open, onClose, onSave, initial, defaultDa
         )}
 
         <div className="text-center py-3">
-          <span className={`text-4xl font-bold tracking-tight ${type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
-            {type === 'expense' ? '-' : '+'}{sym}{displayAmount}
+          <span className={`text-4xl font-bold tracking-tight ${type === 'expense' ? 'text-red-600' : 'text-emerald-600'}`}>
+            {type === 'expense' ? '-' : '+'}{sym}{sym.length > 1 ? ' ' : ''}{displayAmount}
           </span>
         </div>
 

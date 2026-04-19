@@ -38,6 +38,7 @@ function defaultData(): AppData {
       soundsEnabled: true,
       currency: 'USD',
       language: 'en',
+      hasOnboarded: false,
     },
   };
 }
@@ -89,6 +90,7 @@ export function loadFromLocalStorage(): AppData {
     soundsEnabled: localStorage.getItem('soundsEnabled') !== 'false',
     currency: (localStorage.getItem('currency') as AppSettings['currency']) || 'USD',
     language: (localStorage.getItem('language') as AppSettings['language']) || 'en',
+    hasOnboarded: localStorage.getItem('hasOnboarded') === 'true',
   };
 
   return { recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, activeSpendingCategories, settings };
@@ -112,6 +114,7 @@ export function saveToLocalStorage(data: AppData) {
   localStorage.setItem('soundsEnabled', String(data.settings.soundsEnabled));
   localStorage.setItem('currency', data.settings.currency);
   localStorage.setItem('language', data.settings.language);
+  localStorage.setItem('hasOnboarded', String(data.settings.hasOnboarded));
 }
 
 export function hasLocalData(): boolean {

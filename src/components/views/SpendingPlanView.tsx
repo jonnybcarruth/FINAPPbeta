@@ -7,6 +7,7 @@ import { PLAN_DEFINITIONS, computePlanBreakdown, applyPlan } from '@/lib/spendin
 import { format, addMonths, parseISO } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import { useT, useFmt, useLocale } from '@/lib/i18n';
+import { hapticLight } from '@/lib/haptics';
 
 export default function SpendingPlanView() {
   const { metrics, settings, setSettings,
@@ -41,6 +42,7 @@ export default function SpendingPlanView() {
   };
 
   const handleCategoryToggle = (name: string, checked: boolean) => {
+    void hapticLight();
     const newCats = activeSpendingCategories.map((c) => c.name === name ? { ...c, enabled: checked } : c);
     setActiveSpendingCategories(newCats);
     saveWithOverrides(undefined, undefined, undefined, newCats, undefined);

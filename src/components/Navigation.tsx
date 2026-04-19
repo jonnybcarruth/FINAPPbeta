@@ -24,28 +24,16 @@ const DashboardIcon = () => (
   </svg>
 );
 
-const DebtIcon = () => (
+const BillsIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="1" y="5" width="22" height="14" rx="2.5"/>
-    <line x1="1" y1="10" x2="23" y2="10"/>
-    <line x1="6" y1="15" x2="9" y2="15"/>
-    <line x1="12" y1="15" x2="15" y2="15"/>
-  </svg>
-);
-
-const SchedulesIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="17 2 21 6 17 10"/>
-    <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-    <polyline points="7 22 3 18 7 14"/>
-    <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+    <path d="M12 2v20M5 5h11a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h11"/>
   </svg>
 );
 
 const PlanIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="2" x2="12" y2="22"/>
-    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    <path d="M3 12l4-9 4 9 4-9 4 9 4-9"/>
+    <path d="M3 21h18"/>
   </svg>
 );
 
@@ -61,10 +49,9 @@ const SavingsIcon = () => (
 const NAV_ITEMS: { id: ViewId; labelKey: string; Icon: FC }[] = [
   { id: 'calendar', labelKey: 'calendar', Icon: CalendarIcon },
   { id: 'dashboard', labelKey: 'dashboard', Icon: DashboardIcon },
-  { id: 'debt', labelKey: 'debt', Icon: DebtIcon },
-  { id: 'schedules', labelKey: 'schedules', Icon: SchedulesIcon },
-  { id: 'plan', labelKey: 'plan', Icon: PlanIcon },
+  { id: 'bills', labelKey: 'bills', Icon: BillsIcon },
   { id: 'savings', labelKey: 'savings', Icon: SavingsIcon },
+  { id: 'plan', labelKey: 'plan', Icon: PlanIcon },
 ];
 
 export default function Navigation() {

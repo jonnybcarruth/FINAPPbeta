@@ -60,6 +60,7 @@ export interface AppSettings {
   soundsEnabled: boolean;
   currency: 'USD' | 'BRL';
   language: 'en' | 'pt';
+  hasOnboarded: boolean;
 }
 
 export interface Projection {
@@ -70,7 +71,7 @@ export interface Projection {
   id?: string;
 }
 
-export type ViewId = 'calendar' | 'dashboard' | 'debt' | 'schedules' | 'plan' | 'savings';
+export type ViewId = 'calendar' | 'dashboard' | 'bills' | 'plan' | 'savings';
 
 export interface DailyBalanceMap {
   [dateKey: string]: number;
