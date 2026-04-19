@@ -1,16 +1,53 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export default function ResetPasswordPage() {
-  const { updatePassword } = useAuth();
   const router = useRouter();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [linkExpired, setLinkExpired] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    // If we already have a session (user hit this page with an active session),
+    // allow them through right away.
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      if (data.session) setReady(true);
+    });
+
+    // The Supabase client fires PASSWORD_RECOVERY after it finishes
+    // consuming the ?code= in the URL from the reset-password email link.
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (!mounted) return;
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setReady(true);
+      }
+    });
+
+    // If after 5s we still don't have a session, assume the link is stale/bad.
+    const timeout = setTimeout(() => {
+      if (!mounted) return;
+      setReady((r) => {
+        if (!r) setLinkExpired(true);
+        return r;
+      });
+    }, 5000);
+
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -24,10 +61,35 @@ export default function ResetPasswordPage() {
       return;
     }
     setSubmitting(true);
-    const { error } = await updatePassword(password);
+    const { error } = await supabase.auth.updateUser({ password });
     setSubmitting(false);
-    if (error) setError(error);
+    if (error) setError(error.message);
     else router.replace('/');
+  }
+
+  if (linkExpired) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-sm text-center space-y-4">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Reset link invalid or expired</h1>
+          <p className="text-sm text-gray-500">
+            Password reset links expire after one hour. Please request a new one.
+          </p>
+          <Link href="/forgot-password" className="inline-block px-5 py-2 bg-ios-blue text-white rounded-xl hover:bg-ios-blue-dark font-semibold text-sm">
+            Request new link
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center space-y-3">
+        <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-gray-500">Verifying your reset link…</p>
+      </div>
+    );
   }
 
   return (
