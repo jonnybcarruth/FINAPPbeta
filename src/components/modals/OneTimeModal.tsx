@@ -8,6 +8,9 @@ import type { OneTimeTransaction } from '@/lib/types';
 import { format } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import { useT, useCurrencySymbol, useLocale } from '@/lib/i18n';
+import type { CategoryId } from '@/lib/categories';
+import CategoryPicker from '../CategoryPicker';
+import { useApp } from '@/context/AppContext';
 
 interface Props {
   open: boolean;
@@ -20,6 +23,7 @@ interface Props {
 const CALC_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'];
 
 export default function OneTimeModal({ open, onClose, onSave, initial, defaultDate }: Props) {
+  const { settings } = useApp();
   const t = useT();
   const sym = useCurrencySymbol();
   const locale = useLocale();
@@ -29,6 +33,7 @@ export default function OneTimeModal({ open, onClose, onSave, initial, defaultDa
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [category, setCategory] = useState<CategoryId | undefined>(undefined);
 
   useEffect(() => {
     if (initial) {
@@ -37,10 +42,12 @@ export default function OneTimeModal({ open, onClose, onSave, initial, defaultDa
       setType(initial.amount > 0 ? 'income' : 'expense');
       setDate(initial.date);
       setShowDatePicker(true);
+      setCategory(initial.category);
     } else {
       setName('');
       setAmount('');
       setType('expense');
+      setCategory(undefined);
       if (defaultDate) {
         setDate(defaultDate);
         setShowDatePicker(false);
@@ -68,7 +75,7 @@ export default function OneTimeModal({ open, onClose, onSave, initial, defaultDa
     if (!name.trim() || isNaN(parsed) || parsed <= 0) return;
     const finalAmount = type === 'income' ? parsed : -parsed;
     void hapticSuccess();
-    onSave({ id: initial?.id || `ONE-${Date.now()}`, name: name.trim(), amount: finalAmount, date });
+    onSave({ id: initial?.id || `ONE-${Date.now()}`, name: name.trim(), amount: finalAmount, date, category });
   };
 
   const displayAmount = amount || '0';
@@ -99,6 +106,13 @@ export default function OneTimeModal({ open, onClose, onSave, initial, defaultDa
             {format(new Date(date + 'T00:00:00'), 'EEEE, MMMM d, yyyy', { locale: dateLocale })}
           </p>
         )}
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {settings.language === 'pt' ? 'Categoria' : 'Category'}
+          </label>
+          <CategoryPicker value={category} onChange={setCategory} filter={type} />
+        </div>
 
         <div className="text-center py-3">
           <span className={`text-4xl font-bold tracking-tight ${type === 'expense' ? 'text-red-600' : 'text-emerald-600'}`}>

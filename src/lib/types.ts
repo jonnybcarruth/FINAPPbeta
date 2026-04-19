@@ -1,3 +1,5 @@
+import type { CategoryId } from './categories';
+
 export interface RecurringSchedule {
   id: string;
   name: string;
@@ -7,6 +9,7 @@ export interface RecurringSchedule {
   frequency: 'Monthly' | 'Weekly' | 'BiWeekly';
   dayValue: number | string;
   enabled: boolean;
+  category?: CategoryId;
 }
 
 export interface OneTimeTransaction {
@@ -15,6 +18,9 @@ export interface OneTimeTransaction {
   amount: number;
   date: string;
   type?: string;
+  category?: CategoryId;
+  actual?: number;
+  completed?: boolean;
 }
 
 export interface DebtPlan {
@@ -26,6 +32,10 @@ export interface DebtPlan {
   payDay: number;
   startDate: string;
   enabled: boolean;
+  category?: CategoryId;
+  debtType?: 'fixed' | 'revolving';
+  interestRate?: number;
+  minimumPayment?: number;
 }
 
 export interface SavingsPlan {
@@ -38,6 +48,8 @@ export interface SavingsPlan {
   endDate?: string;
   goalAmount?: number;
   enabled: boolean;
+  isPercentOfIncome?: boolean;
+  percentValue?: number;
 }
 
 export interface SpendingCategory {
@@ -61,6 +73,7 @@ export interface AppSettings {
   currency: 'USD' | 'BRL';
   language: 'en' | 'pt';
   hasOnboarded: boolean;
+  payFrequency?: 'weekly' | 'biweekly' | 'monthly';
 }
 
 export interface Projection {
@@ -69,6 +82,7 @@ export interface Projection {
   amount: number;
   type: 'Recurring' | 'One-Time' | 'Debt Payment' | 'Savings';
   id?: string;
+  category?: CategoryId;
 }
 
 export type ViewId = 'calendar' | 'dashboard' | 'bills' | 'plan' | 'savings';

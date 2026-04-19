@@ -8,6 +8,8 @@ import type { RecurringSchedule } from '@/lib/types';
 import { format } from 'date-fns';
 import { useT, useCurrencySymbol } from '@/lib/i18n';
 import { useApp } from '@/context/AppContext';
+import type { CategoryId } from '@/lib/categories';
+import CategoryPicker from '../CategoryPicker';
 
 interface Props {
   open: boolean;
@@ -32,6 +34,7 @@ export default function RecurringModal({ open, onClose, onSave, initial }: Props
   const [frequency, setFrequency] = useState<'Monthly' | 'Weekly' | 'BiWeekly'>('Monthly');
   const [dayMonth, setDayMonth] = useState('1');
   const [dayWeek, setDayWeek] = useState('Thursday');
+  const [category, setCategory] = useState<CategoryId | undefined>(undefined);
 
   useEffect(() => {
     if (initial) {
@@ -43,11 +46,12 @@ export default function RecurringModal({ open, onClose, onSave, initial }: Props
       setFrequency(initial.frequency);
       if (initial.frequency === 'Monthly') setDayMonth(String(initial.dayValue));
       else setDayWeek(String(initial.dayValue));
+      setCategory(initial.category);
     } else {
       setName(''); setAmount(''); setType('expense');
       setStartDate(format(new Date(), 'yyyy-MM-dd'));
       setEndDate('');
-      setFrequency('Monthly'); setDayMonth('1'); setDayWeek('Thursday');
+      setFrequency('Monthly'); setDayMonth('1'); setDayWeek('Thursday'); setCategory(undefined);
     }
   }, [initial, open]);
 
@@ -62,6 +66,7 @@ export default function RecurringModal({ open, onClose, onSave, initial }: Props
       frequency,
       dayValue: frequency === 'Monthly' ? parseInt(dayMonth) : dayWeek,
       enabled: initial?.enabled ?? true,
+      category,
     });
   };
 
@@ -73,6 +78,12 @@ export default function RecurringModal({ open, onClose, onSave, initial }: Props
           <input required value={name} onChange={(e) => setName(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
         </div>
         <TypeToggle value={type} onChange={setType} />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {settings.language === 'pt' ? 'Categoria' : 'Category'}
+          </label>
+          <CategoryPicker value={category} onChange={setCategory} filter={type} />
+        </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('amount')} ({sym})</label>
           <input type="number" step="0.01" min="0" required value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />

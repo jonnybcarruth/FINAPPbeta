@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import { useApp } from '@/context/AppContext';
 import { useT, useFmt, useLocale } from '@/lib/i18n';
+import { compute503020, findNegativeCause } from '@/lib/finance';
 
 Chart.register(...registerables);
 
@@ -241,17 +242,47 @@ export default function DashboardView() {
         </div>
       </section>
 
-      {/* Negative balance warning - prominent in-page card */}
-      {minBalance < 0 && (
-        <div className="bg-red-50 dark:bg-red-950/60 border-l-4 border-red-500 rounded-2xl p-4 flex items-start space-x-3">
-          <span className="text-red-600 text-2xl flex-shrink-0 leading-none">⚠️</span>
-          <div>
-            <p className="text-sm font-bold text-red-700 dark:text-red-300">{t('projected_negative_balance')}</p>
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">{fmt(minBalance)} · {minBalanceDate}</p>
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">{t('projected_negative_desc')}</p>
+      {/* Actionable negative balance warning */}
+      {minBalance < 0 && (() => {
+        const cause = findNegativeCause(projections, settings.startingBalance);
+        return (
+          <div className="bg-red-50 dark:bg-red-950/60 border-l-4 border-red-500 rounded-2xl p-4 flex items-start space-x-3">
+            <span className="text-red-600 text-2xl flex-shrink-0 leading-none">⚠️</span>
+            <div>
+              <p className="text-sm font-bold text-red-700 dark:text-red-300">{t('projected_negative_balance')}</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{fmt(minBalance)} · {minBalanceDate}</p>
+              {cause && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                  {settings.language === 'pt' ? 'Causado por' : 'Caused by'}: <span className="font-semibold">{cause.projection.name}</span> ({fmt(cause.projection.amount)})
+                </p>
+              )}
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{t('projected_negative_desc')}</p>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+      {/* 50/30/20 Rule Benchmark */}
+      {metrics.totalIncome > 0 && (() => {
+        const rule = compute503020(projections, metrics.totalIncome);
+        const ruleLabel = settings.language === 'pt' ? 'Regra 50/30/20' : '50/30/20 Rule';
+        const needsLabel = settings.language === 'pt' ? 'Necessidades' : 'Needs';
+        const wantsLabel = settings.language === 'pt' ? 'Desejos' : 'Wants';
+        const savingsLabel = t('savings');
+        return (
+          <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">{ruleLabel}</h2>
+            <div className="space-y-3">
+              <BenchmarkBar label={needsLabel} pct={rule.needsPct} target={50} amount={fmt(rule.needs)} color="bg-blue-500" />
+              <BenchmarkBar label={wantsLabel} pct={rule.wantsPct} target={30} amount={fmt(rule.wants)} color="bg-purple-500" />
+              <BenchmarkBar label={savingsLabel} pct={rule.savingsPct} target={20} amount={fmt(rule.savings)} color="bg-emerald-500" />
+            </div>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 text-center">
+              {settings.language === 'pt' ? 'Meta: 50% necessidades, 30% desejos, 20% poupança' : 'Target: 50% needs, 30% wants, 20% savings'}
+            </p>
+          </section>
+        );
+      })()}
 
       <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
         <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">{t('cash_flow_projection')}</h2>
@@ -273,6 +304,25 @@ export default function DashboardView() {
         <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">{t('net_monthly_flow')}</h2>
         <div className="chart-container"><canvas ref={monthlyNetRef} /></div>
       </section>
+    </div>
+  );
+}
+
+function BenchmarkBar({ label, pct, target, amount, color }: { label: string; pct: number; target: number; amount: string; color: string }) {
+  const isOver = pct > target;
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-1">
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{label}</span>
+        <div className="flex items-center space-x-2">
+          <span className="text-xs text-gray-500">{amount}</span>
+          <span className={`text-xs font-bold ${isOver && label !== 'Savings' && label !== 'Poupança' ? 'text-red-600' : 'text-emerald-600'}`}>{pct}%</span>
+        </div>
+      </div>
+      <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+        <div className={`${color} h-2.5 rounded-full transition-all`} style={{ width: `${Math.min(100, pct)}%` }} />
+        <div className="absolute top-0 h-2.5 w-0.5 bg-gray-900 dark:bg-white opacity-40" style={{ left: `${target}%` }} />
+      </div>
     </div>
   );
 }

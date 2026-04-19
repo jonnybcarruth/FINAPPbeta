@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import ModalShell from './ModalShell';
 import type { SavingsPlan } from '@/lib/types';
-import { hapticSuccess } from '@/lib/haptics';
+import { hapticSuccess, hapticLight } from '@/lib/haptics';
 import { format } from 'date-fns';
 import { useT, useCurrencySymbol } from '@/lib/i18n';
 import { useApp } from '@/context/AppContext';
@@ -32,6 +32,8 @@ export default function SavingsModal({ open, onClose, onSave, initial }: Props) 
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState('');
   const [goalAmount, setGoalAmount] = useState('');
+  const [isPercent, setIsPercent] = useState(false);
+  const [percentValue, setPercentValue] = useState('');
 
   useEffect(() => {
     if (initial) {
@@ -43,11 +45,13 @@ export default function SavingsModal({ open, onClose, onSave, initial }: Props) 
       setStartDate(initial.startDate);
       setEndDate(initial.endDate || '');
       setGoalAmount(initial.goalAmount ? String(initial.goalAmount) : '');
+      setIsPercent(initial.isPercentOfIncome || false);
+      setPercentValue(initial.percentValue ? String(initial.percentValue) : '');
     } else {
       setName(''); setAmount(''); setFrequency('Weekly');
       setDayMonth('1'); setDayWeek('Friday');
       setStartDate(format(new Date(), 'yyyy-MM-dd'));
-      setEndDate(''); setGoalAmount('');
+      setEndDate(''); setGoalAmount(''); setIsPercent(false); setPercentValue('');
     }
   }, [initial, open]);
 
@@ -62,6 +66,7 @@ export default function SavingsModal({ open, onClose, onSave, initial }: Props) 
       ...(endDate ? { endDate } : {}),
       ...(goalAmount ? { goalAmount: parseFloat(goalAmount) } : {}),
       enabled: initial?.enabled ?? true,
+      ...(isPercent ? { isPercentOfIncome: true, percentValue: parseFloat(percentValue) || 0 } : {}),
     });
   };
 
@@ -73,11 +78,27 @@ export default function SavingsModal({ open, onClose, onSave, initial }: Props) 
           <input required value={name} onChange={(e) => setName(e.target.value)}
             className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm" />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('amount_per_contribution')} ({sym})</label>
-          <input type="number" step="0.01" min="0.01" required value={amount} onChange={(e) => setAmount(e.target.value)}
-            className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm" />
+        <div className="flex items-center space-x-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+          <input type="checkbox" checked={isPercent} onChange={(e) => { void hapticLight(); setIsPercent(e.target.checked); }} className="w-4 h-4" />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            {settings.language === 'pt' ? '% da renda mensal' : '% of monthly income'}
+          </span>
         </div>
+        {isPercent ? (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              {settings.language === 'pt' ? 'Percentual (%)' : 'Percentage (%)'}
+            </label>
+            <input type="number" step="0.5" min="0.5" max="100" required value={percentValue} onChange={(e) => setPercentValue(e.target.value)}
+              placeholder="10" className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm" />
+          </div>
+        ) : (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('amount_per_contribution')} ({sym})</label>
+            <input type="number" step="0.01" min="0.01" required value={amount} onChange={(e) => setAmount(e.target.value)}
+              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm" />
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('frequency')}</label>
           <select value={frequency} onChange={(e) => setFrequency(e.target.value as typeof frequency)}

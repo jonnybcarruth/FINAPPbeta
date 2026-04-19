@@ -15,11 +15,12 @@ export default function Onboarding() {
   const [balance, setBalance] = useState('');
   const [income, setIncome] = useState('');
   const [rent, setRent] = useState('');
+  const [payFreq, setPayFreq] = useState<'monthly' | 'biweekly' | 'weekly'>('monthly');
 
   const finish = () => {
     void hapticSuccess();
     const updates: { settings: typeof settings; schedules: RecurringSchedule[] } = {
-      settings: { ...settings, hasOnboarded: true },
+      settings: { ...settings, hasOnboarded: true, payFrequency: payFreq },
       schedules: [],
     };
 
@@ -29,14 +30,16 @@ export default function Onboarding() {
 
     const today = format(new Date(), 'yyyy-MM-dd');
     if (income && parseFloat(income) > 0) {
+      const freqMap = { monthly: 'Monthly', biweekly: 'BiWeekly', weekly: 'Weekly' } as const;
       updates.schedules.push({
         id: `SCH-${Date.now()}-inc`,
         name: t('sugg_salary'),
         amount: parseFloat(income),
         startDate: today,
-        frequency: 'Monthly',
-        dayValue: 1,
+        frequency: freqMap[payFreq],
+        dayValue: payFreq === 'monthly' ? 1 : 'Friday',
         enabled: true,
+        category: 'salary',
       });
     }
     if (rent && parseFloat(rent) > 0) {
@@ -112,13 +115,22 @@ export default function Onboarding() {
           <div className="space-y-5">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('monthly_income_q')}</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">{t('monthly_income_help')}</p>
+            {/* Pay frequency selector */}
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+              {(['weekly', 'biweekly', 'monthly'] as const).map((f) => (
+                <button key={f} type="button" onClick={() => { void hapticLight(); setPayFreq(f); }}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition ${payFreq === f ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow' : 'text-gray-500'}`}>
+                  {f === 'weekly' ? t('weekly') : f === 'biweekly' ? t('biweekly') : t('monthly')}
+                </button>
+              ))}
+            </div>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">{sym}</span>
               <input
                 type="number"
                 value={income}
                 onChange={(e) => setIncome(e.target.value)}
-                placeholder="3000"
+                placeholder={payFreq === 'monthly' ? '3000' : payFreq === 'biweekly' ? '1500' : '750'}
                 className="w-full pl-10 pr-3 py-3 text-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none"
                 autoFocus
               />
