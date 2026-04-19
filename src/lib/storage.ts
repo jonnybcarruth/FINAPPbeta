@@ -145,7 +145,13 @@ export async function loadFromCloud(userId: string): Promise<AppData | null> {
   }
   if (!data?.data) return null;
 
-  const merged = { ...defaultData(), ...(data.data as Partial<AppData>) };
+  const defaults = defaultData();
+  const cloud = data.data as Partial<AppData>;
+  const merged: AppData = {
+    ...defaults,
+    ...cloud,
+    settings: { ...defaults.settings, ...(cloud.settings || {}) },
+  };
   return merged;
 }
 
