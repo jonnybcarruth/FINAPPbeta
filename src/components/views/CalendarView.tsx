@@ -7,6 +7,7 @@ import { useApp } from '@/context/AppContext';
 import { getEndOfDayBalance } from '@/lib/finance';
 import DayDetailsModal from '../modals/DayDetailsModal';
 import OneTimeModal from '../modals/OneTimeModal';
+import SmartBudgetCard from '../SmartBudgetCard';
 import type { OneTimeTransaction, Projection } from '@/lib/types';
 import { useT, useFmt, useLocale } from '@/lib/i18n';
 import { hapticLight } from '@/lib/haptics';
@@ -119,6 +120,8 @@ export default function CalendarView() {
 
   return (
     <div className="space-y-6">
+      {settings.smartBudgetEnabled !== false && <SmartBudgetCard />}
+
       <section className="bg-white dark:bg-gray-800 py-6 px-0 rounded-2xl shadow-sm">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 px-6">
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-0">{t('transaction_calendar')}</h2>

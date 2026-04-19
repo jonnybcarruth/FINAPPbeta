@@ -26,9 +26,10 @@ export default function SlideMenu({ open, onClose }: Props) {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const toggleSetting = (field: 'darkMode' | 'hapticsEnabled' | 'soundsEnabled') => {
+  const toggleSetting = (field: 'darkMode' | 'hapticsEnabled' | 'soundsEnabled' | 'smartBudgetEnabled') => {
     void hapticLight();
-    const newVal = !settings[field];
+    const currentVal = field === 'smartBudgetEnabled' ? settings.smartBudgetEnabled !== false : settings[field];
+    const newVal = !currentVal;
     const newSettings = { ...settings, [field]: newVal };
     setSettings(newSettings);
     if (field === 'darkMode') {
@@ -180,6 +181,7 @@ export default function SlideMenu({ open, onClose }: Props) {
           <div className="p-5 space-y-4 border-b border-gray-200 dark:border-gray-700">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t('preferences')}</p>
 
+            <ToggleRow label={t('smart_budget')} checked={settings.smartBudgetEnabled !== false} onChange={() => toggleSetting('smartBudgetEnabled')} id="menu-smart" />
             <ToggleRow label={t('dark_mode')} checked={settings.darkMode} onChange={() => toggleSetting('darkMode')} id="menu-dark" />
             <ToggleRow label={t('vibrations')} checked={settings.hapticsEnabled} onChange={() => toggleSetting('hapticsEnabled')} id="menu-haptics" />
             <ToggleRow label={t('sounds')} checked={settings.soundsEnabled} onChange={() => toggleSetting('soundsEnabled')} id="menu-sounds" />

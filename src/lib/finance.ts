@@ -301,3 +301,109 @@ export function computeActualVsProjected(projections: Projection[], startDate: s
     varianceOut: actualOut - projectedOut,
   };
 }
+
+// Smart Budget: compute this week's safe discretionary budget
+// Pay-cycle aware — looks at balance today, adds income this week,
+// subtracts upcoming bills/debt/savings, reserves amount for next big bills.
+export interface WeeklyBudget {
+  weekStart: Date;
+  weekEnd: Date;
+  balanceToday: number;
+  incomeThisWeek: number;
+  billsThisWeek: number;
+  savingsThisWeek: number;
+  debtThisWeek: number;
+  reserveForBigBills: number;
+  emergencyBuffer: number;
+  safeToSpend: number;
+  nextBigBill: { name: string; amount: number; date: Date } | null;
+  daysUntilPaycheck: number;
+  upcomingItems: Projection[];
+}
+
+export function computeWeeklyBudget(
+  projections: Projection[],
+  startingBalance: number,
+  dailyBalanceMap: DailyBalanceMap,
+  startDateStr: string
+): WeeklyBudget {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const weekEnd = addDays(today, 7);
+  const twoWeeksOut = addDays(today, 14);
+
+  // Balance "today" — use the most recent daily balance or starting balance
+  const todayKey = format(today, 'yyyy-MM-dd');
+  const balanceToday = getEndOfDayBalance(todayKey, dailyBalanceMap, startDateStr, startingBalance);
+
+  // Walk projections within the next 7 days
+  let incomeThisWeek = 0;
+  let billsThisWeek = 0;
+  let savingsThisWeek = 0;
+  let debtThisWeek = 0;
+  const upcomingItems: Projection[] = [];
+
+  projections.forEach((p) => {
+    if (p.date < today || p.date > weekEnd) return;
+    upcomingItems.push(p);
+    if (p.amount > 0) {
+      incomeThisWeek += p.amount;
+    } else {
+      const abs = Math.abs(p.amount);
+      if (p.type === 'Savings') savingsThisWeek += abs;
+      else if (p.type === 'Debt Payment') debtThisWeek += abs;
+      else billsThisWeek += abs;
+    }
+  });
+
+  // Find biggest non-discretionary expense in next 2 weeks (after this week)
+  // so we reserve for it
+  let nextBigBill: WeeklyBudget['nextBigBill'] = null;
+  let reserveForBigBills = 0;
+  projections.forEach((p) => {
+    if (p.date < weekEnd || p.date > twoWeeksOut) return;
+    if (p.amount >= 0) return;
+    if (p.type === 'Savings') return; // savings isn't urgent
+    const abs = Math.abs(p.amount);
+    if (abs > reserveForBigBills) {
+      reserveForBigBills = abs;
+      nextBigBill = { name: p.name, amount: abs, date: p.date };
+    }
+  });
+
+  // Days until next paycheck (next income event)
+  let daysUntilPaycheck = 7;
+  for (const p of projections) {
+    if (p.date <= today) continue;
+    if (p.amount > 0 && p.type === 'Recurring') {
+      daysUntilPaycheck = Math.max(1, Math.ceil((p.date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+      break;
+    }
+  }
+
+  // Emergency buffer — keep 5% of balance as cushion
+  const emergencyBuffer = Math.max(50, Math.round(balanceToday * 0.05));
+
+  // Safe to spend formula
+  // = Balance today + income this week - bills - debt - savings - reserve - buffer
+  const safeToSpend = Math.max(
+    0,
+    balanceToday + incomeThisWeek - billsThisWeek - savingsThisWeek - debtThisWeek - reserveForBigBills - emergencyBuffer
+  );
+
+  return {
+    weekStart: today,
+    weekEnd,
+    balanceToday,
+    incomeThisWeek,
+    billsThisWeek,
+    savingsThisWeek,
+    debtThisWeek,
+    reserveForBigBills,
+    emergencyBuffer,
+    safeToSpend,
+    nextBigBill,
+    daysUntilPaycheck,
+    upcomingItems,
+  };
+}

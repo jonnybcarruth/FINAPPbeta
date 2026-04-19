@@ -42,6 +42,7 @@ function defaultData(): AppData {
       currency: 'USD',
       language: 'en',
       hasOnboarded: false,
+      smartBudgetEnabled: true,
     },
   };
 }
