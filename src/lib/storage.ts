@@ -36,6 +36,8 @@ function defaultData(): AppData {
       savedAmount: 0,
       hapticsEnabled: true,
       soundsEnabled: true,
+      currency: 'USD',
+      language: 'en',
     },
   };
 }
@@ -85,6 +87,8 @@ export function loadFromLocalStorage(): AppData {
     savedAmount: parseFloat(localStorage.getItem('savedAmount') || '0'),
     hapticsEnabled: localStorage.getItem('hapticsEnabled') !== 'false',
     soundsEnabled: localStorage.getItem('soundsEnabled') !== 'false',
+    currency: (localStorage.getItem('currency') as AppSettings['currency']) || 'USD',
+    language: (localStorage.getItem('language') as AppSettings['language']) || 'en',
   };
 
   return { recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, activeSpendingCategories, settings };
@@ -106,6 +110,8 @@ export function saveToLocalStorage(data: AppData) {
   localStorage.setItem('savedAmount', data.settings.savedAmount.toFixed(2));
   localStorage.setItem('hapticsEnabled', String(data.settings.hapticsEnabled));
   localStorage.setItem('soundsEnabled', String(data.settings.soundsEnabled));
+  localStorage.setItem('currency', data.settings.currency);
+  localStorage.setItem('language', data.settings.language);
 }
 
 export function hasLocalData(): boolean {

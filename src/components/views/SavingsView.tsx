@@ -4,13 +4,15 @@ import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import SavingsModal from '../modals/SavingsModal';
 import type { SavingsPlan } from '@/lib/types';
+import { useT, useFmt } from '@/lib/i18n';
 
 export default function SavingsView() {
-  const { savingsPlans, setSavingsPlans, projections, saveWithOverrides } = useApp();
+  const { savingsPlans, setSavingsPlans, projections, saveWithOverrides, settings } = useApp();
+  const t = useT();
+  const fmt = useFmt();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<SavingsPlan | null>(null);
 
-  // Calculate total saved from projections
   const totalSaved = projections
     .filter((p) => p.type === 'Savings')
     .reduce((sum, p) => sum + Math.abs(p.amount), 0);
@@ -19,7 +21,6 @@ export default function SavingsView() {
     .filter((p) => p.enabled && p.goalAmount)
     .reduce((sum, p) => sum + (p.goalAmount || 0), 0);
 
-  // Per-plan accumulated amounts
   const perPlanSaved: Record<string, number> = {};
   projections
     .filter((p) => p.type === 'Savings')
@@ -43,62 +44,56 @@ export default function SavingsView() {
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm('Delete this savings plan?')) return;
+    const msg = settings.language === 'pt' ? 'Excluir este plano de poupança?' : 'Delete this savings plan?';
+    if (!confirm(msg)) return;
     const updated = savingsPlans.filter((p) => p.id !== id);
     setSavingsPlans(updated);
     saveWithOverrides(undefined, undefined, undefined, undefined, undefined, updated);
   };
 
-  const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  const freqLabel = (f: string) => f === 'Monthly' ? t('monthly') : f === 'BiWeekly' ? t('biweekly') : t('weekly');
 
   return (
     <div className="space-y-6">
-      {/* Summary cards */}
       <section className="grid grid-cols-2 gap-4 text-center">
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">Total Saved (Projected)</h3>
+          <h3 className="text-xs font-semibold text-gray-500">{t('total_saved')}</h3>
           <p className="text-2xl font-bold text-emerald-600 mt-1">{fmt(totalSaved)}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">Total Goal</h3>
+          <h3 className="text-xs font-semibold text-gray-500">{t('total_goal')}</h3>
           <p className="text-2xl font-bold text-blue-600 mt-1">{totalGoals > 0 ? fmt(totalGoals) : '—'}</p>
         </div>
       </section>
 
-      {/* Overall progress bar */}
       {totalGoals > 0 && (
         <section className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Overall Progress</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('overall_progress')}</span>
             <span className="text-sm font-bold text-emerald-600">{Math.min(100, Math.round((totalSaved / totalGoals) * 100))}%</span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-            <div
-              className="bg-emerald-500 h-3 rounded-full transition-all"
-              style={{ width: `${Math.min(100, (totalSaved / totalGoals) * 100)}%` }}
-            />
+            <div className="bg-emerald-500 h-3 rounded-full transition-all" style={{ width: `${Math.min(100, (totalSaved / totalGoals) * 100)}%` }} />
           </div>
         </section>
       )}
 
-      {/* Plans list */}
       <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Savings Plans</h2>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('savings_plans')}</h2>
           <button onClick={() => { setEditing(null); setOpen(true); }} className="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-semibold text-sm">
-            Add Savings
+            {t('add_savings')}
           </button>
         </div>
-        <p className="text-gray-500 mb-6 text-sm">Set up recurring contributions to your savings. These show as expenses in your cash flow and are tracked here.</p>
+        <p className="text-gray-500 mb-6 text-sm">{t('savings_intro')}</p>
 
         <div className="space-y-4">
-          {savingsPlans.length === 0 && <p className="text-center text-gray-400 italic py-8">No savings plans yet. Start one to track your progress.</p>}
+          {savingsPlans.length === 0 && <p className="text-center text-gray-400 italic py-8">{t('no_savings')}</p>}
           {savingsPlans.map((plan) => {
             const saved = perPlanSaved[plan.name] || 0;
             const goalPct = plan.goalAmount ? Math.min(100, (saved / plan.goalAmount) * 100) : null;
             return (
               <div key={plan.id} className={`p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-gray-700 shadow-sm hover:shadow-md transition ${!plan.enabled ? 'opacity-50' : ''}`}>
-                {/* Row 1: name + toggle */}
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center min-w-0 mr-3">
                     <div className="flex-shrink-0 w-3 h-3 rounded-full mr-3 bg-emerald-500" />
@@ -110,9 +105,8 @@ export default function SavingsView() {
                     <label htmlFor={`sav-tog-${plan.id}`} className="toggle-label block overflow-hidden h-7 rounded-full bg-gray-300 cursor-pointer" />
                   </div>
                 </div>
-                {/* Row 2: details + amount + buttons */}
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-gray-500">{plan.frequency} · ${plan.amount.toFixed(2)}/contribution</p>
+                  <p className="text-sm text-gray-500">{freqLabel(plan.frequency)} · {fmt(plan.amount)}</p>
                   <div className="flex items-center space-x-2">
                     <p className="font-bold text-base text-emerald-600">{fmt(saved)}</p>
                     <button onClick={() => { setEditing(plan); setOpen(true); }} className="p-2 text-ios-gray hover:text-ios-blue rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">
@@ -123,12 +117,11 @@ export default function SavingsView() {
                     </button>
                   </div>
                 </div>
-                {/* Progress bar if goal is set */}
                 {goalPct !== null && plan.goalAmount && (
                   <div>
                     <div className="flex justify-between text-xs text-gray-500 mb-1">
-                      <span>{fmt(saved)} saved</span>
-                      <span>Goal: {fmt(plan.goalAmount)}</span>
+                      <span>{fmt(saved)}</span>
+                      <span>{t('goal')}: {fmt(plan.goalAmount)}</span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                       <div className="bg-emerald-500 h-2 rounded-full transition-all" style={{ width: `${goalPct}%` }} />

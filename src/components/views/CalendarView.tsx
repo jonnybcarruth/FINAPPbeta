@@ -7,12 +7,20 @@ import { getEndOfDayBalance } from '@/lib/finance';
 import DayDetailsModal from '../modals/DayDetailsModal';
 import OneTimeModal from '../modals/OneTimeModal';
 import type { OneTimeTransaction } from '@/lib/types';
+import { useT, useFmt, useLocale } from '@/lib/i18n';
+import { ptBR, enUS } from 'date-fns/locale';
 
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_LABELS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_LABELS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 export default function CalendarView() {
   const { dailyBalanceMap, dailyTransactionMap, settings, setSettings, saveWithOverrides,
     oneTimeTransactions, setOneTimeTransactions, currentCalendarDate, setCurrentCalendarDate } = useApp();
+  const t = useT();
+  const fmt = useFmt();
+  const locale = useLocale();
+  const dateLocale = locale === 'pt-BR' ? ptBR : enUS;
+  const DAY_LABELS = locale === 'pt-BR' ? DAY_LABELS_PT : DAY_LABELS_EN;
   const [dayKey, setDayKey] = useState('');
   const [showDay, setShowDay] = useState(false);
   const [showOneTime, setShowOneTime] = useState(false);
@@ -36,7 +44,7 @@ export default function CalendarView() {
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm('Delete this transaction?')) return;
+    if (!confirm(settings.language === 'pt' ? 'Excluir esta transação?' : 'Delete this transaction?')) return;
     const updated = oneTimeTransactions.filter((t) => t.id !== id);
     setOneTimeTransactions(updated);
     setShowDay(false);
@@ -79,7 +87,7 @@ export default function CalendarView() {
           {txs.map((t, i) => (
             <li key={i} className={`flex items-center rounded px-1 ${t.type === 'Savings' ? 'bg-emerald-100 text-emerald-800 border-l-2 border-emerald-500' : t.type === 'Debt Payment' ? 'bg-pink-100 text-pink-800 border-l-2 border-pink-500' : t.type === 'One-Time' ? 'bg-purple-50 text-purple-800 border-l-2 border-purple-500' : t.amount > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
               <span className="truncate" title={t.name}>{t.name}</span>
-              <span className="font-semibold ml-auto">${Math.abs(t.amount).toFixed(2)}</span>
+              <span className="font-semibold ml-auto">{fmt(Math.abs(t.amount))}</span>
             </li>
           ))}
         </ul>
@@ -92,16 +100,16 @@ export default function CalendarView() {
     <div className="space-y-6">
       <section className="bg-white dark:bg-gray-800 py-6 px-0 rounded-2xl shadow-sm">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 px-6">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-0">Transaction Calendar</h2>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-0">{t('transaction_calendar')}</h2>
           <button onClick={() => { setEditTx(null); setDefaultDate(''); setShowOneTime(true); }} className="px-4 py-2 bg-ios-blue text-white rounded-xl hover:bg-ios-blue-dark font-semibold text-sm">
-            Add Event
+            {t('add_event')}
           </button>
         </div>
         <div className="flex justify-between items-center mb-4 px-6">
           <button onClick={() => { setCalDir('right'); setCalAnimKey(k => k + 1); setCurrentCalendarDate(subMonths(currentCalendarDate, 1)); }} aria-label="Previous month" className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100" style={{ letterSpacing: '-0.01em' }}>{format(currentCalendarDate, 'MMMM yyyy')}</h3>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100" style={{ letterSpacing: '-0.01em' }}>{format(currentCalendarDate, 'MMMM yyyy', { locale: dateLocale })}</h3>
           <button onClick={() => { setCalDir('left'); setCalAnimKey(k => k + 1); setCurrentCalendarDate(addMonths(currentCalendarDate, 1)); }} aria-label="Next month" className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
@@ -118,7 +126,7 @@ export default function CalendarView() {
               setSettings(newSettings);
               saveWithOverrides(undefined, undefined, undefined, undefined, newSettings);
             }} className="w-4 h-4" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Show End of Day Balance</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('show_eod_balance')}</span>
           </label>
         </div>
       </section>

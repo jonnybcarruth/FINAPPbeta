@@ -58,6 +58,8 @@ export interface AppSettings {
   savedAmount: number;
   hapticsEnabled: boolean;
   soundsEnabled: boolean;
+  currency: 'USD' | 'BRL';
+  language: 'en' | 'pt';
 }
 
 export interface Projection {

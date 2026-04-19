@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import DebtPlanModal from '../modals/DebtPlanModal';
 import type { DebtPlan } from '@/lib/types';
+import { useT, useFmt } from '@/lib/i18n';
 
 export default function DebtPlansView() {
-  const { debtPlans, setDebtPlans, saveWithOverrides } = useApp();
+  const { debtPlans, setDebtPlans, saveWithOverrides, settings } = useApp();
+  const t = useT();
+  const fmt = useFmt();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<DebtPlan | null>(null);
 
@@ -25,7 +28,8 @@ export default function DebtPlansView() {
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm('Delete this debt plan?')) return;
+    const msg = settings.language === 'pt' ? 'Excluir este plano de dívida?' : 'Delete this debt plan?';
+    if (!confirm(msg)) return;
     const updated = debtPlans.filter((p) => p.id !== id);
     setDebtPlans(updated);
     saveWithOverrides(undefined, undefined, updated, undefined, undefined);
@@ -34,18 +38,17 @@ export default function DebtPlansView() {
   return (
     <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Debt Plan Management</h2>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('debt_plan_management')}</h2>
         <button onClick={() => { setEditing(null); setOpen(true); }} className="px-4 py-2 bg-ios-blue text-white rounded-xl hover:bg-ios-blue-dark font-semibold text-sm">
-          Add Debt Plan
+          {t('add_debt_plan')}
         </button>
       </div>
-      <p className="text-gray-500 mb-6 text-sm">Define structured debt repayments. Payments are calculated based on the payoff period.</p>
+      <p className="text-gray-500 mb-6 text-sm">{t('define_debt')}</p>
 
       <div className="space-y-4">
-        {debtPlans.length === 0 && <p className="text-center text-gray-400 italic py-8">No debt plans yet.</p>}
+        {debtPlans.length === 0 && <p className="text-center text-gray-400 italic py-8">{t('no_debts')}</p>}
         {debtPlans.map((plan) => (
           <div key={plan.id} className={`p-4 rounded-xl border border-pink-200 bg-white dark:bg-gray-700 shadow-sm hover:shadow-md transition ${!plan.enabled ? 'opacity-50' : ''}`}>
-            {/* Row 1: name + toggle */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center min-w-0 mr-3">
                 <div className="flex-shrink-0 w-3 h-3 rounded-full mr-3 bg-pink-500" />
@@ -57,11 +60,10 @@ export default function DebtPlansView() {
                 <label htmlFor={`debt-tog-${plan.id}`} className="toggle-label block overflow-hidden h-7 rounded-full bg-gray-300 cursor-pointer" />
               </div>
             </div>
-            {/* Row 2: details + amount + buttons */}
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-500">${plan.totalAmount.toLocaleString()} · {plan.payoffMonths} months</p>
+              <p className="text-sm text-gray-500">{fmt(plan.totalAmount)} · {plan.payoffMonths} {t('months')}</p>
               <div className="flex items-center space-x-2">
-                <p className="font-bold text-base text-pink-600">${(plan.totalAmount / plan.payoffMonths).toFixed(2)}/mo</p>
+                <p className="font-bold text-base text-pink-600">{fmt(plan.totalAmount / plan.payoffMonths)}{t('per_month')}</p>
                 <button onClick={() => { setEditing(plan); setOpen(true); }} className="p-2 text-ios-gray hover:text-ios-blue rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>

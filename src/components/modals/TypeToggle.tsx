@@ -1,14 +1,17 @@
 'use client';
 
+import { useT } from '@/lib/i18n';
+
 interface TypeToggleProps {
   value: 'income' | 'expense';
   onChange: (v: 'income' | 'expense') => void;
 }
 
 export default function TypeToggle({ value, onChange }: TypeToggleProps) {
+  const t = useT();
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount Type</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('type')}</label>
       <div className="flex rounded-lg border border-gray-300 overflow-hidden">
         <button
           type="button"
@@ -17,7 +20,7 @@ export default function TypeToggle({ value, onChange }: TypeToggleProps) {
             value === 'expense' ? 'bg-red-100 text-red-700' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
         >
-          Expense
+          {t('expense')}
         </button>
         <button
           type="button"
@@ -26,7 +29,7 @@ export default function TypeToggle({ value, onChange }: TypeToggleProps) {
             value === 'income' ? 'bg-green-100 text-green-700' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300'
           }`}
         >
-          Income
+          {t('income')}
         </button>
       </div>
     </div>

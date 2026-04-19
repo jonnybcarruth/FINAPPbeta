@@ -162,11 +162,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         try { await saveToCloud(user.id, data); }
         catch (e) {
           console.error('[AppContext] cloud save failed', e);
-          showStatus('Saved locally — cloud sync failed', 'bg-yellow-100 text-yellow-800');
+          const failMsg = data.settings.language === 'pt' ? 'Salvo localmente — sincronização com nuvem falhou' : 'Saved locally — cloud sync failed';
+          showStatus(failMsg, 'bg-yellow-100 text-yellow-800');
           return;
         }
       }
-      showStatus('Saved!', 'bg-blue-100 text-blue-700');
+      const savedText = data.settings.language === 'pt' ? 'Salvo!' : 'Saved!';
+      showStatus(savedText, 'bg-blue-100 text-blue-700');
     },
     [user, showStatus]
   );

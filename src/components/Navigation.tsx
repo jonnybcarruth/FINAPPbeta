@@ -4,6 +4,7 @@ import type { FC } from 'react';
 import { useApp } from '@/context/AppContext';
 import type { ViewId } from '@/lib/types';
 import { hapticLight } from '@/lib/haptics';
+import { useT } from '@/lib/i18n';
 
 const CalendarIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -57,17 +58,18 @@ const SavingsIcon = () => (
   </svg>
 );
 
-const NAV_ITEMS: { id: ViewId; label: string; Icon: FC }[] = [
-  { id: 'calendar', label: 'Calendar', Icon: CalendarIcon },
-  { id: 'dashboard', label: 'Dashboard', Icon: DashboardIcon },
-  { id: 'debt', label: 'Debt', Icon: DebtIcon },
-  { id: 'schedules', label: 'Schedules', Icon: SchedulesIcon },
-  { id: 'plan', label: 'Plan', Icon: PlanIcon },
-  { id: 'savings', label: 'Savings', Icon: SavingsIcon },
+const NAV_ITEMS: { id: ViewId; labelKey: string; Icon: FC }[] = [
+  { id: 'calendar', labelKey: 'calendar', Icon: CalendarIcon },
+  { id: 'dashboard', labelKey: 'dashboard', Icon: DashboardIcon },
+  { id: 'debt', labelKey: 'debt', Icon: DebtIcon },
+  { id: 'schedules', labelKey: 'schedules', Icon: SchedulesIcon },
+  { id: 'plan', labelKey: 'plan', Icon: PlanIcon },
+  { id: 'savings', labelKey: 'savings', Icon: SavingsIcon },
 ];
 
 export default function Navigation() {
   const { activeView, setActiveView, setViewSlideDir } = useApp();
+  const t = useT();
 
   const handleNav = (id: ViewId) => {
     const from = NAV_ITEMS.findIndex((n) => n.id === activeView);
@@ -81,7 +83,7 @@ export default function Navigation() {
   return (
     <nav id="bottom-nav">
       <div className="flex justify-around items-center h-full max-w-2xl mx-auto px-1">
-        {NAV_ITEMS.map(({ id, label, Icon }) => (
+        {NAV_ITEMS.map(({ id, labelKey, Icon }) => (
           <button
             key={id}
             data-view={id}
@@ -89,7 +91,7 @@ export default function Navigation() {
             className={`nav-btn flex flex-col items-center justify-center flex-1 py-1 gap-0.5 transition-colors ${activeView === id ? 'active-nav' : ''}`}
           >
             <Icon />
-            <span style={{ fontSize: '10px', fontWeight: activeView === id ? 600 : 500, letterSpacing: '-0.01em' }}>{label}</span>
+            <span style={{ fontSize: '10px', fontWeight: activeView === id ? 600 : 500, letterSpacing: '-0.01em' }}>{t(labelKey)}</span>
           </button>
         ))}
       </div>

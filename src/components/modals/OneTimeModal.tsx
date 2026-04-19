@@ -6,6 +6,8 @@ import ModalShell from './ModalShell';
 import TypeToggle from './TypeToggle';
 import type { OneTimeTransaction } from '@/lib/types';
 import { format } from 'date-fns';
+import { ptBR, enUS } from 'date-fns/locale';
+import { useT, useCurrencySymbol, useLocale } from '@/lib/i18n';
 
 interface Props {
   open: boolean;
@@ -18,6 +20,10 @@ interface Props {
 const CALC_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'];
 
 export default function OneTimeModal({ open, onClose, onSave, initial, defaultDate }: Props) {
+  const t = useT();
+  const sym = useCurrencySymbol();
+  const locale = useLocale();
+  const dateLocale = locale === 'pt-BR' ? ptBR : enUS;
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'income' | 'expense'>('expense');
@@ -69,43 +75,37 @@ export default function OneTimeModal({ open, onClose, onSave, initial, defaultDa
   const isValid = name.trim().length > 0 && parseFloat(amount) > 0;
 
   return (
-    <ModalShell open={open} onClose={onClose} title={initial ? 'Edit Transaction' : 'Add Transaction'}>
+    <ModalShell open={open} onClose={onClose} title={initial ? t('edit_transaction') : t('add_transaction')}>
       <div className="space-y-4">
-        {/* Type toggle first */}
         <TypeToggle value={type} onChange={setType} />
 
-        {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('name')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Car repair, Bonus"
             className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm"
           />
         </div>
 
-        {/* Date */}
         {showDatePicker ? (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('date')}</label>
             <input type="date" required value={date} onChange={(e) => setDate(e.target.value)}
               className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm" />
           </div>
         ) : (
           <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-            {format(new Date(date + 'T00:00:00'), 'EEEE, MMMM d, yyyy')}
+            {format(new Date(date + 'T00:00:00'), 'EEEE, MMMM d, yyyy', { locale: dateLocale })}
           </p>
         )}
 
-        {/* Amount display */}
         <div className="text-center py-3">
           <span className={`text-4xl font-bold tracking-tight ${type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
-            {type === 'expense' ? '-' : '+'}${displayAmount}
+            {type === 'expense' ? '-' : '+'}{sym}{displayAmount}
           </span>
         </div>
 
-        {/* Calculator keypad */}
         <div className="grid grid-cols-3 gap-2">
           {CALC_KEYS.map((key) => (
             <button
@@ -127,16 +127,15 @@ export default function OneTimeModal({ open, onClose, onSave, initial, defaultDa
           ))}
         </div>
 
-        {/* Actions */}
         <div className="flex justify-end space-x-3 pt-2">
-          <button type="button" onClick={onClose} className="px-5 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm">Cancel</button>
+          <button type="button" onClick={onClose} className="px-5 py-2.5 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm">{t('cancel')}</button>
           <button
             type="button"
             onClick={handleSubmit}
             disabled={!isValid}
             className="px-5 py-2.5 bg-ios-blue text-white rounded-xl hover:bg-ios-blue-dark font-semibold text-sm disabled:opacity-40"
           >
-            Save
+            {t('save')}
           </button>
         </div>
       </div>

@@ -13,21 +13,22 @@ import RecurringSchedulesView from '@/components/views/RecurringSchedulesView';
 import SpendingPlanView from '@/components/views/SpendingPlanView';
 import SavingsView from '@/components/views/SavingsView';
 import { setHapticsEnabled } from '@/lib/haptics';
-
-const VIEW_LABELS: Record<string, string> = {
-  calendar: 'Calendar',
-  dashboard: 'Dashboard',
-  debt: 'Debt Plans',
-  schedules: 'Recurring',
-  plan: 'Spending Plan',
-  savings: 'Savings',
-};
+import { useT } from '@/lib/i18n';
 
 export default function Home() {
   const { activeView, viewSlideDir, dataLoading, settings } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
+  const t = useT();
 
-  // Sync haptics enabled state when settings load
+  const VIEW_LABELS: Record<string, string> = {
+    calendar: t('calendar'),
+    dashboard: t('dashboard'),
+    debt: t('debt_plans'),
+    schedules: t('recurring'),
+    plan: t('spending_plan'),
+    savings: t('savings'),
+  };
+
   useEffect(() => {
     setHapticsEnabled(settings.hapticsEnabled);
   }, [settings.hapticsEnabled]);
@@ -36,7 +37,7 @@ export default function Home() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center space-y-3">
         <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-gray-500">Loading your data…</p>
+        <p className="text-sm text-gray-500">{t('loading_data')}</p>
       </div>
     );
   }

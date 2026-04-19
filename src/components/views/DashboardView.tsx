@@ -4,12 +4,18 @@ import { useEffect, useRef, useState } from 'react';
 import { Chart, registerables, type Point } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import { format } from 'date-fns';
+import { ptBR, enUS } from 'date-fns/locale';
 import { useApp } from '@/context/AppContext';
+import { useT, useFmt, useLocale } from '@/lib/i18n';
 
 Chart.register(...registerables);
 
 export default function DashboardView() {
   const { metrics, projections, settings } = useApp();
+  const t = useT();
+  const fmt = useFmt();
+  const locale = useLocale();
+  const dateLocale = locale === 'pt-BR' ? ptBR : enUS;
   const cashFlowRef = useRef<HTMLCanvasElement>(null);
   const monthlyNetRef = useRef<HTMLCanvasElement>(null);
   const incExpRef = useRef<HTMLCanvasElement>(null);
@@ -34,7 +40,7 @@ export default function DashboardView() {
     projections.forEach((p) => {
       balCents += Math.round(p.amount * 100);
       const bal = balCents / 100;
-      if (bal < min) { min = bal; minDate = format(p.date, 'MMM d, yyyy'); }
+      if (bal < min) { min = bal; minDate = format(p.date, 'MMM d, yyyy', { locale: dateLocale }); }
     });
     setMinBalance(min);
     setMinBalanceDate(minDate);
@@ -54,7 +60,7 @@ export default function DashboardView() {
       setAvgMonthlyIncome(mKeys.reduce((s, k) => s + months[k].inc, 0) / mKeys.length);
       setAvgMonthlyExpenses(mKeys.reduce((s, k) => s + months[k].exp, 0) / mKeys.length);
     }
-  }, [projections, settings]);
+  }, [projections, settings, dateLocale]);
 
   // Cash flow line chart
   useEffect(() => {
@@ -68,7 +74,7 @@ export default function DashboardView() {
       type: 'line',
       data: {
         datasets: [{
-          label: 'Projected Balance',
+          label: t('projected_savings'),
           data: dataPoints,
           borderColor: isDark() ? '#4CAF50' : '#3B82F6',
           backgroundColor: isDark() ? 'rgba(76,175,80,0.2)' : 'rgba(59,130,246,0.1)',
@@ -79,16 +85,16 @@ export default function DashboardView() {
         responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { labels: { color: '#6B7280' } },
-          tooltip: { callbacks: { label: (ctx) => `Balance: $${Number(ctx.parsed.y).toLocaleString()}` } },
+          tooltip: { callbacks: { label: (ctx) => fmt(Number(ctx.parsed.y)) } },
         },
         scales: {
           x: { type: 'time', time: { unit: 'month' }, ticks: { color: '#6B7280' }, grid: { color: 'rgba(100,100,100,0.15)' } },
-          y: { ticks: { callback: (v) => `$${Number(v).toLocaleString()}`, color: '#6B7280' }, grid: { color: 'rgba(100,100,100,0.15)' } },
+          y: { ticks: { callback: (v) => fmt(Number(v)), color: '#6B7280' }, grid: { color: 'rgba(100,100,100,0.15)' } },
         },
       },
     });
     return () => cashChart.current?.destroy();
-  }, [projections, settings]);
+  }, [projections, settings, fmt, t]);
 
   // Monthly net bar chart
   useEffect(() => {
@@ -102,9 +108,9 @@ export default function DashboardView() {
     netChart.current = new Chart(monthlyNetRef.current, {
       type: 'bar',
       data: {
-        labels: labels.map((l) => format(new Date(l + '-02T00:00:00'), 'MMM yyyy')),
+        labels: labels.map((l) => format(new Date(l + '-02T00:00:00'), 'MMM yyyy', { locale: dateLocale })),
         datasets: [{
-          label: 'Net Monthly Flow',
+          label: t('net_monthly_flow'),
           data,
           backgroundColor: data.map((v) => v >= 0 ? 'rgba(76,175,80,0.8)' : 'rgba(220,38,38,0.7)'),
           borderColor: data.map((v) => v >= 0 ? '#4CAF50' : '#DC2626'),
@@ -115,16 +121,16 @@ export default function DashboardView() {
         responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { labels: { color: '#6B7280' } },
-          tooltip: { callbacks: { label: (ctx) => `Net: $${Number(ctx.parsed.y).toLocaleString()}` } },
+          tooltip: { callbacks: { label: (ctx) => fmt(Number(ctx.parsed.y)) } },
         },
         scales: {
           x: { ticks: { color: '#6B7280' }, grid: { color: 'rgba(100,100,100,0.15)' } },
-          y: { ticks: { callback: (v) => `$${Number(v).toLocaleString()}`, color: '#6B7280' }, grid: { color: 'rgba(100,100,100,0.15)' } },
+          y: { ticks: { callback: (v) => fmt(Number(v)), color: '#6B7280' }, grid: { color: 'rgba(100,100,100,0.15)' } },
         },
       },
     });
     return () => netChart.current?.destroy();
-  }, [projections]);
+  }, [projections, fmt, t, dateLocale]);
 
   // Income vs Expenses doughnut
   useEffect(() => {
@@ -133,7 +139,7 @@ export default function DashboardView() {
     incExpChart.current = new Chart(incExpRef.current, {
       type: 'doughnut',
       data: {
-        labels: ['Income', 'Expenses'],
+        labels: [t('total_income'), t('total_expenses')],
         datasets: [{
           data: [metrics.totalIncome, Math.abs(metrics.totalExpenses)],
           backgroundColor: ['rgba(76,175,80,0.85)', 'rgba(220,38,38,0.75)'],
@@ -145,12 +151,12 @@ export default function DashboardView() {
         responsive: true, maintainAspectRatio: false, cutout: '60%',
         plugins: {
           legend: { position: 'bottom', labels: { color: '#6B7280', padding: 16 } },
-          tooltip: { callbacks: { label: (ctx) => `${ctx.label}: $${Number(ctx.parsed).toLocaleString()}` } },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmt(Number(ctx.parsed))}` } },
         },
       },
     });
     return () => incExpChart.current?.destroy();
-  }, [metrics]);
+  }, [metrics, fmt, t]);
 
   // Expense category breakdown bar
   useEffect(() => {
@@ -159,7 +165,7 @@ export default function DashboardView() {
     const cats: Record<string, number> = {};
     projections.forEach((p) => {
       if (p.amount < 0) {
-        const label = p.type === 'Debt Payment' ? 'Debt Payments' : p.name.replace(' (Planned)', '');
+        const label = p.type === 'Debt Payment' ? t('debt') : p.name.replace(' (Planned)', '');
         cats[label] = (cats[label] || 0) + Math.abs(p.amount);
       }
     });
@@ -171,7 +177,7 @@ export default function DashboardView() {
       data: {
         labels: sorted.map(([k]) => k.length > 18 ? k.slice(0, 16) + '…' : k),
         datasets: [{
-          label: 'Total Spent',
+          label: t('top_expenses'),
           data: sorted.map(([, v]) => Math.round(v * 100) / 100),
           backgroundColor: sorted.map((_, i) => colors[i % colors.length]),
           borderWidth: 0,
@@ -183,37 +189,35 @@ export default function DashboardView() {
         responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: (ctx) => `$${Number(ctx.parsed.x).toLocaleString()}` } },
+          tooltip: { callbacks: { label: (ctx) => fmt(Number(ctx.parsed.x)) } },
         },
         scales: {
-          x: { ticks: { callback: (v) => `$${Number(v).toLocaleString()}`, color: '#6B7280' }, grid: { color: 'rgba(100,100,100,0.15)' } },
+          x: { ticks: { callback: (v) => fmt(Number(v)), color: '#6B7280' }, grid: { color: 'rgba(100,100,100,0.15)' } },
           y: { ticks: { color: '#6B7280' }, grid: { display: false } },
         },
       },
     });
     return () => catChart.current?.destroy();
-  }, [projections]);
-
-  const fmt = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  }, [projections, fmt, t]);
 
   return (
     <div className="space-y-6">
       {/* Stat cards - top row */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">End Balance</h3>
+          <h3 className="text-xs font-semibold text-gray-500">{t('end_balance')}</h3>
           <p className={`text-xl font-bold mt-1 ${metrics.endBalance >= 0 ? 'text-gray-800 dark:text-gray-100' : 'text-red-600'}`}>{fmt(metrics.endBalance)}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">Total Income</h3>
+          <h3 className="text-xs font-semibold text-gray-500">{t('total_income')}</h3>
           <p className="text-xl font-bold text-green-600 mt-1">{fmt(metrics.totalIncome)}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">Total Expenses</h3>
+          <h3 className="text-xs font-semibold text-gray-500">{t('total_expenses')}</h3>
           <p className="text-xl font-bold text-red-600 mt-1">{fmt(Math.abs(metrics.totalExpenses))}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">Net Savings</h3>
+          <h3 className="text-xs font-semibold text-gray-500">{t('net_savings')}</h3>
           <p className={`text-xl font-bold mt-1 ${metrics.totalIncome + metrics.totalExpenses >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             {fmt(metrics.totalIncome + metrics.totalExpenses)}
           </p>
@@ -224,21 +228,21 @@ export default function DashboardView() {
       <section className="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
         {totalSaved > 0 && (
           <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm col-span-2 md:col-span-1">
-            <h3 className="text-xs font-semibold text-gray-500">Total Saved</h3>
+            <h3 className="text-xs font-semibold text-gray-500">{t('total_saved')}</h3>
             <p className="text-lg font-bold text-emerald-600 mt-1">{fmt(totalSaved)}</p>
           </div>
         )}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">Lowest Balance</h3>
+          <h3 className="text-xs font-semibold text-gray-500">{t('lowest_balance')}</h3>
           <p className={`text-lg font-bold mt-1 ${minBalance < 0 ? 'text-red-600' : 'text-gray-800 dark:text-gray-100'}`}>{fmt(minBalance)}</p>
           <p className="text-xs text-gray-400 mt-0.5">{minBalanceDate}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-          <h3 className="text-xs font-semibold text-gray-500">Avg Monthly Income</h3>
+          <h3 className="text-xs font-semibold text-gray-500">{t('avg_monthly_income')}</h3>
           <p className="text-lg font-bold text-green-600 mt-1">{fmt(avgMonthlyIncome)}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm col-span-2 md:col-span-1">
-          <h3 className="text-xs font-semibold text-gray-500">Avg Monthly Expenses</h3>
+          <h3 className="text-xs font-semibold text-gray-500">{t('avg_monthly_expenses')}</h3>
           <p className="text-lg font-bold text-red-600 mt-1">{fmt(avgMonthlyExpenses)}</p>
         </div>
       </section>
@@ -248,33 +252,30 @@ export default function DashboardView() {
         <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-2xl p-4 flex items-start space-x-3">
           <span className="text-red-600 text-xl flex-shrink-0">!</span>
           <div>
-            <p className="text-sm font-semibold text-red-700 dark:text-red-300">Projected negative balance</p>
-            <p className="text-xs text-red-600 dark:text-red-400">Your balance is projected to drop to {fmt(minBalance)} on {minBalanceDate}. Consider adjusting income or expenses.</p>
+            <p className="text-sm font-semibold text-red-700 dark:text-red-300">{t('projected_negative_balance')}</p>
+            <p className="text-xs text-red-600 dark:text-red-400">{fmt(minBalance)} · {minBalanceDate} — {t('projected_negative_desc')}</p>
           </div>
         </div>
       )}
 
-      {/* Cash flow chart */}
       <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
-        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">Cash Flow Projection</h2>
+        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">{t('cash_flow_projection')}</h2>
         <div className="chart-container"><canvas ref={cashFlowRef} /></div>
       </section>
 
-      {/* Income vs Expenses doughnut + category breakdown side by side on desktop */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">Income vs Expenses</h2>
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">{t('income_vs_expenses')}</h2>
           <div className="chart-container-sm"><canvas ref={incExpRef} /></div>
         </div>
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">Top Expenses</h2>
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">{t('top_expenses')}</h2>
           <div className="chart-container-sm"><canvas ref={categoryRef} /></div>
         </div>
       </section>
 
-      {/* Monthly net flow */}
       <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
-        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">Net Monthly Flow</h2>
+        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">{t('net_monthly_flow')}</h2>
         <div className="chart-container"><canvas ref={monthlyNetRef} /></div>
       </section>
     </div>
