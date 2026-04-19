@@ -7,7 +7,8 @@ import { format } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import { useApp } from '@/context/AppContext';
 import { useT, useFmt, useLocale } from '@/lib/i18n';
-import { compute503020, findNegativeCause } from '@/lib/finance';
+import { compute503020, findNegativeCause, computeActualVsProjected } from '@/lib/finance';
+import { startOfMonth, endOfMonth } from 'date-fns';
 
 Chart.register(...registerables);
 
@@ -259,6 +260,58 @@ export default function DashboardView() {
               <p className="text-xs text-red-600 dark:text-red-400 mt-1">{t('projected_negative_desc')}</p>
             </div>
           </div>
+        );
+      })()}
+
+      {/* Projected vs Actual (this month) */}
+      {(() => {
+        const monthStart = format(startOfMonth(new Date()), 'yyyy-MM-dd');
+        const monthEnd = format(endOfMonth(new Date()), 'yyyy-MM-dd');
+        const pva = computeActualVsProjected(projections, monthStart, monthEnd);
+        if (pva.totalCount === 0) return null;
+        const isOverBudget = pva.actualOut > pva.projectedOut;
+        const outVariance = pva.actualOut - pva.projectedOut;
+        return (
+          <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">{t('projected_vs_actual')}</h2>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {pva.completedCount}/{pva.totalCount} {t('bills_paid')}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('projected')}</p>
+                <p className="text-lg font-bold text-gray-800 dark:text-gray-200 mt-0.5">{fmt(pva.projectedOut)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('actual')}</p>
+                <p className={`text-lg font-bold mt-0.5 ${isOverBudget ? 'text-red-600' : 'text-emerald-600'}`}>
+                  {fmt(pva.actualOut)}
+                </p>
+              </div>
+            </div>
+            {pva.completedCount > 0 && (
+              <div className={`p-3 rounded-lg ${isOverBudget ? 'bg-red-50 dark:bg-red-950/40' : 'bg-emerald-50 dark:bg-emerald-950/40'}`}>
+                <p className={`text-sm font-semibold ${isOverBudget ? 'text-red-700 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300'}`}>
+                  {isOverBudget ? t('over_budget') : t('under_budget')}: {fmt(Math.abs(outVariance))}
+                </p>
+              </div>
+            )}
+            {/* Progress bar */}
+            <div className="mt-4">
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                <span>{t('this_month')}</span>
+                <span>{pva.projectedOut > 0 ? Math.round((pva.actualOut / pva.projectedOut) * 100) : 0}%</span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                <div
+                  className={`h-2 rounded-full transition-all ${isOverBudget ? 'bg-red-500' : 'bg-emerald-500'}`}
+                  style={{ width: `${Math.min(100, pva.projectedOut > 0 ? (pva.actualOut / pva.projectedOut) * 100 : 0)}%` }}
+                />
+              </div>
+            </div>
+          </section>
         );
       })()}
 

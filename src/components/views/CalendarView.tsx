@@ -104,9 +104,10 @@ export default function CalendarView() {
         </div>
         <ul className="mt-1 space-y-0.5 text-xs overflow-y-auto">
           {txs.map((t, i) => (
-            <li key={i} className={`flex items-center rounded px-1 ${t.amount >= 0 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-red-50 text-red-800 dark:bg-red-950/60 dark:text-red-300'}`}>
-              <CategoryDot type={t.type} />
-              <span className="truncate" title={t.name}>{t.name}</span>
+            <li key={i} className={`flex items-center rounded px-1 ${t.completed ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200' : t.amount >= 0 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-red-50 text-red-800 dark:bg-red-950/60 dark:text-red-300'}`}>
+              {t.completed && <span className="text-emerald-600 mr-0.5 flex-shrink-0">✓</span>}
+              {!t.completed && <CategoryDot type={t.type} />}
+              <span className={`truncate ${t.completed ? 'line-through opacity-75' : ''}`} title={t.name}>{t.name}</span>
               <span className="font-semibold ml-auto">{fmt(Math.abs(t.amount))}</span>
             </li>
           ))}

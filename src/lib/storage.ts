@@ -5,6 +5,7 @@ import type {
   SavingsPlan,
   AppSettings,
   SpendingCategory,
+  TransactionLog,
 } from './types';
 import { DEFAULT_SCHEDULES, SPENDING_CATEGORIES } from './constants';
 import { format } from 'date-fns';
@@ -17,6 +18,7 @@ export interface AppData {
   savingsPlans: SavingsPlan[];
   activeSpendingCategories: SpendingCategory[];
   settings: AppSettings;
+  transactionLogs: TransactionLog[];
 }
 
 function defaultData(): AppData {
@@ -25,6 +27,7 @@ function defaultData(): AppData {
     oneTimeTransactions: [],
     debtPlans: [],
     savingsPlans: [],
+    transactionLogs: [],
     activeSpendingCategories: SPENDING_CATEGORIES.map((c) => ({ ...c, enabled: c.defaultEnabled })),
     settings: {
       startDate: format(new Date(), 'yyyy-MM-dd'),
@@ -50,6 +53,7 @@ const LOCAL_KEYS = [
   'oneTimeTransactions',
   'debtPlans',
   'savingsPlans',
+  'transactionLogs',
   'activeSpendingCategories',
   'startDate',
   'projectionMonths',
@@ -74,6 +78,8 @@ export function loadFromLocalStorage(): AppData {
 
   const savingsPlans: SavingsPlan[] = JSON.parse(localStorage.getItem('savingsPlans') || '[]');
 
+  const transactionLogs: TransactionLog[] = JSON.parse(localStorage.getItem('transactionLogs') || '[]');
+
   const activeSpendingCategories: SpendingCategory[] =
     JSON.parse(localStorage.getItem('activeSpendingCategories') || 'null') ??
     SPENDING_CATEGORIES.map((c) => ({ ...c, enabled: c.defaultEnabled }));
@@ -93,7 +99,7 @@ export function loadFromLocalStorage(): AppData {
     hasOnboarded: localStorage.getItem('hasOnboarded') === 'true',
   };
 
-  return { recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, activeSpendingCategories, settings };
+  return { recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, transactionLogs, activeSpendingCategories, settings };
 }
 
 export function saveToLocalStorage(data: AppData) {
@@ -102,6 +108,7 @@ export function saveToLocalStorage(data: AppData) {
   localStorage.setItem('oneTimeTransactions', JSON.stringify(data.oneTimeTransactions));
   localStorage.setItem('debtPlans', JSON.stringify(data.debtPlans));
   localStorage.setItem('savingsPlans', JSON.stringify(data.savingsPlans));
+  localStorage.setItem('transactionLogs', JSON.stringify(data.transactionLogs || []));
   localStorage.setItem('activeSpendingCategories', JSON.stringify(data.activeSpendingCategories));
   localStorage.setItem('startDate', data.settings.startDate);
   localStorage.setItem('projectionMonths', String(data.settings.projectionMonths));
@@ -154,6 +161,7 @@ export async function loadFromCloud(userId: string): Promise<AppData | null> {
     ...defaults,
     ...cloud,
     settings: { ...defaults.settings, ...(cloud.settings || {}) },
+    transactionLogs: cloud.transactionLogs || [],
   };
   return merged;
 }

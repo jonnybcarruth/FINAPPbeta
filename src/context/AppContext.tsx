@@ -12,6 +12,7 @@ import type {
   Projection,
   DailyBalanceMap,
   DailyTransactionMap,
+  TransactionLog,
 } from '@/lib/types';
 import {
   loadFromCloud,
@@ -35,6 +36,9 @@ interface AppContextType {
   setDebtPlans: (d: DebtPlan[]) => void;
   savingsPlans: SavingsPlan[];
   setSavingsPlans: (s: SavingsPlan[]) => void;
+  transactionLogs: TransactionLog[];
+  logTransaction: (log: TransactionLog) => void;
+  removeLog: (projectionKey: string) => void;
   activeSpendingCategories: SpendingCategory[];
   setActiveSpendingCategories: (c: SpendingCategory[]) => void;
   settings: AppSettings;
@@ -60,7 +64,8 @@ interface AppContextType {
     dp?: DebtPlan[],
     cats?: SpendingCategory[],
     s?: AppSettings,
-    sp?: SavingsPlan[]
+    sp?: SavingsPlan[],
+    logs?: TransactionLog[]
   ) => void;
 }
 
@@ -74,6 +79,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [oneTimeTransactions, setOneTimeTransactions] = useState<OneTimeTransaction[]>(initial.oneTimeTransactions);
   const [debtPlans, setDebtPlans] = useState<DebtPlan[]>(initial.debtPlans);
   const [savingsPlans, setSavingsPlans] = useState<SavingsPlan[]>(initial.savingsPlans);
+  const [transactionLogs, setTransactionLogs] = useState<TransactionLog[]>(initial.transactionLogs);
   const [activeSpendingCategories, setActiveSpendingCategories] = useState<SpendingCategory[]>(
     initial.activeSpendingCategories
   );
@@ -96,8 +102,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const recompute = useCallback(
-    (rs: RecurringSchedule[], ot: OneTimeTransaction[], dp: DebtPlan[], s: AppSettings, sp: SavingsPlan[]) => {
-      const proj = generateProjections(s.startDate, s.projectionMonths, rs, ot, dp, sp);
+    (rs: RecurringSchedule[], ot: OneTimeTransaction[], dp: DebtPlan[], s: AppSettings, sp: SavingsPlan[], logs: TransactionLog[]) => {
+      const proj = generateProjections(s.startDate, s.projectionMonths, rs, ot, dp, sp, logs);
       const balMap = calculateDailyBalances(proj, s.startingBalance);
       const txMap: DailyTransactionMap = {};
       proj.forEach((p) => {
@@ -119,11 +125,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setOneTimeTransactions(data.oneTimeTransactions);
       setDebtPlans(data.debtPlans);
       setSavingsPlans(data.savingsPlans);
+      setTransactionLogs(data.transactionLogs || []);
       setActiveSpendingCategories(data.activeSpendingCategories);
       setSettings(data.settings);
       if (data.settings.darkMode) document.documentElement.classList.add('dark');
       else document.documentElement.classList.remove('dark');
-      recompute(data.recurringSchedules, data.oneTimeTransactions, data.debtPlans, data.settings, data.savingsPlans);
+      recompute(data.recurringSchedules, data.oneTimeTransactions, data.debtPlans, data.settings, data.savingsPlans, data.transactionLogs || []);
     },
     [recompute]
   );
@@ -177,10 +184,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 
   const saveAndRefresh = useCallback(() => {
-    const data: AppData = { recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, activeSpendingCategories, settings };
-    recompute(recurringSchedules, oneTimeTransactions, debtPlans, settings, savingsPlans);
+    const data: AppData = { recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, transactionLogs, activeSpendingCategories, settings };
+    recompute(recurringSchedules, oneTimeTransactions, debtPlans, settings, savingsPlans, transactionLogs);
     void persist(data);
-  }, [recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, activeSpendingCategories, settings, recompute, persist]);
+  }, [recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, transactionLogs, activeSpendingCategories, settings, recompute, persist]);
 
   const saveWithOverrides = useCallback(
     (
@@ -189,14 +196,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       dp: DebtPlan[] = debtPlans,
       cats: SpendingCategory[] = activeSpendingCategories,
       s: AppSettings = settings,
-      sp: SavingsPlan[] = savingsPlans
+      sp: SavingsPlan[] = savingsPlans,
+      logs: TransactionLog[] = transactionLogs
     ) => {
-      const data: AppData = { recurringSchedules: rs, oneTimeTransactions: ot, debtPlans: dp, savingsPlans: sp, activeSpendingCategories: cats, settings: s };
-      recompute(rs, ot, dp, s, sp);
+      const data: AppData = { recurringSchedules: rs, oneTimeTransactions: ot, debtPlans: dp, savingsPlans: sp, transactionLogs: logs, activeSpendingCategories: cats, settings: s };
+      recompute(rs, ot, dp, s, sp, logs);
       void persist(data);
     },
-    [recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, activeSpendingCategories, settings, recompute, persist]
+    [recurringSchedules, oneTimeTransactions, debtPlans, savingsPlans, transactionLogs, activeSpendingCategories, settings, recompute, persist]
   );
+
+  const logTransaction = useCallback((log: TransactionLog) => {
+    const updated = [...transactionLogs.filter((l) => l.projectionKey !== log.projectionKey), log];
+    setTransactionLogs(updated);
+    saveWithOverrides(undefined, undefined, undefined, undefined, undefined, undefined, updated);
+  }, [transactionLogs, saveWithOverrides]);
+
+  const removeLog = useCallback((projectionKey: string) => {
+    const updated = transactionLogs.filter((l) => l.projectionKey !== projectionKey);
+    setTransactionLogs(updated);
+    saveWithOverrides(undefined, undefined, undefined, undefined, undefined, undefined, updated);
+  }, [transactionLogs, saveWithOverrides]);
 
   return (
     <AppContext.Provider
@@ -205,6 +225,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         oneTimeTransactions, setOneTimeTransactions,
         debtPlans, setDebtPlans,
         savingsPlans, setSavingsPlans,
+        transactionLogs, logTransaction, removeLog,
         activeSpendingCategories, setActiveSpendingCategories,
         settings, setSettings,
         activeView, setActiveView,

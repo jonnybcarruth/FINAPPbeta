@@ -83,6 +83,18 @@ export interface Projection {
   type: 'Recurring' | 'One-Time' | 'Debt Payment' | 'Savings';
   id?: string;
   category?: CategoryId;
+  projectionKey: string;
+  projectedAmount: number;
+  completed?: boolean;
+  notes?: string;
+}
+
+export interface TransactionLog {
+  projectionKey: string;
+  amount: number;
+  completed: boolean;
+  notes?: string;
+  loggedAt: string;
 }
 
 export type ViewId = 'calendar' | 'dashboard' | 'bills' | 'plan' | 'savings';

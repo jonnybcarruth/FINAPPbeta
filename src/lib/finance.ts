@@ -3,7 +3,7 @@ import {
   startOfMonth, addDays, parseISO, isBefore,
   differenceInDays, startOfISOWeek,
 } from 'date-fns';
-import type { RecurringSchedule, OneTimeTransaction, DebtPlan, SavingsPlan, Projection, DailyBalanceMap } from './types';
+import type { RecurringSchedule, OneTimeTransaction, DebtPlan, SavingsPlan, Projection, DailyBalanceMap, TransactionLog } from './types';
 import { WEEKLY_DAY_MAP } from './constants';
 
 export function generateProjections(
@@ -12,12 +12,25 @@ export function generateProjections(
   recurringSchedules: RecurringSchedule[],
   oneTimeTransactions: OneTimeTransaction[],
   debtPlans: DebtPlan[],
-  savingsPlans: SavingsPlan[] = []
+  savingsPlans: SavingsPlan[] = [],
+  transactionLogs: TransactionLog[] = []
 ): Projection[] {
   const startDate = new Date(startDateStr + 'T00:00:00');
   const endDate = addMonths(startDate, projectionMonths);
   const activeSchedules = recurringSchedules.filter((s) => s.enabled);
   const projections: Projection[] = [];
+
+  // Build log lookup by projectionKey
+  const logMap = new Map<string, TransactionLog>();
+  transactionLogs.forEach((l) => logMap.set(l.projectionKey, l));
+
+  const applyLog = (p: Projection): Projection => {
+    const log = logMap.get(p.projectionKey);
+    if (log) {
+      return { ...p, amount: log.amount, completed: log.completed, notes: log.notes };
+    }
+    return p;
+  };
 
   // 1. Recurring
   eachDayOfInterval({ start: startDate, end: endDate }).forEach((day) => {
@@ -44,12 +57,19 @@ export function generateProjections(
 
       if (shouldPay) {
         if (schedule.endDate && day > new Date(schedule.endDate + 'T00:00:00')) return;
-        projections.push({ date: day, name: schedule.name, amount: schedule.amount, type: 'Recurring', category: schedule.category });
+        const dateStr = format(day, 'yyyy-MM-dd');
+        const key = `rec:${schedule.id}:${dateStr}`;
+        projections.push(applyLog({
+          date: day, name: schedule.name, amount: schedule.amount,
+          projectedAmount: schedule.amount,
+          type: 'Recurring', category: schedule.category,
+          projectionKey: key,
+        }));
       }
     });
   });
 
-  // 2. Debt payments (fixed + revolving)
+  // 2. Debt payments
   debtPlans.filter((p) => p.enabled).forEach((plan) => {
     if (plan.debtType === 'revolving' && plan.interestRate && plan.minimumPayment) {
       let balance = plan.totalAmount;
@@ -63,7 +83,14 @@ export function generateProjections(
           const interest = balance * monthlyRate;
           const payment = Math.min(balance + interest, plan.minimumPayment);
           balance = balance + interest - payment;
-          projections.push({ date: day, name: `Debt: ${plan.name}`, amount: -payment, type: 'Debt Payment', category: plan.category || 'debt' });
+          const dateStr = format(day, 'yyyy-MM-dd');
+          const key = `debt:${plan.id}:${dateStr}`;
+          projections.push(applyLog({
+            date: day, name: `Debt: ${plan.name}`, amount: -payment,
+            projectedAmount: -payment,
+            type: 'Debt Payment', category: plan.category || 'debt',
+            projectionKey: key,
+          }));
         }
         currentMonth = addMonths(currentMonth, 1);
       }
@@ -75,7 +102,14 @@ export function generateProjections(
         const clampedPayDay = Math.min(plan.payDay, daysInMonth);
         const day = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), clampedPayDay);
         if (day >= startDate && day <= endDate && day >= parseISO(plan.startDate)) {
-          projections.push({ date: day, name: `Debt: ${plan.name}`, amount: -plan.monthlyPayment, type: 'Debt Payment', category: plan.category || 'debt' });
+          const dateStr = format(day, 'yyyy-MM-dd');
+          const key = `debt:${plan.id}:${dateStr}`;
+          projections.push(applyLog({
+            date: day, name: `Debt: ${plan.name}`, amount: -plan.monthlyPayment,
+            projectedAmount: -plan.monthlyPayment,
+            type: 'Debt Payment', category: plan.category || 'debt',
+            projectionKey: key,
+          }));
           paymentsMade++;
         }
         currentMonth = addMonths(currentMonth, 1);
@@ -83,15 +117,14 @@ export function generateProjections(
     }
   });
 
-  // 3. Savings plans (fixed amount + percentage of income)
+  // 3. Savings plans
   const activeSavings = savingsPlans.filter((s) => s.enabled);
-  // For percentage-based, compute total monthly income from recurring schedules
   const monthlyIncome = activeSchedules
     .filter((s) => s.amount > 0)
     .reduce((sum, s) => {
       if (s.frequency === 'Monthly') return sum + s.amount;
       if (s.frequency === 'Weekly') return sum + s.amount * 4.33;
-      return sum + s.amount * 2.167; // BiWeekly
+      return sum + s.amount * 2.167;
     }, 0);
 
   eachDayOfInterval({ start: startDate, end: endDate }).forEach((day) => {
@@ -124,7 +157,14 @@ export function generateProjections(
           if (plan.frequency === 'Weekly') amount /= 4.33;
           else if (plan.frequency === 'BiWeekly') amount /= 2.167;
         }
-        projections.push({ date: day, name: `Savings: ${plan.name}`, amount: -amount, type: 'Savings', category: 'savings' });
+        const dateStr = format(day, 'yyyy-MM-dd');
+        const key = `sav:${plan.id}:${dateStr}`;
+        projections.push(applyLog({
+          date: day, name: `Savings: ${plan.name}`, amount: -amount,
+          projectedAmount: -amount,
+          type: 'Savings', category: 'savings',
+          projectionKey: key,
+        }));
       }
     });
   });
@@ -133,7 +173,14 @@ export function generateProjections(
   oneTimeTransactions.forEach((t) => {
     const tDate = new Date(t.date + 'T00:00:00');
     if (tDate >= startDate && tDate <= endDate) {
-      projections.push({ date: tDate, name: t.name, amount: t.actual ?? t.amount, type: 'One-Time', id: t.id, category: t.category });
+      const actualAmount = t.actual ?? t.amount;
+      projections.push({
+        date: tDate, name: t.name, amount: actualAmount,
+        projectedAmount: t.amount,
+        type: 'One-Time', id: t.id, category: t.category,
+        projectionKey: `one:${t.id}`,
+        completed: t.completed,
+      });
     }
   });
 
@@ -221,5 +268,36 @@ export function compute503020(projections: Projection[], totalIncome: number) {
     needsPct: total > 0 ? Math.round((needsCents / total) * 100) : 0,
     wantsPct: total > 0 ? Math.round((wantsCents / total) * 100) : 0,
     savingsPct: total > 0 ? Math.round((savingsCents / total) * 100) : 0,
+  };
+}
+
+// Compute projected vs actual for a given date range
+export function computeActualVsProjected(projections: Projection[], startDate: string, endDate: string) {
+  const start = parseISO(startDate);
+  const end = parseISO(endDate);
+  let projectedIn = 0, projectedOut = 0;
+  let actualIn = 0, actualOut = 0;
+  let completedCount = 0;
+  let totalCount = 0;
+
+  projections.forEach((p) => {
+    if (p.date < start || p.date > end) return;
+    totalCount++;
+    if (p.projectedAmount > 0) projectedIn += p.projectedAmount;
+    else projectedOut += Math.abs(p.projectedAmount);
+
+    if (p.completed) {
+      completedCount++;
+      if (p.amount > 0) actualIn += p.amount;
+      else actualOut += Math.abs(p.amount);
+    }
+  });
+
+  return {
+    projectedIn, projectedOut,
+    actualIn, actualOut,
+    completedCount, totalCount,
+    varianceIn: actualIn - projectedIn,
+    varianceOut: actualOut - projectedOut,
   };
 }
