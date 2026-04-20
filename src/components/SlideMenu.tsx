@@ -7,6 +7,7 @@ import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { setHapticsEnabled, hapticLight } from '@/lib/haptics';
 import { useT, useFmt, useLocale, useCurrencySymbol } from '@/lib/i18n';
+import BankAccounts from './BankAccounts';
 
 interface Props {
   open: boolean;
@@ -213,6 +214,11 @@ export default function SlideMenu({ open, onClose }: Props) {
                 </button>
               </div>
             </div>
+          </div>
+
+          <div className="p-5 space-y-1 border-b border-gray-200 dark:border-gray-700">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Bank Accounts</p>
+            <BankAccounts />
           </div>
 
           <div className="p-5 space-y-1 border-b border-gray-200 dark:border-gray-700">
