@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday, addMonths, subMonths } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
 import { useApp } from '@/context/AppContext';
@@ -15,14 +15,16 @@ import { hapticLight } from '@/lib/haptics';
 const DAY_LABELS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DAY_LABELS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-// Category icons (small dots/symbols on calendar entries)
-function CategoryDot({ type }: { type: Projection['type'] }) {
-  const color =
-    type === 'Savings' ? 'bg-emerald-500' :
-    type === 'Debt Payment' ? 'bg-pink-500' :
-    type === 'One-Time' ? 'bg-purple-500' :
-    'bg-gray-400';
-  return <span className={`inline-block w-1.5 h-1.5 rounded-full ${color} mr-1 flex-shrink-0`} />;
+function dotClass(type: Projection['type']): string {
+  if (type === 'Savings') return 'savings';
+  if (type === 'Debt Payment') return 'bill';
+  if (type === 'Recurring') return 'bill';
+  if (type === 'One-Time') return 'one';
+  return 'bill';
+}
+
+function incomeDot(p: Projection): string {
+  return p.amount > 0 ? 'income' : dotClass(p.type);
 }
 
 export default function CalendarView() {
@@ -33,8 +35,9 @@ export default function CalendarView() {
   const locale = useLocale();
   const dateLocale = locale === 'pt-BR' ? ptBR : enUS;
   const DAY_LABELS = locale === 'pt-BR' ? DAY_LABELS_PT : DAY_LABELS_EN;
-  const [dayKey, setDayKey] = useState('');
-  const [showDay, setShowDay] = useState(false);
+
+  const [selected, setSelected] = useState<string | null>(null);
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
   const [showOneTime, setShowOneTime] = useState(false);
   const [editTx, setEditTx] = useState<OneTimeTransaction | null>(null);
   const [defaultDate, setDefaultDate] = useState('');
@@ -44,12 +47,42 @@ export default function CalendarView() {
   const monthStart = startOfMonth(currentCalendarDate);
   const gridStart = startOfWeek(monthStart);
   const gridEnd = endOfWeek(endOfMonth(currentCalendarDate));
+  const monthLabel = format(currentCalendarDate, 'MMMM yyyy', { locale: dateLocale });
+
+  // Compute EOD range for micro-bars
+  const eodValues = useMemo(() => {
+    const vals: number[] = [];
+    let d = gridStart;
+    while (d <= gridEnd) {
+      if (isSameMonth(d, monthStart)) {
+        const dk = format(d, 'yyyy-MM-dd');
+        vals.push(getEndOfDayBalance(dk, dailyBalanceMap, settings.startDate, settings.startingBalance));
+      }
+      d = addDays(d, 1);
+    }
+    return { min: Math.min(...vals, 0), max: Math.max(...vals, 1) };
+  }, [dailyBalanceMap, gridStart, gridEnd, monthStart, settings]);
+
+  // Month stats
+  const monthStats = useMemo(() => {
+    let inn = 0, out = 0;
+    let d = gridStart;
+    while (d <= gridEnd) {
+      if (isSameMonth(d, monthStart)) {
+        const dk = format(d, 'yyyy-MM-dd');
+        (dailyTransactionMap[dk] || []).forEach((p) => {
+          if (p.amount > 0) inn += p.amount;
+          else out += Math.abs(p.amount);
+        });
+      }
+      d = addDays(d, 1);
+    }
+    return { inn: Math.round(inn), out: Math.round(out), net: Math.round(inn - out) };
+  }, [dailyTransactionMap, gridStart, gridEnd, monthStart]);
 
   const handleSaveOneTime = (tx: OneTimeTransaction) => {
-    const exists = oneTimeTransactions.findIndex((t) => t.id === tx.id);
-    const updated = exists >= 0
-      ? oneTimeTransactions.map((t) => (t.id === tx.id ? tx : t))
-      : [...oneTimeTransactions, tx];
+    const exists = oneTimeTransactions.findIndex((o) => o.id === tx.id);
+    const updated = exists >= 0 ? oneTimeTransactions.map((o) => (o.id === tx.id ? tx : o)) : [...oneTimeTransactions, tx];
     setOneTimeTransactions(updated);
     setShowOneTime(false);
     saveWithOverrides(undefined, updated, undefined, undefined, undefined);
@@ -57,113 +90,154 @@ export default function CalendarView() {
 
   const handleDelete = (id: string) => {
     if (!confirm(settings.language === 'pt' ? 'Excluir esta transação?' : 'Delete this transaction?')) return;
-    const updated = oneTimeTransactions.filter((t) => t.id !== id);
+    const updated = oneTimeTransactions.filter((o) => o.id !== id);
     setOneTimeTransactions(updated);
-    setShowDay(false);
+    setSelected(null);
     saveWithOverrides(undefined, updated, undefined, undefined, undefined);
   };
 
   const handleEdit = (id: string) => {
-    const tx = oneTimeTransactions.find((t) => t.id === id);
-    if (tx) { setEditTx(tx); setShowDay(false); setShowOneTime(true); }
+    const tx = oneTimeTransactions.find((o) => o.id === id);
+    if (tx) { setEditTx(tx); setSelected(null); setShowOneTime(true); }
   };
 
-  const handleDayClick = (dk: string, inMonth: boolean) => {
-    if (!inMonth) return;
+  const move = (delta: number) => {
+    setCalDir(delta > 0 ? 'right' : 'left');
+    setCalAnimKey((k) => k + 1);
     void hapticLight();
-    setDayKey(dk);
-    setShowDay(true);
+    if (delta > 0) setCurrentCalendarDate(addMonths(currentCalendarDate, 1));
+    else setCurrentCalendarDate(subMonths(currentCalendarDate, 1));
   };
 
-  const days: React.ReactNode[] = [];
-  DAY_LABELS.forEach((d) => (
-    days.push(<div key={d} className="text-center font-semibold text-sm text-gray-500 dark:text-gray-400 py-2">{d}</div>)
-  ));
-
+  // Build cells
+  const cells: { day: number; inMonth: boolean; key: string | null; isToday: boolean; txs: Projection[]; eod: number }[] = [];
   let day = gridStart;
   while (day <= gridEnd) {
     const dk = format(day, 'yyyy-MM-dd');
-    const txs = dailyTransactionMap[dk] || [];
     const inMonth = isSameMonth(day, monthStart);
-    const today = isToday(day);
-    const dayDate = day;
-    const eod = getEndOfDayBalance(dk, dailyBalanceMap, settings.startDate, settings.startingBalance);
-    days.push(
-      <div
-        key={dk}
-        data-date={dk}
-        onClick={() => handleDayClick(dk, inMonth)}
-        className={`calendar-day p-2 border border-gray-200 dark:border-gray-700 rounded-md ${!inMonth ? 'bg-gray-50 dark:bg-gray-900 text-gray-400' : 'bg-white dark:bg-gray-800 cursor-pointer hover:shadow-lg'} ${today ? 'border-blue-500 border-2' : ''} ${txs.length > 0 && inMonth ? 'bg-blue-50 dark:bg-blue-950/40' : ''}`}
-      >
-        <div className="text-sm font-semibold text-right flex flex-col items-end">
-          <span>{format(dayDate, 'd')}</span>
-          {settings.showEODBalance && inMonth && (
-            <span className={`text-xs font-bold leading-none truncate ${eod >= 1000 ? 'text-emerald-600' : eod < 0 ? 'text-red-600' : 'text-gray-500'}`}>
-              {(Math.round(eod / 100) / 10).toFixed(1)}k
-            </span>
-          )}
-        </div>
-        <ul className="mt-1 space-y-0.5 text-xs overflow-y-auto">
-          {txs.map((t, i) => (
-            <li key={i} className={`flex items-center rounded px-1 ${t.completed ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200' : t.amount >= 0 ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-red-50 text-red-800 dark:bg-red-950/60 dark:text-red-300'}`}>
-              {t.completed && <span className="text-emerald-600 mr-0.5 flex-shrink-0">✓</span>}
-              {!t.completed && <CategoryDot type={t.type} />}
-              <span className={`truncate ${t.completed ? 'line-through opacity-75' : ''}`} title={t.name}>{t.name}</span>
-              <span className="font-semibold ml-auto">{fmt(Math.abs(t.amount))}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
+    const txs = inMonth ? (dailyTransactionMap[dk] || []) : [];
+    const eod = inMonth ? getEndOfDayBalance(dk, dailyBalanceMap, settings.startDate, settings.startingBalance) : 0;
+    cells.push({ day: day.getDate(), inMonth, key: inMonth ? dk : null, isToday: isToday(day), txs, eod });
     day = addDays(day, 1);
   }
+  while (cells.length < 42) cells.push({ day: 0, inMonth: false, key: null, isToday: false, txs: [], eod: 0 });
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {settings.smartBudgetEnabled !== false && <SmartBudgetCard />}
 
-      <section className="bg-white dark:bg-gray-800 py-6 px-0 rounded-2xl shadow-sm">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 px-6">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-0">{t('transaction_calendar')}</h2>
-          <button onClick={() => { setEditTx(null); setDefaultDate(''); setShowOneTime(true); }} className="px-4 py-2 bg-ios-blue text-white rounded-xl hover:bg-ios-blue-dark font-semibold text-sm">
-            + {t('add')}
-          </button>
-        </div>
-        <div className="flex justify-between items-center mb-4 px-6">
-          <button onClick={() => { setCalDir('right'); setCalAnimKey(k => k + 1); setCurrentCalendarDate(subMonths(currentCalendarDate, 1)); void hapticLight(); }} aria-label="Previous month" className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100" style={{ letterSpacing: '-0.01em' }}>{format(currentCalendarDate, 'MMMM yyyy', { locale: dateLocale })}</h3>
-          <button onClick={() => { setCalDir('left'); setCalAnimKey(k => k + 1); setCurrentCalendarDate(addMonths(currentCalendarDate, 1)); void hapticLight(); }} aria-label="Next month" className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <div key={calAnimKey} className={calDir === 'left' ? 'cal-slide-from-right' : 'cal-slide-from-left'}>
-            <div id="calendar-grid" className="grid grid-cols-7 gap-0 calendar-grid">{days}</div>
+      <div className="dd-card" style={{ padding: 0, overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 20px 14px' }}>
+          <div>
+            <div className="dd-overline">{t('calendar')}</div>
+            <h3 className="dd-h3" style={{ marginTop: 4 }}>{monthLabel}</h3>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="dd-icon-btn" onClick={() => move(-1)} aria-label="Previous month">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button className="dd-icon-btn" onClick={() => move(1)} aria-label="Next month">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
           </div>
         </div>
-        <div className="flex justify-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 px-6">
-          <label className="flex items-center space-x-2 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg cursor-pointer">
-            <input type="checkbox" checked={settings.showEODBalance} onChange={(e) => {
-              void hapticLight();
-              const newSettings = { ...settings, showEODBalance: e.target.checked };
-              setSettings(newSettings);
-              saveWithOverrides(undefined, undefined, undefined, undefined, newSettings);
-            }} className="w-4 h-4" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('show_eod_balance')}</span>
-          </label>
-        </div>
-      </section>
 
-      <DayDetailsModal
-        open={showDay} onClose={() => setShowDay(false)} dateKey={dayKey}
-        transactions={dailyTransactionMap[dayKey] || []}
-        eodBalance={getEndOfDayBalance(dayKey, dailyBalanceMap, settings.startDate, settings.startingBalance)}
-        onAddOneTime={(date) => { setDefaultDate(date); setEditTx(null); setShowOneTime(true); }}
-        onEditOneTime={handleEdit} onDeleteOneTime={handleDelete}
-      />
+        {/* Month stats strip */}
+        <div style={{ display: 'flex', padding: '0 20px 14px', borderBottom: '1px solid var(--line)' }}>
+          <StatChip label={settings.language === 'pt' ? 'Entrada' : 'In'} value={fmt(monthStats.inn)} />
+          <StatChip label={settings.language === 'pt' ? 'Saída' : 'Out'} value={fmt(monthStats.out)} />
+          <StatChip label="Net" value={(monthStats.net >= 0 ? '+' : '') + fmt(monthStats.net)} />
+        </div>
+
+        {/* Day-of-week header */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, padding: '12px 12px 8px' }}>
+          {DAY_LABELS.map((d) => (
+            <div key={d} className="dd-overline" style={{ textAlign: 'center' }}>{d}</div>
+          ))}
+        </div>
+
+        {/* Grid */}
+        <div style={{ overflow: 'hidden' }}>
+          <div key={calAnimKey} className={calDir === 'right' ? 'cal-slide-r' : 'cal-slide-l'}
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, padding: '0 12px 16px' }}>
+            {cells.map((c, i) => {
+              const hot = c.txs.length > 0;
+              const eodPct = c.inMonth && eodValues.max > eodValues.min ? (c.eod - eodValues.min) / (eodValues.max - eodValues.min) : 0;
+              const isHover = c.key === hoverKey;
+              const isSel = c.key === selected;
+              return (
+                <button
+                  key={i}
+                  disabled={!c.inMonth}
+                  onClick={() => { if (c.key) { void hapticLight(); setSelected(c.key); } }}
+                  onMouseEnter={() => c.key && setHoverKey(c.key)}
+                  onMouseLeave={() => setHoverKey(null)}
+                  className={`cal-cell ${c.inMonth ? 'in' : 'out'} ${c.isToday ? 'today' : ''} ${hot ? 'hot' : ''} ${isHover ? 'hover' : ''} ${isSel ? 'sel' : ''}`}
+                >
+                  <div className="cal-day-num">{c.day || ''}</div>
+                  {c.inMonth && c.txs.length > 0 && (
+                    <>
+                      <div className="cal-bar">
+                        <div className="cal-bar-fill" style={{ height: `${Math.max(6, eodPct * 100)}%` }} />
+                      </div>
+                      <div className="cal-dots">
+                        {c.txs.slice(0, 4).map((tx, j) => (
+                          <span key={j} className={`cal-dot ${incomeDot(tx)}`} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {c.inMonth && (c.isToday || isHover) && (
+                    <div className="cal-eod">{fmt(c.eod)}</div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', padding: '12px 20px 18px', borderTop: '1px solid var(--line)', flexWrap: 'wrap' }}>
+          <LegendItem cls="income" label={t('income')} />
+          <LegendItem cls="bill" label={settings.language === 'pt' ? 'Conta' : 'Bill'} />
+          <LegendItem cls="savings" label={t('savings')} />
+          <LegendItem cls="one" label="One-time" />
+        </div>
+      </div>
+
+      {/* Day detail sheet */}
+      {selected && (
+        <DayDetailsModal
+          open={true}
+          onClose={() => setSelected(null)}
+          dateKey={selected}
+          transactions={dailyTransactionMap[selected] || []}
+          eodBalance={getEndOfDayBalance(selected, dailyBalanceMap, settings.startDate, settings.startingBalance)}
+          onAddOneTime={(date) => { setDefaultDate(date); setEditTx(null); setShowOneTime(true); }}
+          onEditOneTime={handleEdit}
+          onDeleteOneTime={handleDelete}
+        />
+      )}
       <OneTimeModal open={showOneTime} onClose={() => setShowOneTime(false)} onSave={handleSaveOneTime} initial={editTx} defaultDate={defaultDate} />
+    </div>
+  );
+}
+
+function StatChip({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ flex: 1, padding: '10px 0' }}>
+      <div className="dd-overline">{label}</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em', marginTop: 2, color: 'var(--fg-1)' }}>{value}</div>
+    </div>
+  );
+}
+
+function LegendItem({ cls, label }: { cls: string; label: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <span className={`cal-dot ${cls}`} style={{ width: 8, height: 8 }} />
+      <span style={{ fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.04em' }}>{label}</span>
     </div>
   );
 }

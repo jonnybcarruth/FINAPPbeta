@@ -29,25 +29,30 @@ export default function ModalShell({ open, onClose, title, children }: ModalShel
   return (
     <div
       className={`fixed inset-0 flex items-center justify-center z-50 p-4 ${phase === 'in' ? 'modal-backdrop-in' : 'modal-backdrop-out'}`}
-      style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+      style={{ background: 'rgba(10,10,10,0.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className={`relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-h-[85vh] overflow-y-auto ${phase === 'in' ? 'modal-panel-in' : 'modal-panel-out'}`}
+        className={`relative w-full max-w-md max-h-[85vh] overflow-y-auto ${phase === 'in' ? 'modal-panel-in' : 'modal-panel-out'}`}
+        style={{
+          background: 'var(--surface)',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--line)',
+          boxShadow: 'var(--shadow-lg)',
+          padding: 24,
+        }}
       >
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100" style={{ letterSpacing: '-0.01em' }}>{title}</h3>
-          <button
-            onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            aria-label="Close"
-          >
-            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <line x1="1" y1="1" x2="13" y2="13"/>
-              <line x1="13" y1="1" x2="1" y2="13"/>
-            </svg>
-          </button>
-        </div>
+        {title && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <h3 className="dd-h3">{title}</h3>
+            <button className="dd-icon-btn" onClick={onClose} aria-label="Close" style={{ width: 28, height: 28 }}>
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <line x1="1" y1="1" x2="13" y2="13"/>
+                <line x1="13" y1="1" x2="1" y2="13"/>
+              </svg>
+            </button>
+          </div>
+        )}
         {children}
       </div>
     </div>

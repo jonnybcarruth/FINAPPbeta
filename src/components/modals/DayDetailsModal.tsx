@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import ModalShell from './ModalShell';
 import MarkPaidModal from './MarkPaidModal';
 import type { Projection, OneTimeTransaction } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
@@ -9,6 +8,7 @@ import { ptBR, enUS } from 'date-fns/locale';
 import { useT, useFmt, useLocale } from '@/lib/i18n';
 import { useApp } from '@/context/AppContext';
 import { hapticLight } from '@/lib/haptics';
+import { Ticker } from '@/components/LogoMark';
 
 interface Props {
   open: boolean;
@@ -21,12 +21,10 @@ interface Props {
   onDeleteOneTime: (id: string) => void;
 }
 
-function txColor(t: Projection) {
-  if (t.completed) return 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
-  if (t.type === 'Savings') return 'bg-emerald-50 text-emerald-800 border-emerald-200';
-  if (t.type === 'Debt Payment') return 'bg-pink-50 text-pink-800 border-pink-200';
-  if (t.type === 'One-Time') return t.amount > 0 ? 'bg-purple-100 text-purple-800 border-purple-200' : 'bg-red-50 text-red-800 border-red-200';
-  return t.amount > 0 ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200';
+function dotClass(p: Projection): string {
+  if (p.amount > 0) return 'income';
+  if (p.type === 'Savings') return 'savings';
+  return 'bill';
 }
 
 export default function DayDetailsModal({ open, onClose, dateKey, transactions, eodBalance, onAddOneTime, onEditOneTime, onDeleteOneTime }: Props) {
@@ -34,10 +32,11 @@ export default function DayDetailsModal({ open, onClose, dateKey, transactions, 
   const fmt = useFmt();
   const locale = useLocale();
   const dateLocale = locale === 'pt-BR' ? ptBR : enUS;
-  const fmtDate = dateKey ? format(parseISO(dateKey), 'EEEE, MMM do', { locale: dateLocale }) : '';
-  const { removeLog, oneTimeTransactions, setOneTimeTransactions, saveWithOverrides } = useApp();
-
+  const fmtDate = dateKey ? format(parseISO(dateKey), 'EEEE, MMMM d', { locale: dateLocale }) : '';
+  const { removeLog, oneTimeTransactions, setOneTimeTransactions, saveWithOverrides, settings } = useApp();
   const [markingPaid, setMarkingPaid] = useState<Projection | null>(null);
+
+  if (!open) return null;
 
   const handleUnpay = (projection: Projection) => {
     void hapticLight();
@@ -54,22 +53,12 @@ export default function DayDetailsModal({ open, onClose, dateKey, transactions, 
     }
   };
 
-  const handleMarkPaid = (projection: Projection) => {
-    void hapticLight();
-    if (projection.type === 'One-Time' && projection.id) {
-      // For one-time, we'll open the MarkPaid modal but on save we update the OneTimeTransaction directly
-      setMarkingPaid(projection);
-    } else {
-      setMarkingPaid(projection);
-    }
-  };
-
   const handleMarkPaidOneTime = (projection: Projection, actual: number, notes?: string) => {
     if (projection.type !== 'One-Time' || !projection.id) return;
     const tx = oneTimeTransactions.find((o) => o.id === projection.id);
     if (!tx) return;
     const sign = tx.amount < 0 ? -1 : 1;
-    const updated: OneTimeTransaction = { ...tx, completed: true, actual: actual * sign, ...(notes ? { type: notes } : {}) };
+    const updated: OneTimeTransaction = { ...tx, completed: true, actual: actual * sign };
     const list = oneTimeTransactions.map((o) => o.id === tx.id ? updated : o);
     setOneTimeTransactions(list);
     saveWithOverrides(undefined, list, undefined, undefined, undefined);
@@ -77,103 +66,79 @@ export default function DayDetailsModal({ open, onClose, dateKey, transactions, 
 
   return (
     <>
-      <ModalShell open={open} onClose={onClose} title="">
-        <div className="mb-4">
-          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{fmtDate}</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {t('end_of_day_balance')}: <span className="font-bold text-blue-600">{fmt(eodBalance)}</span>
-          </p>
-        </div>
+      <div className="cal-sheet-scrim" onClick={onClose} style={{ animation: 'fadeIn 0.18s var(--ease) both' }}>
+        <div className="cal-sheet" onClick={(e) => e.stopPropagation()}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+            <div>
+              <div className="dd-overline">{settings.language === 'pt' ? 'Detalhe do dia' : 'Day detail'}</div>
+              <h3 className="dd-h3" style={{ marginTop: 4 }}>{fmtDate}</h3>
+            </div>
+            <button className="dd-icon-btn" onClick={onClose} aria-label="Close">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
 
-        <div className="space-y-2 max-h-80 overflow-y-auto mb-4">
-          {transactions.length === 0 && (
-            <p className="text-center text-gray-500 italic">{t('no_transactions_day')}</p>
-          )}
-          {transactions.map((tx, i) => {
-            const variance = tx.completed ? tx.amount - tx.projectedAmount : 0;
-            return (
-              <div key={i} className={`rounded-lg border p-3 ${txColor(tx)}`}>
-                <div className="flex justify-between items-center">
-                  <div className="flex flex-col flex-grow min-w-0">
-                    <div className="flex items-center space-x-2">
-                      {tx.completed && (
-                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex-shrink-0">✓</span>
-                      )}
-                      <span className="font-medium truncate">{tx.name}</span>
+          <div style={{ marginBottom: 16 }}>
+            <div className="dd-overline">{t('end_of_day_balance')}</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 44, fontWeight: 500, letterSpacing: '-0.025em', lineHeight: 1, marginTop: 4 }}>
+              <Ticker value={eodBalance} />
+            </div>
+          </div>
+
+          {transactions.length === 0 ? (
+            <div style={{ color: 'var(--fg-3)', fontSize: 14, padding: '24px 0', textAlign: 'center' }}>
+              {t('no_transactions_day')}
+            </div>
+          ) : (
+            <div style={{ maxHeight: 280, overflowY: 'auto', marginBottom: 16 }}>
+              {transactions.map((tx, i) => {
+                const variance = tx.completed ? tx.amount - tx.projectedAmount : 0;
+                return (
+                  <div key={i} className="dd-row">
+                    <span className={`dd-dot ${dotClass(tx)}`} />
+                    <div style={{ flex: 1 }}>
+                      <div className="dd-row-name" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {tx.completed && <span style={{ color: 'var(--brand-neon)', fontSize: 12 }}>✓</span>}
+                        <span style={tx.completed ? { opacity: 0.7 } : {}}>{tx.name}</span>
+                      </div>
+                      <div className="dd-row-sub">
+                        {tx.type} {tx.completed && `· ${t('paid')}`}
+                        {tx.completed && variance !== 0 && (
+                          <span style={{ color: variance > 0 ? 'var(--negative)' : 'var(--brand-neon)', marginLeft: 4 }}>
+                            ({variance > 0 ? '+' : ''}{fmt(variance)})
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-xs opacity-70">
-                      {tx.type} {tx.completed && `· ${t('paid')}`}
-                    </span>
+                    <div className="dd-row-amount" style={{ color: tx.amount > 0 ? 'var(--brand-neon)' : 'var(--fg-1)' }}>
+                      {tx.amount > 0 ? '+' : ''}{fmt(tx.amount)}
+                    </div>
+                    <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
+                      {tx.completed ? (
+                        <button onClick={() => handleUnpay(tx)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'var(--fg-3)', padding: 4 }}>↺</button>
+                      ) : (
+                        <button onClick={() => { void hapticLight(); setMarkingPaid(tx); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'var(--fg-3)', padding: 4 }}>✓</button>
+                      )}
+                      {tx.type === 'One-Time' && tx.id && (
+                        <>
+                          <button onClick={() => onEditOneTime(tx.id!)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'var(--fg-3)', padding: 4 }}>✎</button>
+                          <button onClick={() => onDeleteOneTime(tx.id!)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'var(--fg-3)', padding: 4 }}>✕</button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
-                    <span className={`font-bold ${tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {tx.amount >= 0 ? '↑' : '↓'} {fmt(Math.abs(tx.amount))}
-                    </span>
-                  </div>
-                </div>
+                );
+              })}
+            </div>
+          )}
 
-                {tx.completed && variance !== 0 && (
-                  <p className={`text-xs mt-1 ${Math.sign(variance) === Math.sign(-tx.projectedAmount) ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'}`}>
-                    {t('variance')}: {variance > 0 ? '+' : ''}{fmt(variance)} vs {fmt(tx.projectedAmount)}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-end space-x-1.5 mt-2">
-                  {tx.completed ? (
-                    <button
-                      onClick={() => handleUnpay(tx)}
-                      className="text-xs px-2 py-1 rounded-md bg-white/60 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 font-medium"
-                    >
-                      ↺ {t('undo_payment')}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleMarkPaid(tx)}
-                      className="text-xs px-2 py-1 rounded-md bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 font-medium"
-                    >
-                      ✓ {t('mark_as_paid')}
-                    </button>
-                  )}
-                  {tx.type === 'One-Time' && tx.id && (
-                    <>
-                      <button onClick={() => onEditOneTime(tx.id!)} className="text-gray-400 hover:text-purple-600 p-1 transition-colors" aria-label={t('edit')}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                      </button>
-                      <button onClick={() => onDeleteOneTime(tx.id!)} className="text-gray-400 hover:text-red-600 p-1 transition-colors" aria-label={t('delete')}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6"/>
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                          <path d="M10 11v6"/><path d="M14 11v6"/>
-                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                        </svg>
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
-          <button onClick={() => { onClose(); onAddOneTime(dateKey); }} className="px-4 py-2 bg-ios-blue text-white rounded-xl hover:bg-ios-blue-dark text-sm font-semibold">
+          <button className="dd-btn-primary" onClick={() => { onClose(); onAddOneTime(dateKey); }} style={{ width: '100%' }}>
             + {t('add_event')}
           </button>
-          <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm">
-            {t('close')}
-          </button>
         </div>
-      </ModalShell>
+      </div>
 
-      <MarkPaidModal
-        open={!!markingPaid}
-        onClose={() => setMarkingPaid(null)}
-        projection={markingPaid}
-        onOneTimeSave={handleMarkPaidOneTime}
-      />
+      <MarkPaidModal open={!!markingPaid} onClose={() => setMarkingPaid(null)} projection={markingPaid} onOneTimeSave={handleMarkPaidOneTime} />
     </>
   );
 }
