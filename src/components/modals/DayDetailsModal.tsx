@@ -64,6 +64,18 @@ export default function DayDetailsModal({ open, onClose, dateKey, transactions, 
     saveWithOverrides(undefined, list, undefined, undefined, undefined);
   };
 
+  // Hide day detail when mark-paid is open to prevent stacking
+  if (markingPaid) {
+    return (
+      <MarkPaidModal
+        open={true}
+        onClose={() => setMarkingPaid(null)}
+        projection={markingPaid}
+        onOneTimeSave={handleMarkPaidOneTime}
+      />
+    );
+  }
+
   return (
     <>
       <div className="cal-sheet-scrim" onClick={onClose} style={{ animation: 'fadeIn 0.18s var(--ease) both' }}>
@@ -138,7 +150,6 @@ export default function DayDetailsModal({ open, onClose, dateKey, transactions, 
         </div>
       </div>
 
-      <MarkPaidModal open={!!markingPaid} onClose={() => setMarkingPaid(null)} projection={markingPaid} onOneTimeSave={handleMarkPaidOneTime} />
     </>
   );
 }

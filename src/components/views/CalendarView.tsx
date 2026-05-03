@@ -133,10 +133,10 @@ export default function CalendarView() {
           ))}
         </div>
 
-        {/* Grid — edge-to-edge, no gaps, table-style borders */}
-        <div style={{ overflow: 'hidden', borderTop: '1px solid var(--line)' }}>
+        {/* Grid */}
+        <div style={{ overflow: 'hidden' }}>
           <div key={calAnimKey} className={calDir === 'right' ? 'cal-slide-r' : 'cal-slide-l'}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
             {cells.map((c, i) => {
               const isSel = c.key === selected;
               return (
@@ -158,14 +158,31 @@ export default function CalendarView() {
                       +{c.txs.length - 3}
                     </div>
                   )}
+                  {c.inMonth && settings.showEODBalance && c.key && (
+                    <div className={`cal-eod ${getEndOfDayBalance(c.key, dailyBalanceMap, settings.startDate, settings.startingBalance) < 0 ? 'neg' : ''}`}>
+                      {fmt(getEndOfDayBalance(c.key, dailyBalanceMap, settings.startDate, settings.startingBalance))}
+                    </div>
+                  )}
                 </button>
               );
             })}
           </div>
         </div>
+
+        {/* EOD toggle */}
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--fg-3)', fontWeight: 500 }}>
+            <input type="checkbox" checked={settings.showEODBalance} onChange={(e) => {
+              void hapticLight();
+              const newSettings = { ...settings, showEODBalance: e.target.checked };
+              setSettings(newSettings);
+              saveWithOverrides(undefined, undefined, undefined, undefined, newSettings);
+            }} style={{ width: 16, height: 16 }} />
+            {t('show_eod_balance')}
+          </label>
+        </div>
       </div>
 
-      {/* Day detail sheet */}
       {selected && (
         <DayDetailsModal
           open={true}
@@ -173,8 +190,8 @@ export default function CalendarView() {
           dateKey={selected}
           transactions={dailyTransactionMap[selected] || []}
           eodBalance={getEndOfDayBalance(selected, dailyBalanceMap, settings.startDate, settings.startingBalance)}
-          onAddOneTime={(date) => { setDefaultDate(date); setEditTx(null); setShowOneTime(true); }}
-          onEditOneTime={handleEdit}
+          onAddOneTime={(date) => { setSelected(null); setDefaultDate(date); setEditTx(null); setShowOneTime(true); }}
+          onEditOneTime={(id) => { setSelected(null); handleEdit(id); }}
           onDeleteOneTime={handleDelete}
         />
       )}
