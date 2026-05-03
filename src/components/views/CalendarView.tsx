@@ -12,19 +12,14 @@ import type { OneTimeTransaction, Projection } from '@/lib/types';
 import { useT, useFmt, useLocale } from '@/lib/i18n';
 import { hapticLight } from '@/lib/haptics';
 
-const DAY_LABELS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const DAY_LABELS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const DAY_LABELS_EN = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const DAY_LABELS_PT = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-function dotClass(type: Projection['type']): string {
-  if (type === 'Savings') return 'savings';
-  if (type === 'Debt Payment') return 'bill';
-  if (type === 'Recurring') return 'bill';
-  if (type === 'One-Time') return 'one';
+function eventClass(p: Projection): string {
+  if (p.amount > 0) return 'income';
+  if (p.type === 'Savings') return 'savings';
+  if (p.type === 'One-Time') return 'one';
   return 'bill';
-}
-
-function incomeDot(p: Projection): string {
-  return p.amount > 0 ? 'income' : dotClass(p.type);
 }
 
 export default function CalendarView() {
@@ -37,7 +32,6 @@ export default function CalendarView() {
   const DAY_LABELS = locale === 'pt-BR' ? DAY_LABELS_PT : DAY_LABELS_EN;
 
   const [selected, setSelected] = useState<string | null>(null);
-  const [hoverKey, setHoverKey] = useState<string | null>(null);
   const [showOneTime, setShowOneTime] = useState(false);
   const [editTx, setEditTx] = useState<OneTimeTransaction | null>(null);
   const [defaultDate, setDefaultDate] = useState('');
@@ -47,21 +41,8 @@ export default function CalendarView() {
   const monthStart = startOfMonth(currentCalendarDate);
   const gridStart = startOfWeek(monthStart);
   const gridEnd = endOfWeek(endOfMonth(currentCalendarDate));
-  const monthLabel = format(currentCalendarDate, 'MMMM yyyy', { locale: dateLocale });
-
-  // Compute EOD range for micro-bars
-  const eodValues = useMemo(() => {
-    const vals: number[] = [];
-    let d = gridStart;
-    while (d <= gridEnd) {
-      if (isSameMonth(d, monthStart)) {
-        const dk = format(d, 'yyyy-MM-dd');
-        vals.push(getEndOfDayBalance(dk, dailyBalanceMap, settings.startDate, settings.startingBalance));
-      }
-      d = addDays(d, 1);
-    }
-    return { min: Math.min(...vals, 0), max: Math.max(...vals, 1) };
-  }, [dailyBalanceMap, gridStart, gridEnd, monthStart, settings]);
+  const monthLabel = format(currentCalendarDate, 'MMMM', { locale: dateLocale });
+  const yearLabel = format(currentCalendarDate, 'yyyy');
 
   // Month stats
   const monthStats = useMemo(() => {
@@ -110,99 +91,77 @@ export default function CalendarView() {
   };
 
   // Build cells
-  const cells: { day: number; inMonth: boolean; key: string | null; isToday: boolean; txs: Projection[]; eod: number }[] = [];
+  const cells: { day: number; inMonth: boolean; key: string | null; isToday: boolean; txs: Projection[] }[] = [];
   let day = gridStart;
   while (day <= gridEnd) {
     const dk = format(day, 'yyyy-MM-dd');
     const inMonth = isSameMonth(day, monthStart);
     const txs = inMonth ? (dailyTransactionMap[dk] || []) : [];
-    const eod = inMonth ? getEndOfDayBalance(dk, dailyBalanceMap, settings.startDate, settings.startingBalance) : 0;
-    cells.push({ day: day.getDate(), inMonth, key: inMonth ? dk : null, isToday: isToday(day), txs, eod });
+    cells.push({ day: day.getDate(), inMonth, key: inMonth ? dk : null, isToday: isToday(day), txs });
     day = addDays(day, 1);
   }
-  while (cells.length < 42) cells.push({ day: 0, inMonth: false, key: null, isToday: false, txs: [], eod: 0 });
+  while (cells.length < 42) cells.push({ day: 0, inMonth: false, key: null, isToday: false, txs: [] });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {settings.smartBudgetEnabled !== false && <SmartBudgetCard />}
 
-      <div className="dd-card" style={{ padding: 0, overflow: 'hidden' }}>
+      {/* Calendar — edge to edge, no card wrapper */}
+      <div>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 20px 14px' }}>
-          <div>
-            <div className="dd-overline">{t('calendar')}</div>
-            <h3 className="dd-h3" style={{ marginTop: 4 }}>{monthLabel}</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0 12px', marginBottom: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 500, letterSpacing: '-0.02em', margin: 0, color: 'var(--fg-1)' }}>
+              {monthLabel}
+            </h2>
+            <span style={{ fontSize: 14, color: 'var(--fg-3)', fontWeight: 500 }}>{yearLabel}</span>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <button className="dd-icon-btn" onClick={() => move(-1)} aria-label="Previous month">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
             <button className="dd-icon-btn" onClick={() => move(1)} aria-label="Next month">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
           </div>
-        </div>
-
-        {/* Month stats strip */}
-        <div style={{ display: 'flex', padding: '0 20px 14px', borderBottom: '1px solid var(--line)' }}>
-          <StatChip label={settings.language === 'pt' ? 'Entrada' : 'In'} value={fmt(monthStats.inn)} />
-          <StatChip label={settings.language === 'pt' ? 'Saída' : 'Out'} value={fmt(monthStats.out)} />
-          <StatChip label="Net" value={(monthStats.net >= 0 ? '+' : '') + fmt(monthStats.net)} />
         </div>
 
         {/* Day-of-week header */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, padding: '12px 12px 8px' }}>
-          {DAY_LABELS.map((d) => (
-            <div key={d} className="dd-overline" style={{ textAlign: 'center' }}>{d}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid var(--line)' }}>
+          {DAY_LABELS.map((d, i) => (
+            <div key={i} style={{ textAlign: 'center', padding: '6px 0', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', letterSpacing: '0.04em' }}>{d}</div>
           ))}
         </div>
 
-        {/* Grid */}
-        <div style={{ overflow: 'hidden' }}>
+        {/* Grid — edge-to-edge, no gaps, table-style borders */}
+        <div style={{ overflow: 'hidden', borderTop: '1px solid var(--line)' }}>
           <div key={calAnimKey} className={calDir === 'right' ? 'cal-slide-r' : 'cal-slide-l'}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, padding: '0 10px 14px' }}>
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
             {cells.map((c, i) => {
-              const hot = c.txs.length > 0;
-              const eodPct = c.inMonth && eodValues.max > eodValues.min ? (c.eod - eodValues.min) / (eodValues.max - eodValues.min) : 0;
-              const isHover = c.key === hoverKey;
               const isSel = c.key === selected;
               return (
                 <button
                   key={i}
                   disabled={!c.inMonth}
                   onClick={() => { if (c.key) { void hapticLight(); setSelected(c.key); } }}
-                  onMouseEnter={() => c.key && setHoverKey(c.key)}
-                  onMouseLeave={() => setHoverKey(null)}
-                  className={`cal-cell ${c.inMonth ? 'in' : 'out'} ${c.isToday ? 'today' : ''} ${hot ? 'hot' : ''} ${isHover ? 'hover' : ''} ${isSel ? 'sel' : ''}`}
+                  className={`cal-cell ${c.inMonth ? 'in' : 'out'} ${c.isToday ? 'today' : ''} ${isSel ? 'sel' : ''}`}
+                  style={{ textAlign: 'left' }}
                 >
                   <div className="cal-day-num">{c.day || ''}</div>
-                  {c.inMonth && c.txs.length > 0 && (
-                    <>
-                      <div className="cal-bar">
-                        <div className="cal-bar-fill" style={{ height: `${Math.max(6, eodPct * 100)}%` }} />
-                      </div>
-                      <div className="cal-dots">
-                        {c.txs.slice(0, 4).map((tx, j) => (
-                          <span key={j} className={`cal-dot ${incomeDot(tx)}`} />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                  {c.inMonth && (c.isToday || isHover) && (
-                    <div className="cal-eod">{fmt(c.eod)}</div>
+                  {c.inMonth && c.txs.slice(0, 3).map((tx, j) => (
+                    <div key={j} className={`cal-event ${eventClass(tx)}`}>
+                      {tx.name}
+                    </div>
+                  ))}
+                  {c.inMonth && c.txs.length > 3 && (
+                    <div style={{ fontSize: 9, color: 'var(--fg-3)', paddingLeft: 3, marginTop: 1 }}>
+                      +{c.txs.length - 3}
+                    </div>
                   )}
                 </button>
               );
             })}
           </div>
-        </div>
-
-        {/* Legend */}
-        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', padding: '12px 20px 18px', borderTop: '1px solid var(--line)', flexWrap: 'wrap' }}>
-          <LegendItem cls="income" label={t('income')} />
-          <LegendItem cls="bill" label={settings.language === 'pt' ? 'Conta' : 'Bill'} />
-          <LegendItem cls="savings" label={t('savings')} />
-          <LegendItem cls="one" label="One-time" />
         </div>
       </div>
 
@@ -220,24 +179,6 @@ export default function CalendarView() {
         />
       )}
       <OneTimeModal open={showOneTime} onClose={() => setShowOneTime(false)} onSave={handleSaveOneTime} initial={editTx} defaultDate={defaultDate} />
-    </div>
-  );
-}
-
-function StatChip({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ flex: 1, padding: '10px 0' }}>
-      <div className="dd-overline">{label}</div>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 500, letterSpacing: '-0.02em', marginTop: 2, color: 'var(--fg-1)' }}>{value}</div>
-    </div>
-  );
-}
-
-function LegendItem({ cls, label }: { cls: string; label: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <span className={`cal-dot ${cls}`} style={{ width: 8, height: 8 }} />
-      <span style={{ fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.04em' }}>{label}</span>
     </div>
   );
 }
