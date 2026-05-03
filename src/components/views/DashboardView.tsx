@@ -75,8 +75,8 @@ export default function DashboardView() {
         </div>
       </div>
 
-      {/* Stat tiles */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+      {/* Stat tiles — 2 on mobile, 4 on desktop */}
+      <div className="dd-stat-grid">
         <StatTile label={t('total_income')} value={fmt(metrics.totalIncome)} accent />
         <StatTile label={t('total_expenses')} value={fmt(Math.abs(metrics.totalExpenses))} />
         {totalSaved > 0 && <StatTile label={t('total_saved')} value={fmt(totalSaved)} accent />}
@@ -94,6 +94,9 @@ export default function DashboardView() {
           </div>
         </div>
       )}
+
+      {/* Lower cards — side by side on desktop */}
+      <div className="dd-desktop-2col">
 
       {/* 50/30/20 Benchmark */}
       {metrics.totalIncome > 0 && (
@@ -132,6 +135,8 @@ export default function DashboardView() {
           </div>
         );
       })()}
+
+      </div>{/* end dd-desktop-2col */}
 
       {/* Upcoming transactions */}
       <div className="dd-card">

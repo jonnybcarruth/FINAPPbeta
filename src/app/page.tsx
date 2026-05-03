@@ -77,14 +77,14 @@ export default function Home() {
         </div>
       )}
 
-      <div style={{ maxWidth: 680, margin: '0 auto', paddingBottom: 120 }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', paddingBottom: 120 }}>
         {/* Header */}
         <header style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '6px 16px 12px',
         }}>
           <LogoLockup height={28} dark={isDark} progress={logoProgress} />
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <button className="dd-icon-btn" onClick={() => setMenuOpen(true)} aria-label="Menu">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />

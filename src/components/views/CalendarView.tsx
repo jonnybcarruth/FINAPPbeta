@@ -160,7 +160,7 @@ export default function CalendarView() {
         {/* Grid */}
         <div style={{ overflow: 'hidden' }}>
           <div key={calAnimKey} className={calDir === 'right' ? 'cal-slide-r' : 'cal-slide-l'}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, padding: '0 12px 16px' }}>
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 5, padding: '0 12px 16px' }}>
             {cells.map((c, i) => {
               const hot = c.txs.length > 0;
               const eodPct = c.inMonth && eodValues.max > eodValues.min ? (c.eod - eodValues.min) / (eodValues.max - eodValues.min) : 0;
