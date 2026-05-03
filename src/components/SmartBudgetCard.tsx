@@ -137,7 +137,7 @@ export default function SmartBudgetCard() {
 }
 
 function Row({ label, value, positive, negative, bold }: { label: string; value: string; positive?: boolean; negative?: boolean; bold?: boolean }) {
-  const color = positive ? 'text-emerald-600 dark:text-emerald-400' : negative ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-200';
+  const color = positive ? 'text-[var(--brand-neon)] dark:text-[var(--brand-neon)]' : negative ? 'text-[var(--negative)] dark:text-red-400' : 'text-gray-700 dark:text-gray-200';
   return (
     <div className="flex justify-between items-center">
       <span className={`${bold ? 'font-bold' : ''} text-gray-600 dark:text-gray-300`}>{label}</span>

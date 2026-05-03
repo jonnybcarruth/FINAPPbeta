@@ -139,10 +139,10 @@ export default function SpendingPlanView() {
       <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('spending_plans')}</h2>
-          <button onClick={handleDeletePlan} className="px-3 py-1 text-sm bg-red-50 text-ios-red rounded-lg hover:bg-red-100 font-medium">{t('delete_plan')}</button>
+          <button onClick={handleDeletePlan} className="px-3 py-1 text-sm bg-[var(--negative-bg)] text-[var(--negative)] rounded-lg hover:bg-[var(--negative-bg)] font-medium">{t('delete_plan')}</button>
         </div>
         {remainingBudget <= 0 ? (
-          <p className="text-red-500 p-4 bg-red-100 rounded-lg">{t('savings_exceeds')}</p>
+          <p className="text-red-500 p-4 bg-[var(--negative-bg)] rounded-lg">{t('savings_exceeds')}</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {PLAN_DEFINITIONS.map((plan) => {
@@ -158,7 +158,7 @@ export default function SpendingPlanView() {
                     {bd.filter((c) => c.amount > 0.01).map((c) => (
                       <li key={c.name} className="flex justify-between text-gray-700 dark:text-gray-300">
                         <span>{c.name}:</span>
-                        <span className="font-medium text-red-600">{fmt(c.amount)}</span>
+                        <span className="font-medium text-[var(--negative)]">{fmt(c.amount)}</span>
                       </li>
                     ))}
                   </ul>

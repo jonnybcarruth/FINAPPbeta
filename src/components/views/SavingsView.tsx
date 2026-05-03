@@ -77,7 +77,7 @@ export default function SavingsView() {
           <section className="grid grid-cols-2 gap-4 text-center">
             <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
               <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t('total_saved')}</h3>
-              <p className="text-2xl font-bold text-emerald-600 mt-1">{fmt(totalSaved)}</p>
+              <p className="text-2xl font-bold text-[var(--brand-neon)] mt-1">{fmt(totalSaved)}</p>
             </div>
             <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
               <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t('total_goal')}</h3>
@@ -89,10 +89,10 @@ export default function SavingsView() {
             <section className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('overall_progress')}</span>
-                <span className="text-sm font-bold text-emerald-600">{Math.min(100, Math.round((totalSaved / totalGoals) * 100))}%</span>
+                <span className="text-sm font-bold text-[var(--brand-neon)]">{Math.min(100, Math.round((totalSaved / totalGoals) * 100))}%</span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                <div className="bg-emerald-500 h-3 rounded-full transition-all" style={{ width: `${Math.min(100, (totalSaved / totalGoals) * 100)}%` }} />
+                <div className="bg-[var(--brand-neon)] h-3 rounded-full transition-all" style={{ width: `${Math.min(100, (totalSaved / totalGoals) * 100)}%` }} />
               </div>
             </section>
           )}
@@ -100,7 +100,7 @@ export default function SavingsView() {
           <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('savings_plans')}</h2>
-              <button onClick={() => { setEditing(null); setOpen(true); }} className="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-semibold text-sm">
+              <button onClick={() => { setEditing(null); setOpen(true); }} className="px-4 py-2 bg-[var(--fg-1)] text-white rounded-xl hover:bg-[var(--brand-neon)] font-semibold text-sm">
                 + {t('add')}
               </button>
             </div>
@@ -110,10 +110,10 @@ export default function SavingsView() {
                 const saved = perPlanSaved[plan.name] || 0;
                 const goalPct = plan.goalAmount ? Math.min(100, (saved / plan.goalAmount) * 100) : null;
                 return (
-                  <div key={plan.id} className={`p-4 rounded-xl border border-emerald-200 dark:border-emerald-900 bg-white dark:bg-gray-700 shadow-sm hover:shadow-md transition ${!plan.enabled ? 'opacity-50' : ''}`}>
+                  <div key={plan.id} className={`p-4 rounded-xl border border-[var(--line)] dark:border-[var(--line)] bg-white dark:bg-gray-700 shadow-sm hover:shadow-md transition ${!plan.enabled ? 'opacity-50' : ''}`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center min-w-0 mr-3">
-                        <div className="flex-shrink-0 w-3 h-3 rounded-full mr-3 bg-emerald-500" />
+                        <div className="flex-shrink-0 w-3 h-3 rounded-full mr-3 bg-[var(--brand-neon)]" />
                         <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{plan.name}</p>
                       </div>
                       <div className="relative inline-block w-12 h-7 flex-shrink-0 select-none">
@@ -125,11 +125,11 @@ export default function SavingsView() {
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-sm text-gray-500 dark:text-gray-400">{freqLabel(plan.frequency)} · {fmt(plan.amount)}</p>
                       <div className="flex items-center space-x-2">
-                        <p className="font-bold text-base text-emerald-600">{fmt(saved)}</p>
+                        <p className="font-bold text-base text-[var(--brand-neon)]">{fmt(saved)}</p>
                         <button onClick={() => { setEditing(plan); setOpen(true); }} className="p-2 text-gray-400 hover:text-ios-blue rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
-                        <button onClick={() => handleDelete(plan.id)} className="p-2 text-gray-400 hover:text-ios-red rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">
+                        <button onClick={() => handleDelete(plan.id)} className="p-2 text-gray-400 hover:text-[var(--negative)] rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                         </button>
                       </div>
@@ -141,7 +141,7 @@ export default function SavingsView() {
                           <span>{t('goal')}: {fmt(plan.goalAmount)}</span>
                         </div>
                         <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                          <div className="bg-emerald-500 h-2 rounded-full transition-all" style={{ width: `${goalPct}%` }} />
+                          <div className="bg-[var(--brand-neon)] h-2 rounded-full transition-all" style={{ width: `${goalPct}%` }} />
                         </div>
                       </div>
                     )}

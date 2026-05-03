@@ -95,7 +95,7 @@ export default function MarkPaidModal({ open, onClose, projection, onOneTimeSave
                 {t('same_as_projected')}
               </button>
               {variance !== 0 && (
-                <span className={`text-xs font-semibold ${variance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                <span className={`text-xs font-semibold ${variance > 0 ? 'text-[var(--negative)]' : 'text-[var(--brand-neon)]'}`}>
                   {variance > 0 ? '+' : ''}{sym}{Math.abs(variance).toFixed(2)} {t('variance_from_projected')}
                 </span>
               )}
@@ -124,7 +124,7 @@ export default function MarkPaidModal({ open, onClose, projection, onOneTimeSave
             type="button"
             onClick={handleSubmit}
             disabled={isNaN(actualParsed) || actualParsed < 0}
-            className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-semibold text-sm disabled:opacity-40"
+            className="px-5 py-2.5 bg-[var(--fg-1)] text-white rounded-xl hover:bg-[var(--brand-neon)] font-semibold text-sm disabled:opacity-40"
           >
             ✓ {t('mark_as_paid')}
           </button>

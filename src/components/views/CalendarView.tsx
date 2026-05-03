@@ -136,7 +136,7 @@ export default function CalendarView() {
         {/* Grid */}
         <div style={{ overflow: 'hidden' }}>
           <div key={calAnimKey} className={calDir === 'right' ? 'cal-slide-r' : 'cal-slide-l'}
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
             {cells.map((c, i) => {
               const isSel = c.key === selected;
               return (

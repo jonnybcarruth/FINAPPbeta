@@ -70,7 +70,7 @@ export default function RecurringSchedulesView() {
                 <div key={s.id} className={`p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 shadow-sm hover:shadow-md transition ${!s.enabled ? 'opacity-50' : ''}`}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center min-w-0 mr-3">
-                      <div className={`flex-shrink-0 w-3 h-3 rounded-full mr-3 ${isExpense ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                      <div className={`flex-shrink-0 w-3 h-3 rounded-full mr-3 ${isExpense ? 'bg-[var(--fg-3)]' : 'bg-[var(--brand-neon)]'}`} />
                       <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{s.name}</p>
                     </div>
                     <div className="relative inline-block w-12 h-7 flex-shrink-0 select-none">
@@ -82,13 +82,13 @@ export default function RecurringSchedulesView() {
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-gray-500 dark:text-gray-400">{isExpense ? t('expense') : t('income')} · {freqLabel(s.frequency)}</p>
                     <div className="flex items-center space-x-2">
-                      <p className={`font-semibold text-base ${isExpense ? 'text-red-600' : 'text-emerald-600'}`}>
+                      <p className={`font-semibold text-base ${isExpense ? 'text-[var(--negative)]' : 'text-[var(--brand-neon)]'}`}>
                         {fmt(Math.abs(s.amount))}
                       </p>
                       <button onClick={() => { setEditing(s); setOpen(true); }} className="p-2 text-gray-400 hover:text-ios-blue rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </button>
-                      <button onClick={() => handleDelete(s.id)} className="p-2 text-gray-400 hover:text-ios-red rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">
+                      <button onClick={() => handleDelete(s.id)} className="p-2 text-gray-400 hover:text-[var(--negative)] rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                       </button>
                     </div>

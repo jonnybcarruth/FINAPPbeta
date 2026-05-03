@@ -14,14 +14,18 @@ import DashboardView from '@/components/views/DashboardView';
 import BillsView from '@/components/views/BillsView';
 import SpendingPlanView from '@/components/views/SpendingPlanView';
 import SavingsView from '@/components/views/SavingsView';
+import OneTimeModal from '@/components/modals/OneTimeModal';
 import { setHapticsEnabled } from '@/lib/haptics';
 import { useT, useFmt, useLocale } from '@/lib/i18n';
 import { useAuth } from '@/context/AuthContext';
+import type { OneTimeTransaction } from '@/lib/types';
 
 export default function Home() {
-  const { activeView, viewSlideDir, dataLoading, settings, syncState, dailyBalanceMap } = useApp();
+  const { activeView, viewSlideDir, dataLoading, settings, syncState, dailyBalanceMap,
+    oneTimeTransactions, setOneTimeTransactions, saveWithOverrides } = useApp();
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
   const [logoProgress, setLogoProgress] = useState(0);
   const t = useT();
   const fmt = useFmt();
@@ -38,7 +42,6 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Negative balance alert
   const negativeAlert = useMemo(() => {
     const dates = Object.keys(dailyBalanceMap).sort();
     for (const dk of dates) {
@@ -46,6 +49,13 @@ export default function Home() {
     }
     return null;
   }, [dailyBalanceMap]);
+
+  const handleFabSave = (tx: OneTimeTransaction) => {
+    const updated = [...oneTimeTransactions, tx];
+    setOneTimeTransactions(updated);
+    setFabOpen(false);
+    saveWithOverrides(undefined, updated, undefined, undefined, undefined);
+  };
 
   if (dataLoading) {
     return (
@@ -58,13 +68,13 @@ export default function Home() {
 
   const isDark = settings.darkMode;
   const initial = user?.email?.[0]?.toUpperCase() || 'U';
+  const needsPadding = activeView !== 'calendar';
 
   return (
     <>
       <StatusMessage />
       {!settings.hasOnboarded && <Onboarding />}
 
-      {/* Sticky negative balance banner */}
       {negativeAlert && (
         <div style={{
           position: 'sticky', top: 0, zIndex: 30,
@@ -78,7 +88,6 @@ export default function Home() {
       )}
 
       <div style={{ maxWidth: 1280, margin: '0 auto', paddingBottom: 120 }}>
-        {/* Header */}
         <header style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '6px 16px 12px',
@@ -94,8 +103,7 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Content */}
-        <div style={{ padding: '0 16px' }}>
+        <div style={{ padding: needsPadding ? '0 16px' : '0' }}>
           <main key={activeView} className={viewSlideDir === 'left' ? 'view-slide-from-left' : 'view-slide-from-right'} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {activeView === 'calendar' && <CalendarView />}
             {activeView === 'dashboard' && <DashboardView />}
@@ -106,8 +114,15 @@ export default function Home() {
         </div>
       </div>
 
-      <Navigation />
+      <Navigation onAdd={() => setFabOpen(true)} />
       <SlideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <OneTimeModal
+        open={fabOpen}
+        onClose={() => setFabOpen(false)}
+        onSave={handleFabSave}
+        initial={null}
+        defaultDate=""
+      />
     </>
   );
 }

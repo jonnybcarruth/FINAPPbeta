@@ -110,7 +110,7 @@ export default function SlideMenu({ open, onClose }: Props) {
                   <p className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{p.name}</p>
                   <p className="text-xs text-gray-500">{format(p.date, 'MMM d, yyyy', { locale: dateLocale })} · {typeLabel(p)}</p>
                 </div>
-                <p className={`text-sm font-semibold flex-shrink-0 ${p.amount >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                <p className={`text-sm font-semibold flex-shrink-0 ${p.amount >= 0 ? 'text-[var(--brand-neon)]' : 'text-[var(--negative)]'}`}>
                   {p.amount >= 0 ? '+' : ''}{fmt(p.amount)}
                 </p>
               </div>
@@ -121,10 +121,13 @@ export default function SlideMenu({ open, onClose }: Props) {
     );
   }
 
+  if (!open && !showLog) return null;
+
   return (
     <>
       <div
-        className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className="fixed inset-0 z-50"
+        style={{ background: 'rgba(10,10,10,0.5)', animation: 'fadeIn 0.18s var(--ease) both' }}
         onClick={onClose}
       />
       <div className={`fixed inset-y-0 right-0 w-80 max-w-full bg-white dark:bg-gray-900 z-50 transform transition-transform duration-300 shadow-2xl ${open ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
@@ -139,14 +142,12 @@ export default function SlideMenu({ open, onClose }: Props) {
 
         <div className="flex-1 overflow-y-auto">
           {user && (
-            <div className="p-5 border-b border-gray-200 dark:border-gray-700">
-              <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-3">
-                <span className="text-blue-600 dark:text-blue-300 text-lg font-bold">
-                  {(user.email?.[0] || 'U').toUpperCase()}
-                </span>
+            <div className="p-5 border-b" style={{ borderColor: 'var(--line)' }}>
+              <div className="dd-avatar" style={{ width: 48, height: 48, fontSize: 18, marginBottom: 12 }}>
+                {(user.email?.[0] || 'U').toUpperCase()}
               </div>
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{user.email}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{t('dindin_account')}</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--fg-1)' }}>{user.email}</p>
+              <p className="text-xs" style={{ color: 'var(--fg-3)', marginTop: 2 }}>{t('dindin_account')}</p>
             </div>
           )}
 
@@ -238,7 +239,7 @@ export default function SlideMenu({ open, onClose }: Props) {
             {t('sign_out')}
           </button>
           <button onClick={handleDeleteAccount} disabled={deleting}
-            className="w-full py-2.5 text-sm font-semibold text-red-600 bg-red-50 dark:bg-red-950 rounded-xl hover:bg-red-100 dark:hover:bg-red-900 disabled:opacity-60">
+            className="w-full py-2.5 text-sm font-semibold text-[var(--negative)] bg-[var(--negative-bg)] dark:bg-[var(--surface-2)] rounded-xl hover:bg-[var(--negative-bg)] dark:hover:bg-[var(--surface-2)] disabled:opacity-60">
             {deleting ? t('please_wait') : t('delete_account')}
           </button>
           {deleteError && <p className="text-xs text-red-500 text-center">{deleteError}</p>}

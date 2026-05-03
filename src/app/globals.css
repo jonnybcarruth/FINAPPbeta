@@ -222,24 +222,24 @@ body { margin: 0; background: var(--bg); }
   position: relative;
   min-height: 90px;
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
   padding: 5px 5px 3px;
   display: flex; flex-direction: column;
   cursor: pointer;
   font-family: var(--font-ui);
   color: var(--fg-1);
   overflow: hidden;
-  transition: background var(--dur-fast) var(--ease),
-              border-color var(--dur-fast) var(--ease);
+  transition: background var(--dur-fast) var(--ease);
 }
+.cal-cell:nth-child(7n) { border-right: none; }
 @media (min-width: 768px) {
   .cal-cell { min-height: 110px; padding: 6px 6px 4px; }
 }
-.cal-cell.out { background: transparent; border-color: transparent; color: var(--fg-4); cursor: default; }
-.cal-cell.in:hover { background: var(--surface-2); border-color: var(--line-strong); }
-.cal-cell.sel { background: var(--surface-2); border-color: var(--fg-1); }
-.cal-cell.today { border-color: var(--fg-1); border-width: 2px; padding: 4px 4px 2px; }
+.cal-cell.out { background: transparent; color: var(--fg-4); cursor: default; }
+.cal-cell.in:hover { background: var(--surface-2); }
+.cal-cell.sel { background: var(--surface-2); }
+.cal-cell.today { background: transparent; }
 
 .cal-eod {
   font-size: 10px; font-weight: 700; color: var(--fg-1);
