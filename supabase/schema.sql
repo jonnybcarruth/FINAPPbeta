@@ -22,27 +22,30 @@ drop policy if exists "user_data_insert_own" on public.user_data;
 drop policy if exists "user_data_update_own" on public.user_data;
 drop policy if exists "user_data_delete_own" on public.user_data;
 
+-- Using (select auth.uid()) wrapper for initplan optimization: evaluates
+-- once per query instead of once per row.
 create policy "user_data_select_own"
-  on public.user_data for select
-  using (auth.uid() = user_id);
+  on public.user_data for select to authenticated
+  using ((select auth.uid()) = user_id);
 
 create policy "user_data_insert_own"
-  on public.user_data for insert
-  with check (auth.uid() = user_id);
+  on public.user_data for insert to authenticated
+  with check ((select auth.uid()) = user_id);
 
 create policy "user_data_update_own"
-  on public.user_data for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  on public.user_data for update to authenticated
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 create policy "user_data_delete_own"
-  on public.user_data for delete
-  using (auth.uid() = user_id);
+  on public.user_data for delete to authenticated
+  using ((select auth.uid()) = user_id);
 
 -- Bump updated_at on every update for easy freshness checks / conflict UI later.
 create or replace function public.touch_user_data_updated_at()
 returns trigger
 language plpgsql
+set search_path = pg_catalog, public
 as $$
 begin
   new.updated_at = now();
@@ -61,20 +64,25 @@ create trigger user_data_touch_updated_at
 -- CASCADE on user_data.user_id then wipes their data row automatically.
 -- SECURITY DEFINER lets it modify auth.users with elevated privileges; we
 -- hard-code the check to auth.uid() so a user can only delete themselves.
+-- search_path set to empty string to prevent search-path injection.
+-- NOTE: authenticated_security_definer_function_executable advisor warning
+--       is expected and intentional (lint:ignore=0029).
 -- -----------------------------------------------------------------------------
 create or replace function public.delete_user()
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
+declare
+  uid uuid := auth.uid();
 begin
-  if auth.uid() is null then
+  if uid is null then
     raise exception 'Not authenticated';
   end if;
-  delete from auth.users where id = auth.uid();
+  delete from auth.users where id = uid;
 end;
 $$;
 
-revoke all on function public.delete_user() from public;
+revoke execute on function public.delete_user() from public, anon;
 grant execute on function public.delete_user() to authenticated;
