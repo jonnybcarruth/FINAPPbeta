@@ -9,9 +9,9 @@
 @tailwind utilities;
 
 :root {
-  --brand-neon: #D8F2A8;
-  --brand-neon-deep: #BCDF85;
-  --brand-neon-soft: #EEF7D6;
+  --brand-neon: #C8E68E;
+  --brand-neon-deep: #AECE6E;
+  --brand-neon-soft: #E8F3CC;
   --brand-black: #0A0A0A;
   --brand-white: #FFFFFF;
   --brand-gray: #6B6F76;
@@ -278,7 +278,7 @@ body { margin: 0; background: var(--bg); }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   color: var(--fg-1); letter-spacing: -0.01em;
 }
-.cal-event.income { background: var(--brand-neon-soft); color: var(--brand-black); }
+.cal-event.income { background: var(--brand-neon-soft); color: #3d5a0f; }
 .cal-event.bill { background: var(--surface-2); }
 .cal-event.savings { background: transparent; border: 1px solid var(--line); font-size: 8px; }
 .cal-event.one { background: var(--surface-2); }

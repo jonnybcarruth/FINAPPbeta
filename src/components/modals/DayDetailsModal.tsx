@@ -125,16 +125,16 @@ export default function DayDetailsModal({ open, onClose, dateKey, transactions, 
                     <div className="dd-row-amount" style={{ color: tx.amount > 0 ? 'var(--brand-neon)' : 'var(--fg-1)' }}>
                       {tx.amount > 0 ? '+' : ''}{fmt(tx.amount)}
                     </div>
-                    <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
+                    <div style={{ display: 'flex', gap: 6, marginLeft: 8, flexShrink: 0 }}>
                       {tx.completed ? (
-                        <button onClick={() => handleUnpay(tx)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'var(--fg-3)', padding: 4 }}>↺</button>
+                        <button onClick={() => handleUnpay(tx)} className="dd-btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderRadius: 8 }}>↺ {t('undo_payment')}</button>
                       ) : (
-                        <button onClick={() => { void hapticLight(); setMarkingPaid(tx); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'var(--fg-3)', padding: 4 }}>✓</button>
+                        <button onClick={() => { void hapticLight(); setMarkingPaid(tx); }} className="dd-btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderRadius: 8 }}>✓ {t('paid')}</button>
                       )}
                       {tx.type === 'One-Time' && tx.id && (
                         <>
-                          <button onClick={() => onEditOneTime(tx.id!)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'var(--fg-3)', padding: 4 }}>✎</button>
-                          <button onClick={() => onDeleteOneTime(tx.id!)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: 'var(--fg-3)', padding: 4 }}>✕</button>
+                          <button onClick={() => onEditOneTime(tx.id!)} className="dd-btn-secondary" style={{ padding: '4px 8px', fontSize: 11, borderRadius: 8 }}>✎</button>
+                          <button onClick={() => onDeleteOneTime(tx.id!)} className="dd-btn-secondary" style={{ padding: '4px 8px', fontSize: 11, borderRadius: 8, color: 'var(--negative)' }}>✕</button>
                         </>
                       )}
                     </div>

@@ -109,18 +109,18 @@ export default function CalendarView() {
       {/* Calendar — edge to edge, no card wrapper */}
       <div>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4px 0 10px', gap: 14 }}>
-          <button className="dd-icon-btn" onClick={() => move(-1)} aria-label="Previous month">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '8px 0 14px', gap: 16 }}>
+          <button className="dd-icon-btn" style={{ width: 40, height: 40 }} onClick={() => move(-1)} aria-label="Previous month">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 500, letterSpacing: '-0.02em', margin: 0, color: 'var(--fg-1)' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 500, letterSpacing: '-0.02em', margin: 0, color: 'var(--fg-1)' }}>
               {monthLabel}
             </h2>
-            <span style={{ fontSize: 13, color: 'var(--fg-4)', fontWeight: 500 }}>{yearLabel}</span>
+            <span style={{ fontSize: 16, color: 'var(--fg-4)', fontWeight: 500 }}>{yearLabel}</span>
           </div>
-          <button className="dd-icon-btn" onClick={() => move(1)} aria-label="Next month">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <button className="dd-icon-btn" style={{ width: 40, height: 40 }} onClick={() => move(1)} aria-label="Next month">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </div>
 
@@ -159,11 +159,12 @@ export default function CalendarView() {
                   {c.inMonth && settings.showEODBalance && c.key && (() => {
                     const bal = Math.ceil(getEndOfDayBalance(c.key!, dailyBalanceMap, settings.startDate, settings.startingBalance));
                     const isBRL = settings.currency === 'BRL';
+                    const sym = isBRL ? 'R$' : '$';
                     const abs = Math.abs(bal);
                     const formatted = isBRL
                       ? abs.toLocaleString('pt-BR', { maximumFractionDigits: 0 })
                       : abs.toLocaleString('en-US', { maximumFractionDigits: 0 });
-                    return <div className={`cal-eod ${bal < 0 ? 'neg' : ''}`}>{bal < 0 ? '-' : ''}{formatted}</div>;
+                    return <div className={`cal-eod ${bal < 0 ? 'neg' : ''}`}>{bal < 0 ? '-' : ''}{sym}{formatted}</div>;
                   })()}
                 </button>
               );
