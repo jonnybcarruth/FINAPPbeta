@@ -126,10 +126,12 @@ export default function DayDetailsModal({ open, onClose, dateKey, transactions, 
                       {tx.amount > 0 ? '+' : ''}{fmt(tx.amount)}
                     </div>
                     <div style={{ display: 'flex', gap: 6, marginLeft: 8, flexShrink: 0 }}>
-                      {tx.completed ? (
-                        <button onClick={() => handleUnpay(tx)} className="dd-btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderRadius: 8 }}>↺ {t('undo_payment')}</button>
-                      ) : (
-                        <button onClick={() => { void hapticLight(); setMarkingPaid(tx); }} className="dd-btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderRadius: 8 }}>✓ {t('paid')}</button>
+                      {tx.type !== 'One-Time' && (
+                        tx.completed ? (
+                          <button onClick={() => handleUnpay(tx)} className="dd-btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderRadius: 8 }}>↺ {t('undo_payment')}</button>
+                        ) : (
+                          <button onClick={() => { void hapticLight(); setMarkingPaid(tx); }} className="dd-btn-secondary" style={{ padding: '4px 10px', fontSize: 11, borderRadius: 8 }}>✓ {t('paid')}</button>
+                        )
                       )}
                       {tx.type === 'One-Time' && tx.id && (
                         <>

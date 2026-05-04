@@ -45,7 +45,7 @@ export default function SmartBudgetCard() {
     return (
       <section className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm">
         <div className="flex items-center space-x-2 mb-2">
-          <span className="text-xl">💡</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M5 5h11a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h11"/></svg>
           <h3 className="text-base font-bold text-gray-800 dark:text-gray-100">{t('smart_budget')}</h3>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">{t('no_budget_data')}</p>
@@ -53,20 +53,14 @@ export default function SmartBudgetCard() {
     );
   }
 
-  const categoryIcon = (name: string): string => {
-    const n = name.toLowerCase();
-    if (n.includes('groc') || n.includes('alim')) return '🛒';
-    if (n.includes('gas') || n.includes('fuel') || n.includes('combust')) return '⛽';
-    if (n.includes('transport')) return '🚗';
-    return '📌';
-  };
+  const categoryIcon = () => '';
 
   return (
     <section className="dd-card" style={{ padding: 20, background: 'var(--surface)', border: '1px solid var(--line)' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
-          <span className="text-xl">💡</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M5 5h11a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h11"/></svg>
           <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100">{t('smart_budget')}</h3>
         </div>
         <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -89,7 +83,7 @@ export default function SmartBudgetCard() {
             return (
               <div key={s.name}>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="font-medium text-gray-700 dark:text-gray-200">{categoryIcon(s.name)} {s.name}</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-200">{s.name}</span>
                   <span className="font-semibold text-gray-800 dark:text-gray-100">{fmt(s.amount)}</span>
                 </div>
                 <div className="w-full bg-white/60 dark:bg-gray-800/60 rounded-full h-1.5">

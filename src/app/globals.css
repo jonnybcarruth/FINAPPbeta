@@ -245,9 +245,9 @@ body { margin: 0; background: var(--bg); }
   font-size: 8px; font-weight: 600; color: var(--fg-3);
   font-variant-numeric: tabular-nums;
   font-family: var(--font-ui);
-  margin-top: auto; text-align: right;
+  text-align: center;
   letter-spacing: -0.02em; line-height: 1;
-  padding-top: 2px;
+  margin-top: auto; padding-top: 2px;
 }
 .cal-eod.neg { color: var(--negative); }
 @media (min-width: 768px) { .cal-eod { font-size: 10px; } }
@@ -279,12 +279,15 @@ body { margin: 0; background: var(--bg); }
   color: var(--fg-1); letter-spacing: -0.01em;
 }
 .cal-event.income { background: var(--brand-neon-soft); color: #3d5a0f; }
-.cal-event.bill { background: var(--surface-2); }
-.cal-event.savings { background: transparent; border: 1px solid var(--line); font-size: 8px; }
-.cal-event.one { background: var(--surface-2); }
-.dark .cal-event.income { background: rgba(216,242,168,0.18); color: var(--brand-neon); }
-.dark .cal-event.bill { background: rgba(255,255,255,0.06); }
-.dark .cal-event.savings { border-color: rgba(255,255,255,0.12); }
+.cal-event.bill { background: #FCE4E5; color: #9B2C2E; }
+.cal-event.savings { background: var(--surface-2); color: var(--fg-3); }
+.cal-event.one-neg { background: #FCE4E5; color: #9B2C2E; }
+.cal-event.one-pos { background: var(--brand-neon-soft); color: #3d5a0f; }
+.dark .cal-event.income { background: rgba(168,204,101,0.18); color: var(--brand-neon); }
+.dark .cal-event.bill { background: rgba(229,72,77,0.15); color: #f87171; }
+.dark .cal-event.savings { background: rgba(255,255,255,0.06); color: var(--fg-3); }
+.dark .cal-event.one-neg { background: rgba(229,72,77,0.15); color: #f87171; }
+.dark .cal-event.one-pos { background: rgba(168,204,101,0.18); color: var(--brand-neon); }
 
 @media (min-width: 768px) {
   .cal-event { font-size: 11px; padding: 2px 4px; }

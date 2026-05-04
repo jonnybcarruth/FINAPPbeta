@@ -16,9 +16,9 @@ const DAY_LABELS_EN = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const DAY_LABELS_PT = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
 function eventClass(p: Projection): string {
-  if (p.amount > 0) return 'income';
   if (p.type === 'Savings') return 'savings';
-  if (p.type === 'One-Time') return 'one';
+  if (p.amount > 0) return 'income';
+  if (p.type === 'One-Time') return p.amount > 0 ? 'one-pos' : 'one-neg';
   return 'bill';
 }
 
@@ -159,12 +159,9 @@ export default function CalendarView() {
                   {c.inMonth && settings.showEODBalance && c.key && (() => {
                     const bal = Math.ceil(getEndOfDayBalance(c.key!, dailyBalanceMap, settings.startDate, settings.startingBalance));
                     const isBRL = settings.currency === 'BRL';
-                    const sym = isBRL ? 'R$' : '$';
-                    const abs = Math.abs(bal);
-                    const formatted = isBRL
-                      ? abs.toLocaleString('pt-BR', { maximumFractionDigits: 0 })
-                      : abs.toLocaleString('en-US', { maximumFractionDigits: 0 });
-                    return <div className={`cal-eod ${bal < 0 ? 'neg' : ''}`}>{bal < 0 ? '-' : ''}{sym}{formatted}</div>;
+                    const locale = isBRL ? 'pt-BR' : 'en-US';
+                    const formatted = bal.toLocaleString(locale, { style: 'currency', currency: settings.currency, maximumFractionDigits: 0 });
+                    return <div className={`cal-eod ${bal < 0 ? 'neg' : ''}`}>{formatted}</div>;
                   })()}
                 </button>
               );
