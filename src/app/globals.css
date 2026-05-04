@@ -9,9 +9,9 @@
 @tailwind utilities;
 
 :root {
-  --brand-neon: #C8E68E;
-  --brand-neon-deep: #AECE6E;
-  --brand-neon-soft: #E8F3CC;
+  --brand-neon: #A8CC65;
+  --brand-neon-deep: #8FB84D;
+  --brand-neon-soft: #DDE9C4;
   --brand-black: #0A0A0A;
   --brand-white: #FFFFFF;
   --brand-gray: #6B6F76;
@@ -367,6 +367,10 @@ body { margin: 0; background: var(--bg); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
 
 @keyframes calSlideR {
   from { opacity: 0; transform: translateX(28px); }

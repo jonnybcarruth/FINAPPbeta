@@ -127,10 +127,20 @@ export default function SlideMenu({ open, onClose }: Props) {
     <>
       <div
         className="fixed inset-0 z-50"
-        style={{ background: 'rgba(10,10,10,0.5)', animation: 'fadeIn 0.18s var(--ease) both' }}
+        style={{
+          background: 'rgba(10,10,10,0.5)',
+          animation: 'fadeIn 0.24s var(--ease) both',
+        }}
         onClick={onClose}
       />
-      <div className={`fixed inset-y-0 right-0 w-80 max-w-full bg-white dark:bg-gray-900 z-50 transform transition-transform duration-300 shadow-2xl ${open ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
+      <div
+        className="fixed inset-y-0 right-0 w-80 max-w-full z-50 flex flex-col"
+        style={{
+          background: 'var(--surface)',
+          boxShadow: 'var(--shadow-lg)',
+          animation: 'slideInRight 0.3s cubic-bezier(0.32, 0.72, 0, 1) both',
+        }}
+      >
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">{t('menu')}</h2>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">

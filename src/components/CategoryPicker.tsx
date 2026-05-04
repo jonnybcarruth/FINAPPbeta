@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { TRANSACTION_CATEGORIES, type CategoryId } from '@/lib/categories';
 import { useApp } from '@/context/AppContext';
+import { hapticLight } from '@/lib/haptics';
 
 interface Props {
   value?: CategoryId;
@@ -9,37 +11,107 @@ interface Props {
   filter?: 'income' | 'expense' | 'all';
 }
 
-const INCOME_CATS = new Set<CategoryId>(['salary', 'freelance', 'investment', 'gift', 'other']);
-const EXPENSE_CATS = new Set<CategoryId>(
-  TRANSACTION_CATEGORIES.map(c => c.id).filter(id => !INCOME_CATS.has(id) || id === 'other') as CategoryId[]
-);
+const INCOME_IDS = new Set(['salary', 'other']);
 
 export default function CategoryPicker({ value, onChange, filter = 'all' }: Props) {
-  const { settings } = useApp();
+  const { settings, setSettings, saveWithOverrides } = useApp();
   const lang = settings.language;
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState('');
 
-  const cats = TRANSACTION_CATEGORIES.filter((c) => {
-    if (filter === 'income') return INCOME_CATS.has(c.id);
-    if (filter === 'expense') return EXPENSE_CATS.has(c.id);
-    return true;
-  });
+  const customCats = settings.customCategories || [];
+
+  const allCats = [
+    ...TRANSACTION_CATEGORIES.filter((c) => {
+      if (filter === 'income') return INCOME_IDS.has(c.id);
+      if (filter === 'expense') return !INCOME_IDS.has(c.id) || c.id === 'other';
+      return true;
+    }),
+    ...customCats,
+  ];
+
+  const handleAddCustom = () => {
+    if (!newName.trim()) return;
+    void hapticLight();
+    const id = `custom-${Date.now()}`;
+    const newCat = { id, en: newName.trim(), pt: newName.trim() };
+    const updated = [...customCats, newCat];
+    const newSettings = { ...settings, customCategories: updated };
+    setSettings(newSettings);
+    saveWithOverrides(undefined, undefined, undefined, undefined, newSettings);
+    onChange(id);
+    setNewName('');
+    setAdding(false);
+  };
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {cats.map((c) => (
+    <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {allCats.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => { void hapticLight(); onChange(c.id); }}
+            style={{
+              padding: '5px 12px',
+              fontSize: 12,
+              fontWeight: 600,
+              borderRadius: 'var(--radius-pill)',
+              border: value === c.id ? '1.5px solid var(--fg-1)' : '1px solid var(--line)',
+              background: value === c.id ? 'var(--fg-1)' : 'var(--surface)',
+              color: value === c.id ? 'var(--surface)' : 'var(--fg-2)',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-ui)',
+              transition: 'all var(--dur-fast) var(--ease)',
+            }}
+          >
+            {lang === 'pt' ? c.pt : c.en}
+          </button>
+        ))}
         <button
-          key={c.id}
           type="button"
-          onClick={() => onChange(c.id)}
-          className={`px-3 py-1.5 text-xs rounded-full font-medium transition ${
-            value === c.id
-              ? 'bg-ios-blue text-white shadow-sm'
-              : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-          }`}
+          onClick={() => { void hapticLight(); setAdding(!adding); }}
+          style={{
+            padding: '5px 12px',
+            fontSize: 12,
+            fontWeight: 600,
+            borderRadius: 'var(--radius-pill)',
+            border: '1px dashed var(--line)',
+            background: 'transparent',
+            color: 'var(--fg-3)',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-ui)',
+          }}
         >
-          {c.icon} {lang === 'pt' ? c.pt : c.en}
+          + {lang === 'pt' ? 'Nova' : 'New'}
         </button>
-      ))}
+      </div>
+      {adding && (
+        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder={lang === 'pt' ? 'Nome da categoria' : 'Category name'}
+            autoFocus
+            onKeyDown={(e) => e.key === 'Enter' && handleAddCustom()}
+            style={{
+              flex: 1, padding: '6px 10px', fontSize: 12,
+              border: '1px solid var(--line)', borderRadius: 'var(--radius)',
+              background: 'var(--surface)', color: 'var(--fg-1)',
+              fontFamily: 'var(--font-ui)', outline: 'none',
+            }}
+          />
+          <button
+            type="button"
+            onClick={handleAddCustom}
+            className="dd-btn-primary"
+            style={{ padding: '6px 14px', fontSize: 12 }}
+          >
+            {lang === 'pt' ? 'Criar' : 'Create'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

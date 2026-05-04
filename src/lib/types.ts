@@ -75,6 +75,7 @@ export interface AppSettings {
   hasOnboarded: boolean;
   payFrequency?: 'weekly' | 'biweekly' | 'monthly';
   smartBudgetEnabled?: boolean;
+  customCategories?: { id: string; en: string; pt: string }[];
 }
 
 export interface Projection {
