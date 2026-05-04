@@ -8,6 +8,7 @@ import { getEndOfDayBalance } from '@/lib/finance';
 import DayDetailsModal from '../modals/DayDetailsModal';
 import OneTimeModal from '../modals/OneTimeModal';
 import SmartBudgetCard from '../SmartBudgetCard';
+import UpdateBalanceModal from '../modals/UpdateBalanceModal';
 import type { OneTimeTransaction, Projection } from '@/lib/types';
 import { useT, useFmt, useLocale } from '@/lib/i18n';
 import { hapticLight } from '@/lib/haptics';
@@ -37,6 +38,7 @@ export default function CalendarView() {
   const [defaultDate, setDefaultDate] = useState('');
   const [calAnimKey, setCalAnimKey] = useState(0);
   const [calDir, setCalDir] = useState<'right' | 'left'>('left');
+  const [showUpdateBalance, setShowUpdateBalance] = useState(false);
 
   const monthStart = startOfMonth(currentCalendarDate);
   const gridStart = startOfWeek(monthStart);
@@ -182,6 +184,19 @@ export default function CalendarView() {
           </label>
         </div>
       </div>
+
+      {/* Update Balance */}
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '4px 0 8px' }}>
+        <button
+          onClick={() => { void hapticLight(); setShowUpdateBalance(true); }}
+          className="dd-btn-secondary"
+          style={{ fontSize: 12, padding: '8px 16px', borderRadius: 'var(--radius-pill)' }}
+        >
+          {settings.language === 'pt' ? 'Atualizar saldo' : 'Update balance'}
+        </button>
+      </div>
+
+      <UpdateBalanceModal open={showUpdateBalance} onClose={() => setShowUpdateBalance(false)} />
 
       {selected && (
         <DayDetailsModal
