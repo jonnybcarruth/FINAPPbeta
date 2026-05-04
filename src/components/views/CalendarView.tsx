@@ -162,9 +162,9 @@ export default function CalendarView() {
                     const bal = Math.ceil(getEndOfDayBalance(c.key!, dailyBalanceMap, settings.startDate, settings.startingBalance));
                     const isBRL = settings.currency === 'BRL';
                     const locale = isBRL ? 'pt-BR' : 'en-US';
-                    let formatted = bal.toLocaleString(locale, { style: 'currency', currency: settings.currency, maximumFractionDigits: 0 });
-                    if (isBRL) formatted = formatted.replace(/\s/g, '');
-                    return <div className={`cal-eod ${bal < 0 ? 'neg' : ''}`}>{formatted}</div>;
+                    const abs = Math.abs(bal);
+                    const num = abs.toLocaleString(locale, { maximumFractionDigits: 0 });
+                    return <div className={`cal-eod ${bal < 0 ? 'neg' : ''}`}>{bal < 0 ? '-' : ''}{num}</div>;
                   })()}
                 </button>
               );
