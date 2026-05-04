@@ -109,12 +109,12 @@ export default function CalendarView() {
       {/* Calendar — edge to edge, no card wrapper */}
       <div>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0 12px', marginBottom: 4 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0 10px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 500, letterSpacing: '-0.02em', margin: 0, color: 'var(--fg-1)' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 500, letterSpacing: '-0.02em', margin: 0, color: 'var(--fg-1)' }}>
               {monthLabel}
             </h2>
-            <span style={{ fontSize: 14, color: 'var(--fg-3)', fontWeight: 500 }}>{yearLabel}</span>
+            <span style={{ fontSize: 13, color: 'var(--fg-4)', fontWeight: 500 }}>{yearLabel}</span>
           </div>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <button className="dd-icon-btn" onClick={() => move(-1)} aria-label="Previous month">
@@ -127,9 +127,9 @@ export default function CalendarView() {
         </div>
 
         {/* Day-of-week header */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid var(--line)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '0.5px solid var(--line)' }}>
           {DAY_LABELS.map((d, i) => (
-            <div key={i} style={{ textAlign: 'center', padding: '6px 0', fontSize: 12, fontWeight: 600, color: 'var(--fg-3)', letterSpacing: '0.04em' }}>{d}</div>
+            <div key={i} style={{ textAlign: 'center', padding: '8px 0 6px', fontSize: 11, fontWeight: 600, color: i === 0 || i === 6 ? 'var(--fg-4)' : 'var(--fg-3)', letterSpacing: '0.06em' }}>{d}</div>
           ))}
         </div>
 
@@ -158,11 +158,13 @@ export default function CalendarView() {
                       +{c.txs.length - 3}
                     </div>
                   )}
-                  {c.inMonth && settings.showEODBalance && c.key && (
-                    <div className={`cal-eod ${getEndOfDayBalance(c.key, dailyBalanceMap, settings.startDate, settings.startingBalance) < 0 ? 'neg' : ''}`}>
-                      {fmt(getEndOfDayBalance(c.key, dailyBalanceMap, settings.startDate, settings.startingBalance))}
-                    </div>
-                  )}
+                  {c.inMonth && settings.showEODBalance && c.key && (() => {
+                    const bal = getEndOfDayBalance(c.key!, dailyBalanceMap, settings.startDate, settings.startingBalance);
+                    const abs = Math.abs(bal);
+                    const short = abs >= 1000 ? `${(abs / 1000).toFixed(1)}k` : fmt(bal);
+                    const display = bal < 0 ? `-${short}` : short;
+                    return <div className={`cal-eod ${bal < 0 ? 'neg' : ''}`}>{display}</div>;
+                  })()}
                 </button>
               );
             })}

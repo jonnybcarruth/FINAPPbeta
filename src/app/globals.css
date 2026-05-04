@@ -220,11 +220,11 @@ body { margin: 0; background: var(--bg); }
 /* ─── Calendar ───────────────────────── */
 .cal-cell {
   position: relative;
-  min-height: 90px;
+  min-height: 88px;
   background: var(--surface);
-  border-bottom: 1px solid var(--line);
-  border-right: 1px solid var(--line);
-  padding: 5px 5px 3px;
+  border-bottom: 0.5px solid var(--line);
+  border-right: 0.5px solid var(--line);
+  padding: 4px 4px 3px;
   display: flex; flex-direction: column;
   cursor: pointer;
   font-family: var(--font-ui);
@@ -242,39 +242,49 @@ body { margin: 0; background: var(--bg); }
 .cal-cell.today { background: transparent; }
 
 .cal-eod {
-  font-size: 10px; font-weight: 700; color: var(--fg-1);
+  font-size: 8px; font-weight: 600; color: var(--fg-3);
   font-variant-numeric: tabular-nums;
-  margin-top: auto; padding: 1px 2px;
+  font-family: var(--font-ui);
+  margin-top: auto; text-align: right;
+  letter-spacing: -0.02em; line-height: 1;
+  padding-top: 2px;
 }
 .cal-eod.neg { color: var(--negative); }
+@media (min-width: 768px) { .cal-eod { font-size: 10px; } }
 
 .cal-day-num {
-  font-size: 13px; font-weight: 500; text-align: left;
+  font-size: 12px; font-weight: 500; text-align: left;
   letter-spacing: -0.01em; line-height: 1;
-  padding: 1px 2px; display: inline-block; width: fit-content;
+  padding: 0 1px; display: inline-block; width: fit-content;
+  color: var(--fg-2);
 }
 .cal-cell.today .cal-day-num {
   background: var(--fg-1); color: var(--surface);
-  border-radius: 50%; width: 22px; height: 22px;
+  border-radius: 50%; width: 20px; height: 20px;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 12px;
+  font-weight: 700; font-size: 11px;
 }
 .dark .cal-cell.today .cal-day-num { background: var(--brand-neon); color: var(--brand-black); }
 .cal-cell.out .cal-day-num { color: var(--fg-4); }
+@media (min-width: 768px) {
+  .cal-day-num { font-size: 14px; }
+  .cal-cell.today .cal-day-num { width: 24px; height: 24px; font-size: 13px; }
+}
 
 /* Event pills inside calendar cells */
 .cal-event {
-  font-size: 10px; font-weight: 600; line-height: 1.2;
-  padding: 1px 3px; border-radius: 3px; margin-top: 1px;
+  font-size: 9px; font-weight: 600; line-height: 1.15;
+  padding: 1.5px 3px; border-radius: 3px; margin-top: 2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  color: var(--fg-1);
+  color: var(--fg-1); letter-spacing: -0.01em;
 }
 .cal-event.income { background: var(--brand-neon-soft); color: var(--brand-black); }
 .cal-event.bill { background: var(--surface-2); }
-.cal-event.savings { background: transparent; border: 1px solid var(--line); }
+.cal-event.savings { background: transparent; border: 1px solid var(--line); font-size: 8px; }
 .cal-event.one { background: var(--surface-2); }
-.dark .cal-event.income { background: rgba(216,242,168,0.2); color: var(--brand-neon); }
-.dark .cal-event.bill { background: rgba(255,255,255,0.08); }
+.dark .cal-event.income { background: rgba(216,242,168,0.18); color: var(--brand-neon); }
+.dark .cal-event.bill { background: rgba(255,255,255,0.06); }
+.dark .cal-event.savings { border-color: rgba(255,255,255,0.12); }
 
 @media (min-width: 768px) {
   .cal-event { font-size: 11px; padding: 2px 4px; }

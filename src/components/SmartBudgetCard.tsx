@@ -62,7 +62,7 @@ export default function SmartBudgetCard() {
   };
 
   return (
-    <section className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 p-5 rounded-2xl shadow-sm border border-blue-100 dark:border-blue-900">
+    <section className="dd-card" style={{ padding: 20, background: 'var(--surface)', border: '1px solid var(--line)' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
@@ -77,7 +77,7 @@ export default function SmartBudgetCard() {
       {/* Hero amount */}
       <div className="mb-4">
         <p className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">{t('you_can_spend')}</p>
-        <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">{fmt(budget.safeToSpend)}</p>
+        <p style={{ fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 500, letterSpacing: '-0.02em', color: 'var(--fg-1)' }}>{fmt(budget.safeToSpend)}</p>
       </div>
 
       {/* Suggested category split */}
@@ -93,7 +93,7 @@ export default function SmartBudgetCard() {
                   <span className="font-semibold text-gray-800 dark:text-gray-100">{fmt(s.amount)}</span>
                 </div>
                 <div className="w-full bg-white/60 dark:bg-gray-800/60 rounded-full h-1.5">
-                  <div className="bg-blue-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min(100, pct)}%` }} />
+                  <div style={{ background: 'var(--brand-neon)', height: 6, borderRadius: 3, transition: 'width 0.6s var(--ease)', width: `${Math.min(100, pct)}%` }} />
                 </div>
               </div>
             );
@@ -104,7 +104,8 @@ export default function SmartBudgetCard() {
       {/* Expandable details */}
       <button
         onClick={() => { void hapticLight(); setExpanded(!expanded); }}
-        className="w-full flex items-center justify-center space-x-1 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200"
+        className="w-full flex items-center justify-center space-x-1 py-1.5 text-xs font-medium"
+        style={{ color: 'var(--fg-3)' }}
       >
         <span>{expanded ? t('hide_details') : t('how_calculated')}</span>
         <svg className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -113,7 +114,7 @@ export default function SmartBudgetCard() {
       </button>
 
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800 space-y-1.5 text-xs">
+        <div className="mt-3 pt-3 border-t space-y-1.5 text-xs">
           <Row label={t('balance_today')} value={fmt(budget.balanceToday)} />
           {budget.incomeThisWeek > 0 && <Row label={`+ ${t('income_this_week')}`} value={fmt(budget.incomeThisWeek)} positive />}
           {budget.billsThisWeek > 0 && <Row label={`− ${t('bills_this_week')}`} value={fmt(budget.billsThisWeek)} negative />}
@@ -127,7 +128,7 @@ export default function SmartBudgetCard() {
             />
           )}
           {budget.emergencyBuffer > 0 && <Row label={`− ${t('emergency_buffer')}`} value={fmt(budget.emergencyBuffer)} negative />}
-          <div className="border-t border-blue-200 dark:border-blue-800 pt-1.5 mt-1.5">
+          <div className="border-t pt-1.5 mt-1.5">
             <Row label={`= ${t('safe_to_spend')}`} value={fmt(budget.safeToSpend)} bold />
           </div>
         </div>
