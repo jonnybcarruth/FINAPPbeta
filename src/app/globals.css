@@ -242,12 +242,13 @@ body { margin: 0; background: var(--bg); }
 .cal-cell.today { background: transparent; }
 
 .cal-eod {
-  font-size: 8px; font-weight: 600; color: var(--fg-3);
+  font-size: 7px; font-weight: 600; color: var(--fg-3);
   font-variant-numeric: tabular-nums;
   font-family: var(--font-ui);
-  letter-spacing: -0.02em; line-height: 1;
+  letter-spacing: -0.03em; line-height: 1;
   margin-top: auto;
-  align-self: center;
+  width: 100%; text-align: center;
+  overflow: hidden; white-space: nowrap;
 }
 .cal-eod.neg { color: var(--negative); }
 @media (min-width: 768px) { .cal-eod { font-size: 10px; } }
