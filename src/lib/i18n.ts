@@ -444,8 +444,10 @@ export function useT() {
 export function useFmt() {
   const { settings } = useApp();
   const locale = settings.currency === 'BRL' ? 'pt-BR' : 'en-US';
-  return (amount: number): string =>
-    amount.toLocaleString(locale, { style: 'currency', currency: settings.currency });
+  return (amount: number): string => {
+    if (amount == null || isNaN(amount)) return settings.currency === 'BRL' ? 'R$ 0' : '$0';
+    return amount.toLocaleString(locale, { style: 'currency', currency: settings.currency });
+  };
 }
 
 export function useLocale() {

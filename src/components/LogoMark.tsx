@@ -74,7 +74,8 @@ interface TickerProps {
 }
 
 export function Ticker({ value, format }: TickerProps) {
-  const [v, setV] = useState(value);
+  const safeValue = value ?? 0;
+  const [v, setV] = useState(safeValue);
   const fromRef = useRef(value);
   const startRef = useRef(0);
 
@@ -85,12 +86,12 @@ export function Ticker({ value, format }: TickerProps) {
     const ease = (t: number) => 1 - Math.pow(1 - t, 3);
     const tick = (now: number) => {
       const t = Math.min(1, (now - startRef.current) / 900);
-      setV(fromRef.current + (value - fromRef.current) * ease(t));
+      setV(fromRef.current + (safeValue - fromRef.current) * ease(t));
       if (t < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [value]);
+  }, [safeValue]);
 
   const defaultFmt = (n: number) => {
     const abs = Math.abs(Math.round(n));
