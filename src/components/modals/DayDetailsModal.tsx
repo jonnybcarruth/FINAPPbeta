@@ -93,7 +93,7 @@ export default function DayDetailsModal({ open, onClose, dateKey, transactions, 
           <div style={{ marginBottom: 16 }}>
             <div className="dd-overline">{t('end_of_day_balance')}</div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 44, fontWeight: 500, letterSpacing: '-0.025em', lineHeight: 1, marginTop: 4 }}>
-              <Ticker value={eodBalance} />
+              <Ticker value={eodBalance} currency={settings.currency} locale={settings.currency === 'BRL' ? 'pt-BR' : 'en-US'} />
             </div>
           </div>
 

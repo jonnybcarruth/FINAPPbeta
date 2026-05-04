@@ -71,9 +71,11 @@ export function LogoLockup({ height = 32, dark = false, progress = 1 }: LogoLock
 interface TickerProps {
   value: number;
   format?: (v: number) => string;
+  currency?: string;
+  locale?: string;
 }
 
-export function Ticker({ value, format }: TickerProps) {
+export function Ticker({ value, format, currency = 'USD', locale = 'en-US' }: TickerProps) {
   const safeValue = value ?? 0;
   const [v, setV] = useState(safeValue);
   const fromRef = useRef(value);
@@ -94,9 +96,8 @@ export function Ticker({ value, format }: TickerProps) {
   }, [safeValue]);
 
   const defaultFmt = (n: number) => {
-    const abs = Math.abs(Math.round(n));
-    const s = abs.toLocaleString('en-US');
-    return n < 0 ? `−$${s}` : `$${s}`;
+    const rounded = Math.round(n);
+    return rounded.toLocaleString(locale, { style: 'currency', currency, maximumFractionDigits: 0 });
   };
 
   return <span>{(format || defaultFmt)(v)}</span>;

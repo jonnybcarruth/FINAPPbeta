@@ -61,7 +61,7 @@ export default function DashboardView() {
             {netSavings > 0 && <span className="dd-pill">+{Math.round((netSavings / settings.startingBalance) * 100)}%</span>}
           </div>
           <div className="dd-display" style={{ fontVariantNumeric: 'tabular-nums' }}>
-            <Ticker value={metrics.endBalance} />
+            <Ticker value={metrics.endBalance} currency={settings.currency} locale={settings.currency === 'BRL' ? 'pt-BR' : 'en-US'} />
           </div>
           <div style={{ marginTop: 8, color: 'var(--fg-2)', fontSize: 14 }}>
             <span style={{ color: 'var(--fg-1)', fontWeight: 600 }}>{netSavings >= 0 ? '+' : ''}{fmt(netSavings)}</span>
@@ -257,7 +257,7 @@ function ProjectionChart({ data, height = 140 }: { data: { date: Date; val: numb
             {format(data[hover].date, 'MMM d')}
           </div>
           <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg-1)', fontVariantNumeric: 'tabular-nums' }}>
-            ${Math.round(data[hover].val).toLocaleString()}
+            {fmt(Math.round(data[hover].val))}
           </div>
         </div>
       )}
