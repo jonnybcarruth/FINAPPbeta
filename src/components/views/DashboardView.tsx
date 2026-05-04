@@ -192,6 +192,7 @@ function BenchmarkBar({ label, pct, target, color }: { label: string; pct: numbe
 }
 
 function ProjectionChart({ data, height = 140 }: { data: { date: Date; val: number }[]; height?: number }) {
+  const chartFmt = useFmt();
   const ref = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<number | null>(null);
 
@@ -257,7 +258,7 @@ function ProjectionChart({ data, height = 140 }: { data: { date: Date; val: numb
             {format(data[hover].date, 'MMM d')}
           </div>
           <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg-1)', fontVariantNumeric: 'tabular-nums' }}>
-            {fmt(Math.round(data[hover].val))}
+            {chartFmt(Math.round(data[hover].val))}
           </div>
         </div>
       )}
