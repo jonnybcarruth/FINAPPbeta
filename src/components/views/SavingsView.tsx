@@ -59,7 +59,7 @@ export default function SavingsView() {
   return (
     <div className="space-y-6">
       {savingsPlans.length === 0 ? (
-        <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
+        <section className="dd-surface rounded-2xl shadow-sm">
           <EmptyState
             icon={
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -75,31 +75,31 @@ export default function SavingsView() {
       ) : (
         <>
           <section className="grid grid-cols-2 gap-4 text-center">
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t('total_saved')}</h3>
+            <div className="dd-surface p-4 rounded-2xl shadow-sm">
+              <h3 className="text-xs font-semibold dd-text-3">{t('total_saved')}</h3>
               <p className="text-2xl font-bold text-[var(--brand-neon)] mt-1">{fmt(totalSaved)}</p>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400">{t('total_goal')}</h3>
+            <div className="dd-surface p-4 rounded-2xl shadow-sm">
+              <h3 className="text-xs font-semibold dd-text-3">{t('total_goal')}</h3>
               <p className="text-2xl font-bold text-blue-600 mt-1">{totalGoals > 0 ? fmt(totalGoals) : '—'}</p>
             </div>
           </section>
 
           {totalGoals > 0 && (
-            <section className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm">
+            <section className="dd-surface p-4 rounded-2xl shadow-sm">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{t('overall_progress')}</span>
+                <span className="text-sm font-medium dd-text-2">{t('overall_progress')}</span>
                 <span className="text-sm font-bold text-[var(--brand-neon)]">{Math.min(100, Math.round((totalSaved / totalGoals) * 100))}%</span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+              <div className="w-full dd-surface-2 rounded-full h-3">
                 <div className="bg-[var(--brand-neon)] h-3 rounded-full transition-all" style={{ width: `${Math.min(100, (totalSaved / totalGoals) * 100)}%` }} />
               </div>
             </section>
           )}
 
-          <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
+          <section className="dd-surface p-6 rounded-2xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('savings_plans')}</h2>
+              <h2 className="text-xl font-bold dd-text">{t('savings_plans')}</h2>
               <button onClick={() => { setEditing(null); setOpen(true); }} className="px-4 py-2 bg-[var(--fg-1)] text-white rounded-xl hover:bg-[var(--brand-neon)] font-semibold text-sm">
                 + {t('add')}
               </button>
@@ -110,11 +110,11 @@ export default function SavingsView() {
                 const saved = perPlanSaved[plan.name] || 0;
                 const goalPct = plan.goalAmount ? Math.min(100, (saved / plan.goalAmount) * 100) : null;
                 return (
-                  <div key={plan.id} className={`p-4 rounded-xl border border-[var(--line)] dark:border-[var(--line)] bg-white dark:bg-gray-700 shadow-sm hover:shadow-md transition ${!plan.enabled ? 'opacity-50' : ''}`}>
+                  <div key={plan.id} className={`p-4 rounded-xl border border-[var(--line)] dark:border-[var(--line)] dd-surface shadow-sm hover:shadow-md transition ${!plan.enabled ? 'opacity-50' : ''}`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center min-w-0 mr-3">
                         <div className="flex-shrink-0 w-3 h-3 rounded-full mr-3 bg-[var(--brand-neon)]" />
-                        <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{plan.name}</p>
+                        <p className="font-semibold dd-text truncate">{plan.name}</p>
                       </div>
                       <div className="relative inline-block w-12 h-7 flex-shrink-0 select-none">
                         <input type="checkbox" id={`sav-tog-${plan.id}`} checked={plan.enabled} onChange={(e) => handleToggle(plan.id, e.target.checked)}
@@ -123,7 +123,7 @@ export default function SavingsView() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{freqLabel(plan.frequency)} · {fmt(plan.amount)}</p>
+                      <p className="text-sm dd-text-3">{freqLabel(plan.frequency)} · {fmt(plan.amount)}</p>
                       <div className="flex items-center space-x-2">
                         <p className="font-bold text-base text-[var(--brand-neon)]">{fmt(saved)}</p>
                         <button onClick={() => { setEditing(plan); setOpen(true); }} className="p-2 text-gray-400 hover:text-ios-blue rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">
@@ -136,7 +136,7 @@ export default function SavingsView() {
                     </div>
                     {goalPct !== null && plan.goalAmount && (
                       <div>
-                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        <div className="flex justify-between text-xs dd-text-3 mb-1">
                           <span>{fmt(saved)}</span>
                           <span>{t('goal')}: {fmt(plan.goalAmount)}</span>
                         </div>

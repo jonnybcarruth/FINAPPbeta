@@ -13,11 +13,11 @@ interface Props {
 export default function EmptyState({ icon, title, description, cta, suggestions }: Props) {
   return (
     <div className="text-center py-10 px-4">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 mb-4">
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: 'var(--brand-neon-soft)', color: 'var(--fg-1)' }}>
         {icon}
       </div>
-      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">{title}</h3>
-      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-5">{description}</p>
+      <h3 className="text-lg font-bold dd-text mb-2">{title}</h3>
+      <p className="text-sm dd-text-3 max-w-sm mx-auto mb-5">{description}</p>
       {cta && (
         <button
           onClick={cta.onClick}

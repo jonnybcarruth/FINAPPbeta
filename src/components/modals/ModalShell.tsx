@@ -29,7 +29,7 @@ export default function ModalShell({ open, onClose, title, children }: ModalShel
   return (
     <div
       className={`fixed inset-0 flex items-center justify-center z-50 p-4 ${phase === 'in' ? 'modal-backdrop-in' : 'modal-backdrop-out'}`}
-      style={{ background: 'rgba(10,10,10,0.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+      style={{ background: 'rgba(10,10,10,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div

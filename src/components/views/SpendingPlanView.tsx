@@ -77,16 +77,16 @@ export default function SpendingPlanView() {
 
   return (
     <div className="space-y-6">
-      <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">{t('plan_period')}</h2>
+      <section className="dd-surface p-6 rounded-2xl shadow-sm">
+        <h2 className="text-xl font-bold dd-text mb-4">{t('plan_period')}</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('start_date')}</label>
+            <label className="block text-sm font-medium dd-text-2 mb-1">{t('start_date')}</label>
             <input type="date" value={planStart} onChange={(e) => setPlanStart(e.target.value)}
               className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('end_date')}</label>
+            <label className="block text-sm font-medium dd-text-2 mb-1">{t('end_date')}</label>
             <input type="date" value={planEnd} onChange={(e) => setPlanEnd(e.target.value)} min={planStart}
               className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 text-sm" />
           </div>
@@ -96,8 +96,8 @@ export default function SpendingPlanView() {
         </p>
       </section>
 
-      <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">{t('projected_surplus')}</h2>
+      <section className="dd-surface p-6 rounded-2xl shadow-sm">
+        <h2 className="text-xl font-bold dd-text mb-4">{t('projected_surplus')}</h2>
         <div className="grid grid-cols-2 gap-4 text-center">
           <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <p className="text-sm text-gray-500">{t('projected_savings')}</p>
@@ -110,10 +110,10 @@ export default function SpendingPlanView() {
         </div>
       </section>
 
-      <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm space-y-6">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('savings_target')}</h2>
+      <section className="dd-surface p-6 rounded-2xl shadow-sm space-y-6">
+        <h2 className="text-xl font-bold dd-text">{t('savings_target')}</h2>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium dd-text-2 mb-2">
             {t('commit_to_savings')}: <span className="font-bold text-xl text-green-700">{fmt(savedAmount)}</span>
           </label>
           <input type="range" min="0" max={sliderMax} value={savedAmount} step="10"
@@ -122,7 +122,7 @@ export default function SpendingPlanView() {
             className="w-full h-2 rounded-lg appearance-none cursor-pointer" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('spending_categories')}</p>
+          <p className="text-sm font-semibold dd-text-2 mb-3">{t('spending_categories')}</p>
           <div className="space-y-2">
             {activeSpendingCategories.map((cat) => (
               <label key={cat.name} className="flex items-center space-x-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg cursor-pointer">
@@ -136,9 +136,9 @@ export default function SpendingPlanView() {
         </div>
       </section>
 
-      <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
+      <section className="dd-surface p-6 rounded-2xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('spending_plans')}</h2>
+          <h2 className="text-xl font-bold dd-text">{t('spending_plans')}</h2>
           <button onClick={handleDeletePlan} className="px-3 py-1 text-sm bg-[var(--negative-bg)] text-[var(--negative)] rounded-lg hover:bg-[var(--negative-bg)] font-medium">{t('delete_plan')}</button>
         </div>
         {remainingBudget <= 0 ? (
@@ -150,13 +150,13 @@ export default function SpendingPlanView() {
               const totalAlloc = bd.reduce((s, c) => s + c.amount, 0);
               return (
                 <div key={plan.name} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl border border-gray-200 dark:border-gray-600">
-                  <h3 className="text-base font-bold text-gray-800 dark:text-gray-100 mb-2">{planLabel(plan.name)}</h3>
+                  <h3 className="text-base font-bold dd-text mb-2">{planLabel(plan.name)}</h3>
                   <p className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     {fmt(totalAlloc)}{t('per_week')}
                   </p>
                   <ul className="space-y-1 mb-4 text-sm">
                     {bd.filter((c) => c.amount > 0.01).map((c) => (
-                      <li key={c.name} className="flex justify-between text-gray-700 dark:text-gray-300">
+                      <li key={c.name} className="flex justify-between dd-text-2">
                         <span>{c.name}:</span>
                         <span className="font-medium text-[var(--negative)]">{fmt(c.amount)}</span>
                       </li>

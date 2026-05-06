@@ -41,7 +41,7 @@ export default function RecurringSchedulesView() {
   const freqLabel = (f: string) => f === 'Monthly' ? t('monthly') : f === 'BiWeekly' ? t('biweekly') : t('weekly');
 
   return (
-    <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
+    <section className="dd-surface p-6 rounded-2xl shadow-sm">
       {recurringSchedules.length === 0 ? (
         <EmptyState
           icon={
@@ -57,7 +57,7 @@ export default function RecurringSchedulesView() {
       ) : (
         <>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('recurring_schedules')}</h2>
+            <h2 className="text-xl font-bold dd-text">{t('recurring_schedules')}</h2>
             <button onClick={() => { setEditing(null); setOpen(true); }} className="px-4 py-2 bg-ios-blue text-white rounded-xl hover:bg-ios-blue-dark font-semibold text-sm">
               + {t('add')}
             </button>
@@ -67,11 +67,11 @@ export default function RecurringSchedulesView() {
             {recurringSchedules.map((s) => {
               const isExpense = s.amount < 0;
               return (
-                <div key={s.id} className={`p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 shadow-sm hover:shadow-md transition ${!s.enabled ? 'opacity-50' : ''}`}>
+                <div key={s.id} className={`p-4 rounded-xl border dd-border dd-surface shadow-sm hover:shadow-md transition ${!s.enabled ? 'opacity-50' : ''}`}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center min-w-0 mr-3">
                       <div className={`flex-shrink-0 w-3 h-3 rounded-full mr-3 ${isExpense ? 'bg-[var(--fg-3)]' : 'bg-[var(--brand-neon)]'}`} />
-                      <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{s.name}</p>
+                      <p className="font-semibold dd-text truncate">{s.name}</p>
                     </div>
                     <div className="relative inline-block w-12 h-7 flex-shrink-0 select-none">
                       <input type="checkbox" id={`tog-${s.id}`} checked={s.enabled} onChange={(e) => handleToggle(s.id, e.target.checked)}
@@ -80,7 +80,7 @@ export default function RecurringSchedulesView() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{isExpense ? t('expense') : t('income')} · {freqLabel(s.frequency)}</p>
+                    <p className="text-sm dd-text-3">{isExpense ? t('expense') : t('income')} · {freqLabel(s.frequency)}</p>
                     <div className="flex items-center space-x-2">
                       <p className={`font-semibold text-base ${isExpense ? 'text-[var(--negative)]' : 'text-[var(--brand-neon)]'}`}>
                         {fmt(Math.abs(s.amount))}

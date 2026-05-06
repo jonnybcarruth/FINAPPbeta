@@ -56,7 +56,7 @@ export default function BillsView() {
           onClick={() => switchTo('recurring')}
           className={`flex-1 py-2 text-sm font-semibold rounded-lg transition ${
             segment === 'recurring'
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow'
+              ? 'dd-surface text-gray-900 dark:text-white shadow'
               : 'text-gray-500'
           }`}
         >
@@ -66,7 +66,7 @@ export default function BillsView() {
           onClick={() => switchTo('debt')}
           className={`flex-1 py-2 text-sm font-semibold rounded-lg transition ${
             segment === 'debt'
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow'
+              ? 'dd-surface text-gray-900 dark:text-white shadow'
               : 'text-gray-500'
           }`}
         >
@@ -76,12 +76,12 @@ export default function BillsView() {
 
       {/* Quick-add templates */}
       {segment === 'recurring' && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden">
+        <div className="dd-surface rounded-2xl shadow-sm overflow-hidden">
           <button
             onClick={() => { void hapticLight(); setShowTemplates(!showTemplates); }}
             className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700"
           >
-            <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+            <span className="text-sm font-semibold dd-text">
               ⚡ {settings.language === 'pt' ? 'Adicionar conta comum' : 'Quick-add common bill'}
             </span>
             <svg className={`w-4 h-4 text-gray-400 transition-transform ${showTemplates ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -118,7 +118,7 @@ export default function BillsView() {
                       placeholder="0.00"
                       value={templateAmount}
                       onChange={(e) => setTemplateAmount(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg"
+                      className="w-full pl-8 pr-3 py-2 text-sm border dd-border dark:bg-gray-700 dark:text-white rounded-lg"
                     />
                   </div>
                   <button

@@ -39,7 +39,7 @@ export default function DebtPlansView() {
   };
 
   return (
-    <section className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
+    <section className="dd-surface p-6 rounded-2xl shadow-sm">
       {debtPlans.length === 0 ? (
         <EmptyState
           icon={
@@ -55,7 +55,7 @@ export default function DebtPlansView() {
       ) : (
         <>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('debt_plan_management')}</h2>
+            <h2 className="text-xl font-bold dd-text">{t('debt_plan_management')}</h2>
             <button onClick={() => { setEditing(null); setOpen(true); }} className="px-4 py-2 bg-ios-blue text-white rounded-xl hover:bg-ios-blue-dark font-semibold text-sm">
               + {t('add')}
             </button>
@@ -63,11 +63,11 @@ export default function DebtPlansView() {
 
           <div className="space-y-4">
             {debtPlans.map((plan) => (
-              <div key={plan.id} className={`p-4 rounded-xl border border-[var(--line)] dark:border-[var(--line)] bg-white dark:bg-gray-700 shadow-sm hover:shadow-md transition ${!plan.enabled ? 'opacity-50' : ''}`}>
+              <div key={plan.id} className={`p-4 rounded-xl border border-[var(--line)] dark:border-[var(--line)] dd-surface shadow-sm hover:shadow-md transition ${!plan.enabled ? 'opacity-50' : ''}`}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center min-w-0 mr-3">
                     <div className="flex-shrink-0 w-3 h-3 rounded-full mr-3 bg-[var(--fg-3)]" />
-                    <p className="font-semibold text-gray-800 dark:text-gray-100 truncate">{plan.name}</p>
+                    <p className="font-semibold dd-text truncate">{plan.name}</p>
                   </div>
                   <div className="relative inline-block w-12 h-7 flex-shrink-0 select-none">
                     <input type="checkbox" id={`debt-tog-${plan.id}`} checked={plan.enabled} onChange={(e) => handleToggle(plan.id, e.target.checked)}
@@ -76,7 +76,7 @@ export default function DebtPlansView() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{fmt(plan.totalAmount)} · {plan.payoffMonths} {t('months')}</p>
+                  <p className="text-sm dd-text-3">{fmt(plan.totalAmount)} · {plan.payoffMonths} {t('months')}</p>
                   <div className="flex items-center space-x-2">
                     <p className="font-bold text-base text-[var(--fg-3)]">{fmt(plan.totalAmount / plan.payoffMonths)}{t('per_month')}</p>
                     <button onClick={() => { setEditing(plan); setOpen(true); }} className="p-2 text-gray-400 hover:text-ios-blue rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">

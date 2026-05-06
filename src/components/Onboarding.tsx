@@ -80,7 +80,7 @@ export default function Onboarding() {
           <div className="text-center space-y-5">
             <div className="text-6xl">💰</div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('welcome')}</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t('welcome_desc')}</p>
+            <p className="text-sm dd-text-3">{t('welcome_desc')}</p>
             <div className="space-y-2 pt-3">
               <button onClick={next} className="w-full py-3 bg-ios-blue text-white rounded-xl font-semibold">{t('get_started')}</button>
               <button onClick={skip} className="w-full py-2 text-sm text-gray-500 hover:text-gray-700">{t('skip')}</button>
@@ -91,7 +91,7 @@ export default function Onboarding() {
         {step === 1 && (
           <div className="space-y-5">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('starting_balance_q')}</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t('starting_balance_help')}</p>
+            <p className="text-sm dd-text-3">{t('starting_balance_help')}</p>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">{sym}</span>
               <input
@@ -99,12 +99,12 @@ export default function Onboarding() {
                 value={balance}
                 onChange={(e) => setBalance(e.target.value)}
                 placeholder="5000"
-                className="w-full pl-10 pr-3 py-3 text-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none"
+                className="w-full pl-10 pr-3 py-3 text-lg border dd-border dark:bg-gray-900 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none"
                 autoFocus
               />
             </div>
             <div className="flex space-x-2">
-              <button onClick={skip} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-xl font-semibold text-sm">{t('skip')}</button>
+              <button onClick={skip} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 dd-text-2 rounded-xl font-semibold text-sm">{t('skip')}</button>
               <button onClick={next} className="flex-[2] py-3 bg-ios-blue text-white rounded-xl font-semibold">{t('next')}</button>
             </div>
             <Dots step={step} total={4} />
@@ -114,12 +114,12 @@ export default function Onboarding() {
         {step === 2 && (
           <div className="space-y-5">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('monthly_income_q')}</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t('monthly_income_help')}</p>
+            <p className="text-sm dd-text-3">{t('monthly_income_help')}</p>
             {/* Pay frequency selector */}
             <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
               {(['weekly', 'biweekly', 'monthly'] as const).map((f) => (
                 <button key={f} type="button" onClick={() => { void hapticLight(); setPayFreq(f); }}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition ${payFreq === f ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow' : 'text-gray-500'}`}>
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition ${payFreq === f ? 'dd-surface text-gray-900 dark:text-white shadow' : 'text-gray-500'}`}>
                   {f === 'weekly' ? t('weekly') : f === 'biweekly' ? t('biweekly') : t('monthly')}
                 </button>
               ))}
@@ -131,12 +131,12 @@ export default function Onboarding() {
                 value={income}
                 onChange={(e) => setIncome(e.target.value)}
                 placeholder={payFreq === 'monthly' ? '3000' : payFreq === 'biweekly' ? '1500' : '750'}
-                className="w-full pl-10 pr-3 py-3 text-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none"
+                className="w-full pl-10 pr-3 py-3 text-lg border dd-border dark:bg-gray-900 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none"
                 autoFocus
               />
             </div>
             <div className="flex space-x-2">
-              <button onClick={skip} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-xl font-semibold text-sm">{t('skip')}</button>
+              <button onClick={skip} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 dd-text-2 rounded-xl font-semibold text-sm">{t('skip')}</button>
               <button onClick={next} className="flex-[2] py-3 bg-ios-blue text-white rounded-xl font-semibold">{t('next')}</button>
             </div>
             <Dots step={step} total={4} />
@@ -146,7 +146,7 @@ export default function Onboarding() {
         {step === 3 && (
           <div className="space-y-5">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('monthly_rent_q')}</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t('monthly_rent_help')}</p>
+            <p className="text-sm dd-text-3">{t('monthly_rent_help')}</p>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">{sym}</span>
               <input
@@ -154,7 +154,7 @@ export default function Onboarding() {
                 value={rent}
                 onChange={(e) => setRent(e.target.value)}
                 placeholder="1000"
-                className="w-full pl-10 pr-3 py-3 text-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none"
+                className="w-full pl-10 pr-3 py-3 text-lg border dd-border dark:bg-gray-900 dark:text-white rounded-xl focus:border-blue-500 focus:outline-none"
                 autoFocus
               />
             </div>
